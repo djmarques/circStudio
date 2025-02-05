@@ -104,7 +104,7 @@ def _estimate_zeta(data, seq_length_max, n_boostrap=100, level=0.05):
         _ratio_sequences_of_zeroes(data, n, n_boostrap) for n in np.arange(
             1, seq_length_max+1
         )),
-        np.float,
+        float,
         seq_length_max
     )
     zeta_est = np.argmax(ratios < level)
