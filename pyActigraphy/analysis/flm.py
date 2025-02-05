@@ -173,7 +173,7 @@ class FLM():
         elif self.__basis == 'spline':
             from scipy.interpolate import BSpline
             T = self.nsamples
-            t = np.linspace(0, T, r*T, endpoint=True, dtype=np.float)
+            t = np.linspace(0, T, r*T, endpoint=True, dtype=float)
             y_est = BSpline(*self.beta[raw.display_name], extrapolate=False)(t)
             return y_est
 
