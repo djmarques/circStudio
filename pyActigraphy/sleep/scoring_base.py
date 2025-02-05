@@ -798,9 +798,9 @@ class ScoringMixin(object):
         """
 
         # Sampling frequency
-        freq = self.data.index.freq.delta
+        freq = pd.Timedelta(self.data.index.freq)
 
-        if freq == pd.Timedelta('15S'):
+        if freq == pd.Timedelta('15s'):
             window = np.array([
                 0.04,  # W_{-8}
                 0.04,  # W_{-7}
@@ -819,8 +819,8 @@ class ScoringMixin(object):
                 0.04,  # W_{+6}
                 0.04,  # W_{+7}
                 0.04   # W_{+8}
-            ], np.float)
-        elif freq == pd.Timedelta('30S'):
+            ], float)
+        elif freq == pd.Timedelta('30s'):
             window = np.array([
                 0.04,  # W_{-4}
                 0.04,  # W_{-3}
@@ -831,21 +831,21 @@ class ScoringMixin(object):
                 0.20,  # W_{+2}
                 0.04,  # W_{+3}
                 0.04   # W_{+4}
-            ], np.float)
-        elif freq == pd.Timedelta('60S'):
+            ], float)
+        elif freq == pd.Timedelta('60s'):
             window = np.array([
                 0.04,  # W_{-2}
                 0.20,  # W_{-1}
                 1.00,  # W_{+0}
                 0.20,  # W_{+1}
                 0.04   # W_{+2}
-            ], np.float)
-        elif freq == pd.Timedelta('120S'):
+            ], float)
+        elif freq == pd.Timedelta('120s'):
             window = np.array([
                 0.12,  # W_{-1}
                 0.50,  # W_{+0}
                 0.12,  # W_{+1}
-            ], np.float)
+            ], float)
         else:
             raise ValueError(
                 'Oakley\'s algorithm is not defined for data '
