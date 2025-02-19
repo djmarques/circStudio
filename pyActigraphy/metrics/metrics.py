@@ -632,8 +632,8 @@ class MetricsMixin(object):
 
         # n_epochs = int(pd.Timedelta('5H')/self.frequency)
 
-        _, l5 = _lmx(data, '5H', lowest=True)
-        _, m10 = _lmx(data, '10H', lowest=False)
+        _, l5 = _lmx(data, '5h', lowest=True)
+        _, m10 = _lmx(data, '10h', lowest=False)
 
         return (m10-l5)/(m10+l5)
 
@@ -708,7 +708,7 @@ class MetricsMixin(object):
         results = [
             _lmx(
                 data[time[0]:time[1]],
-                '5H',
+                '5h',
                 lowest=True
             ) for time in intervals
         ]
@@ -785,7 +785,7 @@ class MetricsMixin(object):
         results = [
             _lmx(
                 data[time[0]:time[1]],
-                '10H',
+                '10h',
                 lowest=False
             ) for time in intervals
         ]
@@ -863,8 +863,8 @@ class MetricsMixin(object):
 
         for time in intervals:
             data_subset = data[time[0]:time[1]]
-            _, l5 = _lmx(data_subset, '5H', lowest=True)
-            _, m10 = _lmx(data_subset, '10H', lowest=False)
+            _, l5 = _lmx(data_subset, '5h', lowest=True)
+            _, m10 = _lmx(data_subset, '10h', lowest=False)
             results.append((m10-l5)/(m10+l5))
 
         return results
