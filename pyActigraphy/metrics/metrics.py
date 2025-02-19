@@ -870,7 +870,7 @@ class MetricsMixin(object):
         return results
 
     # @lru_cache(maxsize=6)
-    def IS(self, freq='1H', binarize=True, threshold=4):
+    def IS(self, freq='1h', binarize=True, threshold=4):
         r"""Interdaily stability
 
         The Interdaily stability (IS) quantifies the repeatibilty of the
@@ -882,7 +882,7 @@ class MetricsMixin(object):
         freq: str, optional
             Data resampling `frequency string
             <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_.
-            Default is '1H'.
+            Default is '1h'.
         binarize: bool, optional
             If set to True, the data are binarized.
             Default is True.
@@ -945,7 +945,7 @@ class MetricsMixin(object):
             0.6900175913031027
             >>> rawAWD.IS(freq='30min', binarize=True, threshold=4)
             0.6245582891144925
-            >>> rawAWD.IS(freq='1H', binarize=False)
+            >>> rawAWD.IS(freq='1h', binarize=False)
             0.5257020914453097
         """
 
@@ -1011,7 +1011,7 @@ class MetricsMixin(object):
             0.5758268227551039
             >>> rawAWD.ISm(binarize=False)
             0.3915874151855646
-            >>> rawAWD.ISm(freqs=['10min','30min','1H'], binarize=False)
+            >>> rawAWD.ISm(freqs=['10min','30min','1h'], binarize=False)
             0.44598210450842063
         """
 
@@ -1021,7 +1021,7 @@ class MetricsMixin(object):
 
         return mean([_interdaily_stability(datum) for datum in data])
 
-    def ISp(self, period='7D', freq='1H',
+    def ISp(self, period='7D', freq='1h',
             binarize=True, threshold=4, verbose=False):
         r"""Interdaily stability per period
 
@@ -1036,7 +1036,7 @@ class MetricsMixin(object):
         freq: str, optional
             Data resampling `frequency string
             <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_.
-            Default is '1H'.
+            Default is '1h'.
         binarize: bool, optional
             If set to True, the data are binarized.
             Default is True.
@@ -1084,7 +1084,7 @@ class MetricsMixin(object):
         return results
 
     # @lru_cache(maxsize=6)
-    def IV(self, freq='1H', binarize=True, threshold=4):
+    def IV(self, freq='1h', binarize=True, threshold=4):
         r"""Intradaily variability
 
         The Intradaily Variability (IV) quantifies the variability of the
@@ -1096,7 +1096,7 @@ class MetricsMixin(object):
         freq: str, optional
             Data resampling `frequency string
             <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_.
-            Default is '1H'.
+            Default is '1h'.
         binarize: bool, optional
             If set to True, the data are binarized.
             Default is True.
@@ -1153,7 +1153,7 @@ class MetricsMixin(object):
             0.46185426426324316
             >>> rawAWD.IV(freq='30min', binarize=True, threshold=4)
             0.4150769573937417
-            >>> rawAWD.IV(freq='1H', binarize=False)
+            >>> rawAWD.IV(freq='1h', binarize=False)
             0.7859579446494547
         """
         data = self.resampled_data(freq, binarize, threshold)
@@ -1215,7 +1215,7 @@ class MetricsMixin(object):
             0.3482306825356382
             >>> rawAWD.IVm(binarize=False)
             0.6414533006190071
-            >>> rawAWD.IVm(freqs=['10min','30min','1H'], binarize=False)
+            >>> rawAWD.IVm(freqs=['10min','30min','1h'], binarize=False)
             0.7124465677737196
         """
 
@@ -1225,7 +1225,7 @@ class MetricsMixin(object):
 
         return mean([_intradaily_variability(datum) for datum in data])
 
-    def IVp(self, period='7D', freq='1H',
+    def IVp(self, period='7D', freq='1h',
             binarize=True, threshold=4, verbose=False):
         r"""Intradaily variability per period
 
@@ -1240,7 +1240,7 @@ class MetricsMixin(object):
         freq: str, optional
             Data resampling `frequency string
             <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_.
-            Default is '1H'.
+            Default is '1h'.
         binarize: bool, optional
             If set to True, the data are binarized.
             Default is True.
@@ -1835,7 +1835,7 @@ class ForwardMetricsMixin(object):
             ) for iread in self.readers
         }
 
-    def IS(self, freq='1H', binarize=True, threshold=4):
+    def IS(self, freq='1h', binarize=True, threshold=4):
 
         return {
             iread.display_name: iread.IS(
@@ -1864,7 +1864,7 @@ class ForwardMetricsMixin(object):
             ) for iread in self.readers
         }
 
-    def ISp(self, period='7D', freq='1H',
+    def ISp(self, period='7D', freq='1h',
             binarize=True, threshold=4, verbose=False):
 
         return {
@@ -1877,7 +1877,7 @@ class ForwardMetricsMixin(object):
             ) for iread in self.readers
         }
 
-    def IV(self, freq='1H', binarize=True, threshold=4):
+    def IV(self, freq='1h', binarize=True, threshold=4):
 
         return {
             iread.display_name: iread.IV(
@@ -1906,7 +1906,7 @@ class ForwardMetricsMixin(object):
             ) for iread in self.readers
         }
 
-    def IVp(self, period='7D', freq='1H',
+    def IVp(self, period='7D', freq='1h',
             binarize=True, threshold=4, verbose=False):
 
         return {
