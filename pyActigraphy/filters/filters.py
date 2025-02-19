@@ -141,7 +141,8 @@ class FiltersMixin(object):
             ))
 
         # Set mask values between start and stop to zeros
-        self.mask.loc[start:stop] = 0
+        #self.mask.loc[start:stop] = 0
+        self.mask = self.mask.mask((self.mask.index >= start) & (self.mask.index <= stop), 0)
 
     def add_mask_periods(self, input_fname, *args, **kwargs):
         """ Add periods to the inactivity mask
