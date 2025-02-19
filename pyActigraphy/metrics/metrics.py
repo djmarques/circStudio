@@ -1532,12 +1532,12 @@ class MetricsMixin(object):
             if start == 'AonT':
                 start_time = str(aont+offset).split(' ')[-1]
                 period = str(
-                    pd.Timedelta('24H') - ((aont+offset) - (aofft-offset))
+                    pd.Timedelta('24h') - ((aont+offset) - (aofft-offset))
                 ).split(' ')[-1]
             elif start == 'AoffT':
                 start_time = str(aofft+offset).split(' ')[-1]
                 period = str(
-                    pd.Timedelta('24H') - ((aofft+offset) - (aont-offset))
+                    pd.Timedelta('24h') - ((aofft+offset) - (aont-offset))
                 ).split(' ')[-1]
         else:
             start_time = start
@@ -1631,12 +1631,12 @@ class MetricsMixin(object):
             if start == 'AonT':
                 start_time = str(aont+offset).split(' ')[-1]
                 period = str(
-                    pd.Timedelta('24H') - ((aont+offset) - (aofft-offset))
+                    pd.Timedelta('24h') - ((aont+offset) - (aofft-offset))
                 ).split(' ')[-1]
             elif start == 'AoffT':
                 start_time = str(aofft+offset).split(' ')[-1]
                 period = str(
-                    pd.Timedelta('24H') - ((aofft+offset) - (aont-offset))
+                    pd.Timedelta('24h') - ((aofft+offset) - (aont-offset))
                 ).split(' ')[-1]
         else:
             start_time = start
