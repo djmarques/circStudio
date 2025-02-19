@@ -446,9 +446,9 @@ class LightMetricsMixin(object):
 
         if oformat == 'minute':
             tat = light_exposure_counts * \
-                self.data.index.freq.delta/pd.Timedelta('1min')
+                pd.Timedelta(self.data.index.freq)/pd.Timedelta('1min')
         elif oformat == 'timedelta':
-            tat = light_exposure_counts * self.data.index.freq.delta
+            tat = light_exposure_counts * pd.Timedelta(self.data.index.freq)
         else:
             tat = light_exposure_counts
 
@@ -505,9 +505,9 @@ class LightMetricsMixin(object):
 
         if oformat == 'minute':
             tatp = light_exposure_counts_per_day * \
-                self.data.index.freq.delta/pd.Timedelta('1min')
+                pd.Timedelta(self.data.index.freq)/pd.Timedelta('1min')
         elif oformat == 'timedelta':
-            tatp = light_exposure_counts_per_day * self.data.index.freq.delta
+            tatp = light_exposure_counts_per_day * pd.Timedelta(self.data.index.freq)
         else:
             tatp = light_exposure_counts_per_day
 
@@ -978,7 +978,7 @@ class LightMetricsMixin(object):
             self._filter_butterworth,
             axis=0,
             raw=True,
-            fs=1/self.data.index.freq.delta.total_seconds(),
+            fs=1/pd.Timedelta(self.data.index.freq).total_seconds(),
             fc_low=fc_low, fc_high=fc_high, N=N
         )
 
