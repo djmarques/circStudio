@@ -251,14 +251,14 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
 
         if freq is None:
             return data
-        elif to_offset(freq).delta < self.frequency:
+        elif pd.Timedelta(to_offset(freq)) < self.frequency:
             warnings.warn(
                 'Resampling frequency lower than the acquisition'
                 + ' frequency. Returning original data.',
                 UserWarning
             )
             return data
-        elif to_offset(freq).delta == self.frequency:
+        elif pd.Timedelta(to_offset(freq)) == self.frequency:
             return data
 
         resampled_data = data.resample(freq, origin='start').sum()
