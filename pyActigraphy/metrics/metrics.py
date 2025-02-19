@@ -570,7 +570,7 @@ class MetricsMixin(object):
 
         # n_epochs = int(pd.Timedelta('10H')/self.frequency)
 
-        _, m10 = _lmx(data, '10H', lowest=False)
+        _, m10 = _lmx(data, '10h', lowest=False)
 
         return m10
 
