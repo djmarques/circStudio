@@ -78,6 +78,8 @@ class RawATR(BaseRaw):
             index_col=[0]
         ).resample(freq).sum()
 
+        self.index_data = index_data
+
         self.__available_modes = sorted(list(
             set(index_data.columns.values).intersection(
                 set(self.__default_modes))))
