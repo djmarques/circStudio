@@ -1,6 +1,7 @@
 **pyActigraphy Lite (or Portable)**
 ================
-*This is a work in progress* 
+*This is a work in progress*
+
 Open-source python package for actigraphy and light exposure data visualization and analysis. pyActigraphy Lite (or Portable) is intended to be a "easy-to-install" version of PyActigraphy, minimizing dependency conflicts. In order to achieve this goal, some trade-offs have been made. For instance, this portable version removes support for the accelerometer package (Axivity and Activinsights). It also does not include Numba support, with might make it might make matrix computations slower. However, it can be installed in recent versions of Python (up to Python 12.9 - currentyl working to make it compatible with later versions). 
 
 Citation
