@@ -28,7 +28,9 @@ def sri_profile(data, threshold):
     ])
     # Apply prob_stability to each data group (i.e series of consecutive points
     # that are 24h apart for a given time of day)
-    sri_prof = data_grp.apply(prob_stability, threshold=threshold)
+    # Ignore any na values in the series of consecutive points
+    # sri_prof = data_grp.apply(prob_stability, threshold=threshold)
+    sri_prof = data_grp.apply(lambda x: prob_stability(x.dropna(), threshold=threshold))
     sri_prof.index = pd.timedelta_range(
         start='0 day',
         end='1 day',
@@ -40,7 +42,6 @@ def sri_profile(data, threshold):
 
 def sri(data, threshold=None):
     r''' Compute sleep regularity index (SRI)'''
-
     # Compute daily profile of sleep regularity indices
     sri_prof = sri_profile(data, threshold)
 
