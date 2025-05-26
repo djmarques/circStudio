@@ -34,7 +34,7 @@ setup(
     # There are some restrictions on what makes a valid project name
     # specification here:
     # https://packaging.python.org/specifications/core-metadata/#name
-    name='pyActigraphy',
+    name='circStudio',
 
     # Versions should comply with PEP 440:
     # https://www.python.org/dev/peps/pep-0440/
@@ -42,7 +42,7 @@ setup(
     # For a discussion on single-sourcing the version across setup.py and the
     # project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version=find_version("pyActigraphy", "__init__.py"),
+    version=find_version("circStudio", "__init__.py"),
     # version='0.1',
 
     # One-line description
@@ -115,7 +115,7 @@ setup(
     # If using Python 2.6 or earlier, then these have to be included in
     # MANIFEST.in as well.
     package_data={  # Optional
-        'pyActigraphy': ['tests/data/*']
+        'circStudio': ['tests/data/*']
     },
 
     license='GNU GPL-3.0',
