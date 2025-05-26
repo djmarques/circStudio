@@ -108,7 +108,6 @@ setup(
     install_requires=[
         'joblib', 'lmfit', 'pandas>=1.4.0', 'plotly', 'numpy', 'pyexcel',
         'pyexcel-ods3', 'pyexcel-xlsx', 'scipy', 'spm1d', 'statsmodels>=0.10',
-        'stochastic>=0.6.0'
     ],  # Optional
 
     # Data files included in your packages that need to be installed.

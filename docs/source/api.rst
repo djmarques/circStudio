@@ -33,33 +33,11 @@ Associated functions:
    :toctree: _autosummary/
    :template: function.rst
 
-   read_raw_agd
    read_raw_atr
    read_raw_awd
-   read_raw_bba
-   read_raw_dqt
-   read_raw_mesa
-   read_raw_mtn
-   read_raw_rpx
-   read_raw_tal
 
 These functions return a `BaseRaw` object. which is the main class in
 pyActigraphy: :class:`pyActigraphy.io.BaseRaw`
-
-Batch reader
-------------
-
-Reading actigraphy files by batch:
-
-.. currentmodule:: pyActigraphy.io
-
-.. autosummary::
-   :toctree: _autosummary/
-   :template: function.rst
-
-   read_raw
-
-This function return a `RawReader` object: :class:`pyActigraphy.io.RawReader`
 
 Spurious activity masking
 =========================

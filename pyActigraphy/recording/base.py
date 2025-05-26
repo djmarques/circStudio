@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import warnings
-# from pandas.tseries.frequencies import to_offset
 from .utils import _binarized_data
 from .utils import _resampled_data
 
@@ -27,7 +26,6 @@ class BaseRecording():
         start_time=None,
         stop_time=None,
         period=None,
-        log10_transform=True,
         mask=None
     ):
 
@@ -35,10 +33,6 @@ class BaseRecording():
         self.__name = name
         self.__display_name = name
         self.__uuid = uuid
-        # Do not convert to log scale (this is relevant for light data) - convert only at the end, work with lux).
-        # The issue has to do with the calculation of the average daily profile on a log scale, which would be a
-        # Daily geometric mean, which does not correspond to the intuition behind the m10 concept.
-        #self.__data = np.log10(data+1) if log10_transform else data
         self.__data = data
         self.__frequency = frequency
 
