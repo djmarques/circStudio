@@ -26,7 +26,11 @@ def pearsonr(x, y):
     normxm = np.linalg.norm(xm)
     normym = np.linalg.norm(ym)
 
-    r = np.dot(xm/normxm, ym/normym)
+    r = None
+    if normxm == 0 or normym == 0:
+        r = np.nan
+    else:
+        r = np.dot(xm/normxm, ym/normym)
 
     # If r>1 or r<-1, due to precision effect, return 1 or -1.
     return max(min(r, 1.0), -1.0)

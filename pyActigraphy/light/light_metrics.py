@@ -726,7 +726,10 @@ class LightMetricsMixin(object):
 
         """
 
-        epoch_per_hour = pd.Timedelta('1h')/self.data.index.freq
+        # This would give an hourly mean per epoch, which does not correspond to the notion of M10
+        # It would constitute an artifact of using pyActigraphy - so, just the mean lux value of the
+        # Brightest hours of the day is preferred.
+        #epoch_per_hour = pd.Timedelta('1h')/self.data.index.freq
 
         lmx_per_ch = []
         for ch in self.data.columns:
@@ -736,7 +739,8 @@ class LightMetricsMixin(object):
                     {
                         'channel': ch,
                         'index': lmx_ts,
-                        'value': lmx*epoch_per_hour
+                        'value': lmx
+                        #'value': lmx * epoch_per_hour
                     }
                 )
             )
