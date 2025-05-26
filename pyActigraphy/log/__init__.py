@@ -11,4 +11,4 @@ from .sstlog import read_sst_log
 
 __all__ = ["BaseLog", "SSTLog", "read_sst_log"]
 
-#test
+#tests
