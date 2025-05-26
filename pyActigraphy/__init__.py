@@ -21,7 +21,6 @@ from . import io
 from . import light
 from . import metrics
 from . import recording
-from . import reports
 from . import sleep
 from . import utils
 from . import tests
@@ -34,7 +33,6 @@ __all__ = [
     "light",
     "metrics",
     "recording",
-    "reports",
     "sleep",
     "tests",
     "utils",

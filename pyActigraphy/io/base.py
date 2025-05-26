@@ -5,7 +5,6 @@ import warnings
 from pandas.tseries.frequencies import to_offset
 from ..filters import FiltersMixin
 from ..metrics import MetricsMixin, _interval_maker
-from ..reports import ActivityReport, create_sleep_report
 from ..sleep import SleepDiary, ScoringMixin, SleepBoutMixin
 
 

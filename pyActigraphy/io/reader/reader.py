@@ -6,14 +6,8 @@ from pandas import Timedelta
 from pandas.tseries.frequencies import to_offset
 from pyActigraphy.metrics import ForwardMetricsMixin
 from joblib import Parallel, delayed
-from ..agd import read_raw_agd
 from ..atr import read_raw_atr
 from ..awd import read_raw_awd
-from ..dqt import read_raw_dqt
-from ..mesa import read_raw_mesa
-from ..mtn import read_raw_mtn
-from ..rpx import read_raw_rpx
-from ..tal import read_raw_tal
 from pyActigraphy.log import read_sst_log
 
 
