@@ -120,7 +120,8 @@ class RawATR(BaseRaw):
         )
 
         # LIGHT
-        index_light = index_data.filter(like="LIGHT")
+        #index_light = index_data.filter(like="LIGHT")
+        index_light = index_data.filter(["LIGHT"])
 
         # call __init__ function of the base class
         super().__init__(
@@ -187,45 +188,45 @@ class RawATR(BaseRaw):
         r"""Value of the external temperature (in ° C)."""
         return self.__temperature_ext
 
-    @property
-    def amb_light(self):
-        r"""Value of the light intensity in µw/cm²."""
-        return self.__extract_light_channel("AMB LIGHT")
+    #@property
+    #def amb_light(self):
+     #   r"""Value of the light intensity in µw/cm²."""
+      #  return self.__extract_light_channel("AMB LIGHT")
 
     @property
     def white_light(self):
         r"""Value of the light intensity in µw/cm²."""
         return self.__extract_light_channel("LIGHT")
 
-    @property
-    def red_light(self):
-        r"""Value of the light intensity in µw/cm²."""
-        return self.__extract_light_channel("RED LIGHT")
+    #@property
+    #def red_light(self):
+     #   r"""Value of the light intensity in µw/cm²."""
+      #  return self.__extract_light_channel("RED LIGHT")
 
-    @property
-    def green_light(self):
-        r"""Value of the light intensity in µw/cm²."""
-        return self.__extract_light_channel("GREEN LIGHT")
+    #@property
+    #def green_light(self):
+     #   r"""Value of the light intensity in µw/cm²."""
+      #  return self.__extract_light_channel("GREEN LIGHT")
 
-    @property
-    def blue_light(self):
-        r"""Value of the light intensity in µw/cm²."""
-        return self.__extract_light_channel("BLUE LIGHT")
+    #@property
+    #def blue_light(self):
+     #   r"""Value of the light intensity in µw/cm²."""
+      #  return self.__extract_light_channel("BLUE LIGHT")
 
-    @property
-    def ir_light(self):
-        r"""Value of the light intensity in µw/cm²."""
-        return self.__extract_light_channel("IR LIGHT")
+    #@property
+    #def ir_light(self):
+     #   r"""Value of the light intensity in µw/cm²."""
+      #  return self.__extract_light_channel("IR LIGHT")
 
-    @property
-    def uva_light(self):
-        r"""Value of the light intensity in µw/cm²."""
-        return self.__extract_light_channel("UVA LIGHT")
+    #@property
+    #def uva_light(self):
+     #   r"""Value of the light intensity in µw/cm²."""
+      #  return self.__extract_light_channel("UVA LIGHT")
 
-    @property
-    def uvb_light(self):
-        r"""Value of the light intensity in µw/cm²."""
-        return self.__extract_light_channel("UVB LIGHT")
+    #@property
+    #def uvb_light(self):
+     #   r"""Value of the light intensity in µw/cm²."""
+      #  return self.__extract_light_channel("UVB LIGHT")
 
     @property
     def tat_threshold(self):
