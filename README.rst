@@ -28,4 +28,4 @@ Acknowledgments
 Sincere thanks to the following teams:
 
 * The developers of the original **pyActigraphy** package, whose work laid the foundation for this project (https://github.com/ghammad/pyActigraphy).
-* The authors of the **circadian** package, whose original implementation of these models was crucial for the implementation of the mathematical models in this package (https://github.com/Arcascope/circadian).
+* The authors of the **circadian** package, whose original implementation of light-informed models was crucial for our implementation (https://github.com/Arcascope/circadian).
