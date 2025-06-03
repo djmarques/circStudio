@@ -1,5 +1,8 @@
 """Module for mathematical modelling of circadian rhythms"""
 
+# Author: Daniel Marques <daniel.marques@gimm.pt>
+
+
 from .math_models import *
 from .light_tools import Light
 from .tools import *
