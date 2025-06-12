@@ -949,6 +949,7 @@ class MetricsMixin(object):
             0.5257020914453097
         """
 
+        #data = self.resample_activity(freq=freq)
         data = self.resample_activity(freq=freq)
         return _interdaily_stability(data)
 

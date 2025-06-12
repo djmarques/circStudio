@@ -40,37 +40,38 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
 
         # Return original time series if freq is not specified or lower than the sampling frequency
         if freq is None or pd.Timedelta(to_offset(freq)) <= self.frequency:
-            print("this")
-            return self.activity
-
-        # Catch scenario in which mask inactivity is true but no mask is found (return original time series)
-        if self.mask_inactivity and self._mask is None:
-            print("No mask was found. Create a new mask")
             return self.activity
 
         else:
             # After the initial checks, resample activity trace (sum all the counts within the resampling window)
             resampled_activity = self.activity.resample(freq, origin="start").sum()
 
-            # Create an empty resampled mask to use later (in case there is a mask available)
-            resampled_mask = None
-
             # If mask inactivity is set to False, return the resampled trace
             if not self.mask_inactivity:
                 return resampled_activity
 
+            # Catch the scenario where mask inactivity is true but no mask is found
+            elif self.mask_inactivity and self._mask is None:
+                print("No mask was found. Create a new mask.")
+                return resampled_activity
+
             # When resampling, exclude all the resampled timepoints within the new resampling window
             elif self.mask_inactivity and self.exclude_if_mask:
+                print('this should not run')
                 # Capture the minimum (0) for each resampling bin
                 resampled_mask = self._mask.resample(freq, origin="start").min()
+
+                # Return the masked resampled activity trace
                 return resampled_activity.where(resampled_mask > 0)
 
             # When resampling, do not exclude all the resampled timepoints within the new resampling window
             else:
+                print('this block also should not run')
                 resampled_mask = self._mask.resample(freq, origin="start").min()
 
-            # Return the masked resampled activity trace
-            return resampled_activity.where(resampled_mask > 0)
+                # Return the masked resampled activity trace
+                return resampled_activity.where(resampled_mask > 0)
+
 
     def resample_light(self, freq):
         """Light time series, resampled at the specified frequency."""
