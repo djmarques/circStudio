@@ -11,13 +11,7 @@ from ..sleep import SleepDiary, ScoringMixin, SleepBoutMixin
 class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
     """Base class for raw data."""
 
-    def __init__(self,
-                 start_time,
-                 period,
-                 frequency,
-                 activity,
-                 light,
-                 fpath=None):
+    def __init__(self, start_time, period, frequency, activity, light, fpath=None):
         self.start_time = start_time
         self.period = period
         self.frequency = frequency
@@ -35,49 +29,58 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
 
     def time_range(self):
         r"""Range (in days, hours, etc) of the activity data acquistion period"""
-        return (self.activity.index[-1]-self.activity.index[0])
+        return self.activity.index[-1] - self.activity.index[0]
 
     def duration(self):
         r"""Duration (in days, hours, etc) of the activity data acquistion period"""
         return self.frequency * self.length()
 
-
     def resample_activity(self, freq):
         r"""Resample activity data at the specified frequency, with or without mask."""
-        # Return original time series if freq isn't specified or lower than the original sampling frequency
+
+        # Return original time series if freq is not specified or lower than the sampling frequency
         if freq is None or pd.Timedelta(to_offset(freq)) <= self.frequency:
+            print("this")
             return self.activity
 
-        resampled_data = self.activity.resample(freq, origin='start').sum()
-        if self.mask_inactivity is True:
-            if self.mask is None:
-                print('No mask was found. Create a new mask')
-                return self.activity
-
-            elif self.exclude_if_mask:
-                resampled_mask = self.mask.resample(freq, origin='start').min()
-
-            else:
-                resampled_mask = self.mask.resample(freq, origin='start').max()
-
-            return resampled_data.where(resampled_mask > 0)
+        # Catch scenario in which mask inactivity is true but no mask is found (return original time series)
+        if self.mask_inactivity and self._mask is None:
+            print("No mask was found. Create a new mask")
+            return self.activity
 
         else:
+            # After the initial checks, resample activity trace (sum all the counts within the resampling window)
+            resampled_activity = self.activity.resample(freq, origin="start").sum()
 
-            return resampled_data
+            # Create an empty resampled mask to use later (in case there is a mask available)
+            resampled_mask = None
 
-        # Return resampled activity time series
-        return self.activity.resample(freq, origin='start').sum()
+            # If mask inactivity is set to False, return the resampled trace
+            if not self.mask_inactivity:
+                return resampled_activity
+
+            # When resampling, exclude all the resampled timepoints within the new resampling window
+            elif self.mask_inactivity and self.exclude_if_mask:
+                # Capture the minimum (0) for each resampling bin
+                resampled_mask = self._mask.resample(freq, origin="start").min()
+                return resampled_activity.where(resampled_mask > 0)
+
+            # When resampling, do not exclude all the resampled timepoints within the new resampling window
+            else:
+                resampled_mask = self._mask.resample(freq, origin="start").min()
+
+            # Return the masked resampled activity trace
+            return resampled_activity.where(resampled_mask > 0)
 
     def resample_light(self, freq):
         """Light time series, resampled at the specified frequency."""
 
-        # Return original light time series if
+        # Return original time series if freq is not specified or lower than the sampling frequency
         if freq is None or pd.Timedelta(to_offset(freq)) <= self.frequency:
             return self.light
 
         # Return resampled light time series
-        return light.resample(freq, origin='start').sum()
+        return light.resample(freq, origin="start").sum()
 
     @property
     def mask(self):
@@ -87,11 +90,11 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
             if self._inactivity_length is not None:
                 # Create an inactivity mask with the specified length (and above)
                 self.create_inactivity_mask(self._inactivity_length)
-                return self._mask.loc[self.start_time:self.start_time+self.period]
+                return self._mask.loc[self.start_time : self.start_time + self.period]
             else:
-                print('Inactivity length set to None. Could not create a mask.')
+                print("Inactivity length set to None. Could not create a mask.")
         else:
-            return self._mask.loc[self.start_time:self.start_time+self.period]
+            return self._mask.loc[self.start_time : self.start_time + self.period]
 
     @mask.setter
     def mask(self, value):
@@ -111,13 +114,12 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
         if value is None:
             self.mask_inactivity = False
 
-
     def read_sleep_diary(
-            self,
-            input_fname,
-            header_size=2,
-            state_index=dict(ACTIVE=2, NAP=1, NIGHT=0, NOWEAR=-1),
-            state_colour=dict(NAP='#7bc043', NIGHT='#d3d3d3', NOWEAR='#ee4035')
+        self,
+        input_fname,
+        header_size=2,
+        state_index=dict(ACTIVE=2, NAP=1, NIGHT=0, NOWEAR=-1),
+        state_colour=dict(NAP="#7bc043", NIGHT="#d3d3d3", NOWEAR="#ee4035"),
     ):
         r"""Reader function for sleep diaries.
 
@@ -135,7 +137,6 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
             The dictionnary of state's colours.
             Default is NAP='#7bc043', NIGHT='#d3d3d3', NOWEAR='#ee4035'.
         """
-
         self.sleep_diary = SleepDiary(
             input_fname=input_fname,
             start_time=self.start_time,
@@ -143,5 +144,5 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
             frequency=self.frequency,
             header_size=header_size,
             state_index=state_index,
-            state_colour=state_colour
+            state_colour=state_colour,
         )
