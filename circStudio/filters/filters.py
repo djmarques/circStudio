@@ -101,7 +101,7 @@ class FiltersMixin(object):
         self.inactivity_length = nepochs
 
         # Create actual mask
-        self.mask = _create_inactivity_mask(self.raw_data, nepochs, 1)
+        self.mask = _create_inactivity_mask(self.activity, nepochs, 1)
 
     def add_mask_period(self, start, stop):
         """ Add a period to the inactivity mask

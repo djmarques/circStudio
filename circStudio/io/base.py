@@ -11,301 +11,113 @@ from ..sleep import SleepDiary, ScoringMixin, SleepBoutMixin
 class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
     """Base class for raw data."""
 
-    def __init__(
-        self,
-        name,
-        uuid,
-        format,
-        axial_mode,
-        start_time,
-        period,
-        frequency,
-        data,
-        light,
-        fpath=None
-    ):
+    def __init__(self,
+                 start_time,
+                 period,
+                 frequency,
+                 activity,
+                 light,
+                 fpath=None):
+        self.start_time = start_time
+        self.period = period
+        self.frequency = frequency
+        self.activity = activity
+        self.light = light
+        self._inactivity_length = None
+        self.exclude_if_mask = True
+        self.mask_inactivity = False
+        self._mask = None
+        self.sleep_diary = None
 
-        self.__fpath = fpath
-        self.__name = name
-        self.__display_name = name
-        self.__uuid = uuid
-        self.__format = format
-        self.__axial_mode = axial_mode
-        self.__start_time = start_time
-        self.__period = period
-        self.__frequency = frequency
-        self.__data = data
+    def length(self):
+        r"""Number of activity data acquisition points"""
+        return len(self.activity)
 
-        self.__light = light
+    def time_range(self):
+        r"""Range (in days, hours, etc) of the activity data acquistion period"""
+        return (self.activity.index[-1]-self.activity.index[0])
 
-        self.__mask_inactivity = False
-        self.__inactivity_length = None
-        self.__mask = None
-        self.__exclude_if_mask = True
+    def duration(self):
+        r"""Duration (in days, hours, etc) of the activity data acquistion period"""
+        return self.frequency * self.length()
 
-        self.__sleep_diary = None
 
-    @property
-    def fpath(self):
-        r"""Absolute path of the raw input file."""
-        return self.__fpath
+    def resample_activity(self, freq):
+        r"""Resample activity data at the specified frequency, with or without mask."""
+        # Return original time series if freq isn't specified or lower than the original sampling frequency
+        if freq is None or pd.Timedelta(to_offset(freq)) <= self.frequency:
+            return self.activity
 
-    @property
-    def name(self):
-        r"""Study name as extracted from the raw file."""
-        return self.__name
-
-    @property
-    def display_name(self):
-        r"""Name to be used for display."""
-        return self.__display_name
-
-    @display_name.setter
-    def display_name(self, value):
-        self.__display_name = value
-
-    @property
-    def uuid(self):
-        r"""UUID of the device used to acquire the data"""
-        return self.__uuid
-
-    @property
-    def format(self):
-        r"""Format of the raw data file (AWD,RPX,MTN,...)"""
-        return self.__format
-
-    @property
-    def axial_mode(self):
-        r"""Acquistion mode (mono-axial or tri-axial)"""
-        return self.__axial_mode
-
-    @property
-    def start_time(self):
-        r"""Start time of data acquistion as extracted from the raw file or
-        specified by the user."""
-        return self.__start_time
-
-    @start_time.setter
-    def start_time(self, value):
-        self.__start_time = value
-
-    @property
-    def period(self):
-        r"""Period of data acquistion as extracted from the raw file or
-        specified by the user."""
-        return self.__period
-
-    @period.setter
-    def period(self, value):
-        self.__period = value
-
-    @property
-    def frequency(self):
-        r"""Acquisition frequency as extracted from the raw file."""
-        return self.__frequency
-
-    @property
-    def raw_data(self):
-        r"""Indexed data extracted from the raw file."""
-        return self.__data
-
-    # TODO: @lru_cache(maxsize=6) ???
-    @property
-    def data(self):
-        r"""Indexed data extracted from the raw file.
-        If mask_inactivity is set to true, the `mask` is used
-        to filter out inactive data.
-        """
-        if self.__data is None:
-            return self.__data
-
+        resampled_data = self.activity.resample(freq, origin='start').sum()
         if self.mask_inactivity is True:
-            if self.mask is not None:
-                data = self.raw_data.where(self.mask > 0)
+            if self.mask is None:
+                print('No mask was found. Create a new mask')
+                return self.activity
+
+            elif self.exclude_if_mask:
+                resampled_mask = self.mask.resample(freq, origin='start').min()
+
             else:
-                warnings.warn(
-                    (
-                        'Mask inactivity set to True but no mask could be'
-                        ' found.\n Please create a mask by using the '
-                        '"create_inactivity_mask" function.'
-                    ),
-                    UserWarning
-                )
-                data = self.raw_data
+                resampled_mask = self.mask.resample(freq, origin='start').max()
+
+            return resampled_data.where(resampled_mask > 0)
+
         else:
-            data = self.raw_data
-        return data.loc[self.start_time:self.start_time+self.period]
 
-    @property
-    def raw_light(self):
-        r"""Light measurement performed by the device"""
-        return self.__light
+            return resampled_data
 
-    # TODO: @lru_cache(maxsize=6) ???
-    @property
-    def light(self):
-        r"""Light measurement performed by the device"""
-        return self.__light
+        # Return resampled activity time series
+        return self.activity.resample(freq, origin='start').sum()
 
-    @property
-    def mask_inactivity(self):
-        r"""Switch to mask inactive data."""
-        return self.__mask_inactivity
+    def resample_light(self, freq):
+        """Light time series, resampled at the specified frequency."""
 
-    @mask_inactivity.setter
-    def mask_inactivity(self, value):
-        self.__mask_inactivity = value
+        # Return original light time series if
+        if freq is None or pd.Timedelta(to_offset(freq)) <= self.frequency:
+            return self.light
 
-    @property
-    def inactivity_length(self):
-        r"""Length of the inactivity mask."""
-        return self.__inactivity_length
-
-    @inactivity_length.setter
-    def inactivity_length(self, value):
-        self.__inactivity_length = value
-        # Discard current mask (will be recreated upon access if needed)
-        self.mask = None
-        # Set switch to False if None
-        if value is None:
-            self.mask_inactivity = False
+        # Return resampled light time series
+        return light.resample(freq, origin='start').sum()
 
     @property
     def mask(self):
         r"""Mask used to filter out inactive data."""
-        if self.__mask is None:
+        if self._mask is None:
             # Create a mask if it does not exist
-            if self.inactivity_length is not None:
-                self.create_inactivity_mask(self.inactivity_length)
-                return self.__mask.loc[
-                    self.start_time:self.start_time+self.period
-                ]
+            if self._inactivity_length is not None:
+                # Create an inactivity mask with the specified length (and above)
+                self.create_inactivity_mask(self._inactivity_length)
+                return self._mask.loc[self.start_time:self.start_time+self.period]
             else:
-                warnings.warn(
-                    'Inactivity length set to None. Could not create a mask.',
-                    UserWarning
-                )
+                print('Inactivity length set to None. Could not create a mask.')
         else:
-            return self.__mask.loc[self.start_time:self.start_time+self.period]
+            return self._mask.loc[self.start_time:self.start_time+self.period]
 
     @mask.setter
     def mask(self, value):
-        self.__mask = value
+        self._mask = value
 
     @property
-    def exclude_if_mask(self):
-        r"""Boolean to exclude partially masked data when resampling"""
-        return self.__exclude_if_mask
+    def inactivity_length(self):
+        r"""Length of the inactivity mask."""
+        return self._inactivity_length
 
-    @exclude_if_mask.setter
-    def exclude_if_mask(self, value):
-        self.__exclude_if_mask = value
+    @inactivity_length.setter
+    def inactivity_length(self, value):
+        self._inactivity_length = value
+        # Discard current mask (will be recreated upon access if needed)
+        self._mask = None
+        # Set switch to False if None
+        if value is None:
+            self.mask_inactivity = False
 
-    def mask_fraction(self, start=None, stop=None):
-        r"""Fraction of masked data"""
-        return 1.-(
-            self.mask.loc[start:stop].sum()/len(self.mask.loc[start:stop])
-        )
-
-    def mask_fraction_period(self, period='7D', verbose=False):
-        r"""Mask fraction per consecutive periods"""
-
-        # Compute consecutive intervals
-        intervals = _interval_maker(self.data.index, period, verbose)
-
-        results = [
-            self.mask_fraction(start=time[0], stop=time[1])
-            for time in intervals
-        ]
-        return results
-
-    def length(self):
-        r"""Number of data acquisition points"""
-        return len(self.data)
-
-    def time_range(self):
-        r"""Range (in days, hours, etc) of the data acquistion period"""
-        return (self.data.index[-1]-self.data.index[0])
-
-    def duration(self):
-        r"""Duration (in days, hours, etc) of the data acquistion period"""
-        return self.frequency * self.length()
-
-    def binarized_data(self, threshold):
-        """Boolean thresholding of Pandas Series"""
-        return pd.Series(
-            np.where(self.data > threshold, 1, 0),
-            index=self.data.index
-        ).where(self.data.notna(), np.nan)
-
-    # TODO: @lru_cache(maxsize=6) ???
-    def resampled_data(self, freq, binarize=False, threshold=0):
-        r"""Data resampled at the specified frequency.
-        If mask_inactivity is True, the `mask` is used to filter inactive data.
-        """
-        if binarize is False:
-            data = self.data
-        else:
-            data = self.binarized_data(threshold)
-
-        if freq is None:
-            return data
-        elif pd.Timedelta(to_offset(freq)) < self.frequency:
-            warnings.warn(
-                'Resampling frequency lower than the acquisition'
-                + ' frequency. Returning original data.',
-                UserWarning
-            )
-            return data
-        elif pd.Timedelta(to_offset(freq)) == self.frequency:
-            return data
-
-        resampled_data = data.resample(freq, origin='start').sum()
-        if self.mask_inactivity is True:
-            if self.mask is None:
-                warnings.warn(
-                    (
-                        'Mask inactivity set to True but no mask could be'
-                        ' found.\n Please create a mask by using the '
-                        '"create_inactivity_mask" function.'
-                    ),
-                    UserWarning
-                )
-                return resampled_data
-            elif self.exclude_if_mask:
-                resampled_mask = self.mask.resample(freq, origin='start').min()
-            else:
-                resampled_mask = self.mask.resample(freq, origin='start').max()
-            return resampled_data.where(resampled_mask > 0)
-        else:
-            return resampled_data
-
-    # TODO: @lru_cache(maxsize=6) ???
-    def resampled_light(self, freq):
-        """Light measurement, resampled at the specified frequency.
-        """
-        light = self.light
-
-        if to_offset(freq).delta <= self.frequency:
-            warnings.warn(
-                'Resampling frequency equal to or lower than the acquisition'
-                + ' frequency. Returning original data.',
-                UserWarning
-            )
-            return light
-        else:
-            return light.resample(freq, origin='start').sum()
 
     def read_sleep_diary(
             self,
             input_fname,
             header_size=2,
             state_index=dict(ACTIVE=2, NAP=1, NIGHT=0, NOWEAR=-1),
-            state_colour=dict(
-                NAP='#7bc043',
-                NIGHT='#d3d3d3',
-                NOWEAR='#ee4035'
-            )
+            state_colour=dict(NAP='#7bc043', NIGHT='#d3d3d3', NOWEAR='#ee4035')
     ):
         r"""Reader function for sleep diaries.
 
@@ -324,7 +136,7 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
             Default is NAP='#7bc043', NIGHT='#d3d3d3', NOWEAR='#ee4035'.
         """
 
-        self.__sleep_diary = SleepDiary(
+        self.sleep_diary = SleepDiary(
             input_fname=input_fname,
             start_time=self.start_time,
             periods=self.length(),
@@ -333,12 +145,3 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
             state_index=state_index,
             state_colour=state_colour
         )
-
-    @property
-    def sleep_diary(self):
-        """ :class:`SleepDiary` class instanciation."""
-        return self.__sleep_diary
-
-    @sleep_diary.setter
-    def sleep_diary(self, value):
-        self.__sleep_diary = value

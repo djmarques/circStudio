@@ -166,14 +166,10 @@ class RawAWD(BaseRaw):
         # call __init__ function of the base class
         super().__init__(
             fpath=input_fname,
-            name=name,
-            uuid=uuid,
-            format='AWD',
-            axial_mode='mono-axial',
             start_time=start_time,
             period=period,
             frequency=pd.Timedelta(freq),
-            data=data.loc[:, 'Activity'],
+            activity=data.loc[:, 'Activity'],
             light=LightRecording(
                 name=name,
                 uuid=uuid,

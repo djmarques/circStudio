@@ -64,8 +64,6 @@ class RawATR(BaseRaw):
             )
 
         # extract informations from the header
-        uuid = header['DEVICE_ID'][0]
-        name = header['SUBJECT_NAME'][0]
         freq = pd.Timedelta(int(header['INTERVAL'][0]), unit='s')
         self.__tat_thr = self.__extract_from_header(header, 'TAT_THRESHOLD')
 
@@ -120,27 +118,19 @@ class RawATR(BaseRaw):
         )
 
         # LIGHT
-        #index_light = index_data.filter(like="LIGHT")
         index_light = index_data.filter(["LIGHT"])
 
         # call __init__ function of the base class
         super().__init__(
-            fpath=input_fname,
-            name=name,
-            uuid=uuid,
-            format='ATR',
-            axial_mode='tri-axial',
             start_time=start_time,
             period=period,
             frequency=freq,
             data=index_data[mode],
             light=LightRecording(
                 name=name,
-                uuid=uuid,
                 data=index_light,
                 frequency=index_light.index.freq
             ) if index_light is not None else None
-            # self.__extract_from_data(index_data, 'LIGHT')
         )
 
     @property
@@ -197,36 +187,6 @@ class RawATR(BaseRaw):
     def white_light(self):
         r"""Value of the light intensity in µw/cm²."""
         return self.__extract_light_channel("LIGHT")
-
-    #@property
-    #def red_light(self):
-     #   r"""Value of the light intensity in µw/cm²."""
-      #  return self.__extract_light_channel("RED LIGHT")
-
-    #@property
-    #def green_light(self):
-     #   r"""Value of the light intensity in µw/cm²."""
-      #  return self.__extract_light_channel("GREEN LIGHT")
-
-    #@property
-    #def blue_light(self):
-     #   r"""Value of the light intensity in µw/cm²."""
-      #  return self.__extract_light_channel("BLUE LIGHT")
-
-    #@property
-    #def ir_light(self):
-     #   r"""Value of the light intensity in µw/cm²."""
-      #  return self.__extract_light_channel("IR LIGHT")
-
-    #@property
-    #def uva_light(self):
-     #   r"""Value of the light intensity in µw/cm²."""
-      #  return self.__extract_light_channel("UVA LIGHT")
-
-    #@property
-    #def uvb_light(self):
-     #   r"""Value of the light intensity in µw/cm²."""
-      #  return self.__extract_light_channel("UVB LIGHT")
 
     @property
     def tat_threshold(self):
