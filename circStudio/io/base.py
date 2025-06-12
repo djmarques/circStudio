@@ -57,7 +57,6 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
 
             # When resampling, exclude all the resampled timepoints within the new resampling window
             elif self.mask_inactivity and self.exclude_if_mask:
-                print('this should not run')
                 # Capture the minimum (0) for each resampling bin
                 resampled_mask = self._mask.resample(freq, origin="start").min()
 
@@ -66,7 +65,6 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
 
             # When resampling, do not exclude all the resampled timepoints within the new resampling window
             else:
-                print('this block also should not run')
                 resampled_mask = self._mask.resample(freq, origin="start").min()
 
                 # Return the masked resampled activity trace
