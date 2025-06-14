@@ -1,10 +1,9 @@
 import pandas as pd
 import numpy as np
-import warnings
 
 from pandas.tseries.frequencies import to_offset
 from ..filters import FiltersMixin
-from ..metrics import MetricsMixin, _interval_maker
+from ..metrics import MetricsMixin
 from ..sleep import SleepDiary, ScoringMixin, SleepBoutMixin
 
 
