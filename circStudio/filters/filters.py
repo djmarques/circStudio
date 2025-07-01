@@ -9,7 +9,7 @@ def _create_inactivity_mask(data, duration, threshold):
     if duration is None:
         return None
 
-    # Create the mask filled iwith ones by default.
+    # Create the mask filled with ones by default.
     mask = np.ones_like(data)
 
     # If duration is -1, return a mask with 1s for later manual edition.
@@ -31,6 +31,7 @@ def _create_inactivity_mask(data, duration, threshold):
 
     # Indices of upper transitions (zero to one).
     idx_plus_one = (edges > 0).nonzero()[0]
+
     # Indices of lower transitions (one to zero).
     idx_minus_one = (edges < 0).nonzero()[0]
 
@@ -44,6 +45,7 @@ def _create_inactivity_mask(data, duration, threshold):
         else:
             starts = idx_minus_one
             ends = idx_plus_one
+
     # Odd number of transitions
     # starting with an upper transition
     elif idx_plus_one.size > idx_minus_one.size:
