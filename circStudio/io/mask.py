@@ -10,25 +10,26 @@ class Mask:
         self.mask_inactivity = mask_inactivity
         self._mask = mask
 
-    def resample_activity(self, freq):
-        r"""Resample activity data at the specified frequency, with or without mask."""
+
+    def resample(self, data, freq=None):
+        r"""Resample data at the specified frequency, with or without mask."""
 
         # Return original time series if freq is not specified or lower than the sampling frequency
         if freq is None or pd.Timedelta(to_offset(freq)) <= self.frequency:
-            return self.activity
+            return data
 
         else:
             # After the initial checks, resample activity trace (sum all the counts within the resampling window)
-            resampled_activity = self.activity.resample(freq, origin="start").sum()
+            resampled_data = data.resample(freq, origin="start").sum()
 
             # If mask inactivity is set to False, return the resampled trace
             if not self.mask_inactivity:
-                return resampled_activity
+                return resampled_data
 
             # Catch the scenario where mask inactivity is true but no mask is found
             elif self.mask_inactivity and self._mask is None:
                 print("No mask was found. Create a new mask.")
-                return resampled_activity
+                return resampled_data
 
             # When resampling, exclude all the resampled timepoints within the new resampling window
             elif self.mask_inactivity and self.exclude_if_mask:
@@ -36,14 +37,14 @@ class Mask:
                 resampled_mask = self._mask.resample(freq, origin="start").min()
 
                 # Return the masked resampled activity trace
-                return resampled_activity.where(resampled_mask > 0)
+                return resampled_data.where(resampled_mask > 0)
 
             # When resampling, do not exclude all the resampled timepoints within the new resampling window
             else:
                 resampled_mask = self._mask.resample(freq, origin="start").min()
 
                 # Return the masked resampled activity trace
-                return resampled_activity.where(resampled_mask > 0)
+                return resampled_data.where(resampled_mask > 0)
 
     @property
     def mask(self):

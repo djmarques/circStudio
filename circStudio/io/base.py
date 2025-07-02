@@ -5,11 +5,11 @@ from pandas.tseries.frequencies import to_offset
 from ..filters import FiltersMixin
 from ..metrics import MetricsMixin
 from ..sleep import SleepDiary, ScoringMixin, SleepBoutMixin
+from ..metrics import MetricsMixin
+from ..light import LightMetricsMixin
 from .mask import Mask
-from .light import Light
 
-
-class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin, Mask, Light):
+class BaseRaw(SleepBoutMixin, ScoringMixin, FiltersMixin, MetricsMixin, LightMetricsMixin, Mask):
     """Base class for raw actigraphy data."""
 
     def __init__(self, period, frequency, activity, light, fpath=None, start_time=None, stop_time=None):
@@ -17,8 +17,8 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin, Mask, Li
         self.stop_time = stop_time
         self.period = period
         self.frequency = frequency
-        self.activity = activity
         self.light = light
+        self.activity = activity
         self.sleep_diary = None
         super().__init__(
             exclude_if_mask=True,

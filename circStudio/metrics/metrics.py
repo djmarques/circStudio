@@ -950,7 +950,7 @@ class MetricsMixin(object):
         """
 
         #data = self.resample_activity(freq=freq)
-        data = self.resample_activity(freq=freq)
+        data = self.resample(data=self.activity, freq=freq)
         return _interdaily_stability(data)
 
     def ISm(
