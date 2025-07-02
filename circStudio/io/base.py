@@ -6,9 +6,10 @@ from ..filters import FiltersMixin
 from ..metrics import MetricsMixin
 from ..sleep import SleepDiary, ScoringMixin, SleepBoutMixin
 from .mask import Mask
+from .light import Light
 
 
-class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin, Mask):
+class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin, Mask, Light):
     """Base class for raw actigraphy data."""
 
     def __init__(self, start_time, period, frequency, activity, light, fpath=None):
@@ -18,7 +19,12 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin, Mask):
         self.activity = activity
         self.light = light
         self.sleep_diary = None
-        super().__init__(exclude_if_mask=True, mask_inactivity=False, inactivity_length=None, mask=None)
+        super().__init__(
+            exclude_if_mask=True,
+            mask_inactivity=False,
+            inactivity_length=None,
+            mask=None,
+        )
 
     def length(self):
         r"""Number of activity data acquisition points"""
@@ -32,22 +38,8 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin, Mask):
         r"""Duration (in days, hours, etc) of the activity data acquistion period"""
         return self.frequency * self.length()
 
-    def resample_light(self, freq):
-        """Light time series, resampled at the specified frequency."""
-
-        # Return original time series if freq is not specified or lower than the sampling frequency
-        if freq is None or pd.Timedelta(to_offset(freq)) <= self.frequency:
-            return self.light
-
-        # Return resampled light time series
-        return light.resample(freq, origin="start").sum()
-
     def read_sleep_diary(
-        self,
-        input_fname,
-        header_size=2,
-        state_index=dict(ACTIVE=2, NAP=1, NIGHT=0, NOWEAR=-1),
-        state_colour=dict(NAP="#7bc043", NIGHT="#d3d3d3", NOWEAR="#ee4035"),
+        self, input_fname, header_size=2, state_index=None, state_colour=None
     ):
         r"""Reader function for sleep diaries.
 
@@ -59,11 +51,9 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin, Mask):
             Header size (i.e. number of lines) of the sleep diary.
             Default is 2.
         state_index: dict
-            The dictionnary of state's indices.
-            Default is ACTIVE=2, NAP=1, NIGHT=0, NOWEAR=-1.
+            Dictionnary of state's indices.
         state_color: dict
-            The dictionnary of state's colours.
-            Default is NAP='#7bc043', NIGHT='#d3d3d3', NOWEAR='#ee4035'.
+            Dictionnary of state's colours.
         """
         self.sleep_diary = SleepDiary(
             input_fname=input_fname,

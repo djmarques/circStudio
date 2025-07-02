@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from pandas.tseries.frequencies import to_offset
 
+
 class Mask:
     def __init__(self, exclude_if_mask, mask_inactivity, inactivity_length, mask):
         self.exclude_if_mask = exclude_if_mask

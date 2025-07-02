@@ -5,22 +5,16 @@ import pyexcel as pxl
 
 class SleepDiary():
     """Class for reading sleep diaries."""
-    def __init__(
-        self,
-        input_fname,
-        start_time,
-        periods,
-        frequency,
-        header_size=2,
-        state_index=dict(ACTIVE=2, NAP=1, NIGHT=0, NOWEAR=-1),
-        state_colour=dict(
-            NAP='#7bc043',
-            NIGHT='#d3d3d3',
-            NOWEAR='#ee4035'
-        )
-    ):
+    def __init__(self, input_fname, start_time, periods, frequency, header_size=2, state_index= None, state_colour= None):
 
-        # get absolute file path
+        # Set the default state index and color if not specified by the user
+        if state_index is None:
+            state_index = {'ACTIVE': 2, 'NAP': 1, 'NIGHT': 0, 'NOWEAR': -1}
+
+        if state_colour is None:
+            state_colour = {'NAP': '#7bc043', 'NIGHT': '#d3d3d3', 'NOWEAR': '#ee4035'}
+
+        # Get absolute file path
         input_fname = os.path.abspath(input_fname)
 
         sd_array = pxl.get_array(file_name=input_fname)
