@@ -125,9 +125,8 @@ class RawATR(BaseRaw):
             start_time=start_time,
             period=period,
             frequency=freq,
-            data=index_data[mode],
+            activity=index_data[mode],
             light=LightRecording(
-                name=name,
                 data=index_light,
                 frequency=index_light.index.freq
             ) if index_light is not None else None

@@ -47,11 +47,6 @@ class LightRecording(LightMetricsMixin, BaseRecording):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    @property
-    def name(self):
-        r"""Name of the light recording."""
-        return self.__name
-
     def get_channel(self, channel):
         r"""Light channel accessor
 

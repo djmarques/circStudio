@@ -12,8 +12,9 @@ from .light import Light
 class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin, Mask, Light):
     """Base class for raw actigraphy data."""
 
-    def __init__(self, start_time, period, frequency, activity, light, fpath=None):
+    def __init__(self, period, frequency, activity, light, fpath=None, start_time=None, stop_time=None):
         self.start_time = start_time
+        self.stop_time = stop_time
         self.period = period
         self.frequency = frequency
         self.activity = activity
