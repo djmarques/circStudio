@@ -5,10 +5,11 @@ from pandas.tseries.frequencies import to_offset
 from ..filters import FiltersMixin
 from ..metrics import MetricsMixin
 from ..sleep import SleepDiary, ScoringMixin, SleepBoutMixin
+from .mask import Mask
 
 
-class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
-    """Base class for raw data."""
+class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin, Mask):
+    """Base class for raw actigraphy data."""
 
     def __init__(self, start_time, period, frequency, activity, light, fpath=None):
         self.start_time = start_time
@@ -16,11 +17,8 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
         self.frequency = frequency
         self.activity = activity
         self.light = light
-        self._inactivity_length = None
-        self.exclude_if_mask = True
-        self.mask_inactivity = False
-        self._mask = None
         self.sleep_diary = None
+        super().__init__(exclude_if_mask=True, mask_inactivity=False, inactivity_length=None, mask=None)
 
     def length(self):
         r"""Number of activity data acquisition points"""
@@ -34,42 +32,6 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
         r"""Duration (in days, hours, etc) of the activity data acquistion period"""
         return self.frequency * self.length()
 
-    def resample_activity(self, freq):
-        r"""Resample activity data at the specified frequency, with or without mask."""
-
-        # Return original time series if freq is not specified or lower than the sampling frequency
-        if freq is None or pd.Timedelta(to_offset(freq)) <= self.frequency:
-            return self.activity
-
-        else:
-            # After the initial checks, resample activity trace (sum all the counts within the resampling window)
-            resampled_activity = self.activity.resample(freq, origin="start").sum()
-
-            # If mask inactivity is set to False, return the resampled trace
-            if not self.mask_inactivity:
-                return resampled_activity
-
-            # Catch the scenario where mask inactivity is true but no mask is found
-            elif self.mask_inactivity and self._mask is None:
-                print("No mask was found. Create a new mask.")
-                return resampled_activity
-
-            # When resampling, exclude all the resampled timepoints within the new resampling window
-            elif self.mask_inactivity and self.exclude_if_mask:
-                # Capture the minimum (0) for each resampling bin
-                resampled_mask = self._mask.resample(freq, origin="start").min()
-
-                # Return the masked resampled activity trace
-                return resampled_activity.where(resampled_mask > 0)
-
-            # When resampling, do not exclude all the resampled timepoints within the new resampling window
-            else:
-                resampled_mask = self._mask.resample(freq, origin="start").min()
-
-                # Return the masked resampled activity trace
-                return resampled_activity.where(resampled_mask > 0)
-
-
     def resample_light(self, freq):
         """Light time series, resampled at the specified frequency."""
 
@@ -79,38 +41,6 @@ class BaseRaw(SleepBoutMixin, ScoringMixin, MetricsMixin, FiltersMixin):
 
         # Return resampled light time series
         return light.resample(freq, origin="start").sum()
-
-    @property
-    def mask(self):
-        r"""Mask used to filter out inactive data."""
-        if self._mask is None:
-            # Create a mask if it does not exist
-            if self._inactivity_length is not None:
-                # Create an inactivity mask with the specified length (and above)
-                self.create_inactivity_mask(self._inactivity_length)
-                return self._mask.loc[self.start_time : self.start_time + self.period]
-            else:
-                print("Inactivity length set to None. Could not create a mask.")
-        else:
-            return self._mask.loc[self.start_time : self.start_time + self.period]
-
-    @mask.setter
-    def mask(self, value):
-        self._mask = value
-
-    @property
-    def inactivity_length(self):
-        r"""Length of the inactivity mask."""
-        return self._inactivity_length
-
-    @inactivity_length.setter
-    def inactivity_length(self, value):
-        self._inactivity_length = value
-        # Discard current mask (will be recreated upon access if needed)
-        self._mask = None
-        # Set switch to False if None
-        if value is None:
-            self.mask_inactivity = False
 
     def read_sleep_diary(
         self,
