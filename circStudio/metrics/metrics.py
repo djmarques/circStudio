@@ -1,19 +1,17 @@
 import pandas as pd
 import numpy as np
 import re
-# from functools import lru_cache
+
 from ..utils.utils import _average_daily_activity
 from ..utils.utils import _activity_onset_time
 from ..utils.utils import _activity_offset_time
 from ..utils.utils import _shift_time_axis
-# from ..sleep.scoring import AonT, AoffT
+
 from statistics import mean
 import statsmodels.api as sm
 
 __all__ = [
-    'MetricsMixin',
-    'ForwardMetricsMixin',
-    # '_average_daily_activity',
+    'Activity',
     '_average_daily_total_activity',
     '_interdaily_stability',
     '_intradaily_variability',
@@ -221,15 +219,13 @@ def _td_format(td):
     )
 
 
-class MetricsMixin(object):
-    """ Mixin Class """
+class Activity(object):
+    """ Class containing all the functions to compute activity metrics. """
 
     def average_daily_activity(
         self,
         freq='5min',
         cyclic=False,
-        binarize=True,
-        threshold=4,
         time_origin=None,
         whs='1h'
     ):
@@ -248,12 +244,6 @@ class MetricsMixin(object):
             If set to True, two daily profiles are concatenated to ensure
             continuity between the last point of the day and the first one.
             Default is False.
-        binarize: bool, optional
-            If set to True, the data are binarized.
-            Default is True.
-        threshold: int, optional
-            If binarize is set to True, data above this threshold are set to 1
-            and to 0 otherwise.
         time_origin: str or pd.Timedelta, optional
             If not None, origin of the time axis for the daily profile.
             Original time bins are translated as time delta with respect to
@@ -271,7 +261,7 @@ class MetricsMixin(object):
         raw : pandas.Series
             A Series containing the daily activity profile with a 24h index.
         """
-        data = self.resampled_data(freq, binarize, threshold)
+        data = self.resample(data=self.activity, freq=freq)
 
         if time_origin is None:
 
@@ -279,9 +269,10 @@ class MetricsMixin(object):
 
         else:
             if cyclic is True:
+                # TODO: implement code for time origin with cyclic option of change error type
                 raise NotImplementedError(
                     'Setting a time origin while cyclic option is True is not '
-                    'implemented yet.'
+                    'implemented.'
                 )
 
             avgdaily = _average_daily_activity(data, cyclic=False)
@@ -323,6 +314,7 @@ class MetricsMixin(object):
 
             return _shift_time_axis(avgdaily, shift)
 
+    # TODO: this should be moved to the light class
     def average_daily_light(self, freq='5min', cyclic=False):
         r"""Average daily light distribution
 
@@ -346,28 +338,20 @@ class MetricsMixin(object):
             A Series containing the daily profile of light exposure with a 24h
             index.
         """
-
+        # TODO: modify this function with the new behavior
         light = self.resampled_light(freq)
 
         avgdaily_light = _average_daily_activity(light, cyclic=cyclic)
 
         return avgdaily_light
 
-    def ADAT(
-        self, binarize=True, threshold=4, freq='10min', rescale=True, exclude_ends=False
-    ):
+    def ADAT(self, freq='10min', rescale=True, exclude_ends=False):
         """Total average daily activity
 
         Calculate the total activity counts, averaged over all the days.
 
         Parameters
         ----------
-        binarize: bool, optional
-            If set to True, the data are binarized.
-            Default is True.
-        threshold: int, optional
-            If binarize is set to True, data above this threshold are set to 1
-            and to 0 otherwise.
         rescale: bool, optional
             If set to True, the activity counts are rescaled to account for
             masked periods (if any).
@@ -382,7 +366,7 @@ class MetricsMixin(object):
         -------
         adat : int
         """
-        #data = self.activity
+        # TODO: attempt to use the new resample function instead
         if self.mask_inactivity:
             data = self.activity.where(self.mask > 0)
         else:
@@ -393,15 +377,7 @@ class MetricsMixin(object):
 
         return adat
 
-    def ADATp(
-        self,
-        period='7D',
-        binarize=True,
-        threshold=4,
-        rescale=True,
-        exclude_ends=False,
-        verbose=False
-    ):
+    def ADATp(self, period='7D', rescale=True, exclude_ends=False, verbose=False):
         """Total average daily activity per period
 
         Calculate the total activity counts, averaged over each consecutive
@@ -412,12 +388,6 @@ class MetricsMixin(object):
         period: str, optional
             Time length of the period to be considered. Must be understandable
             by pandas.Timedelta
-        binarize: bool, optional
-            If set to True, the data are binarized.
-            Default is True.
-        threshold: int, optional
-            If binarize is set to True, data above this threshold are set to 1
-            and to 0 otherwise.
         rescale: bool, optional
             If set to True, the activity counts are rescaled to account for
             masked periods (if any).
@@ -436,11 +406,11 @@ class MetricsMixin(object):
         -------
         adatp : list of int
         """
-
-        if binarize is True:
-            data = self.binarized_data(threshold)
+        # TODO: attempt to use the new resample function instead
+        if self.mask_inactivity:
+            data = self.activity.where(self.mask > 0)
         else:
-            data = self.data
+            data = self.activity
 
         intervals = _interval_maker(data.index, period, verbose)
 
@@ -454,25 +424,14 @@ class MetricsMixin(object):
 
         return results
 
-    def L5(self, binarize=True, threshold=4):
+    def L5(self):
         r"""L5
 
         Mean activity during the 5 least active hours of the day.
 
-        Parameters
-        ----------
-        binarize: bool, optional
-            If set to True, the data are binarized.
-            Default is True.
-        threshold: int, optional
-            If binarize is set to True, data above this threshold are set to 1
-            and to 0 otherwise.
-            Default is 4.
-
         Returns
         -------
         l5: float
-
 
         Notes
         -----
@@ -491,48 +450,25 @@ class MetricsMixin(object):
                Rest-Activity Rhythm in Healthy Elderly Males.
                Journal of Biological Rhythms, 12(2), 146–156.
                http://doi.org/10.1177/074873049701200206
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> rawAWD.L5()
-            0.XXXX
-            >>> rawAWD.L5(binarize=False)
-            0.XXXX
         """
 
-        if binarize is True:
-            data = self.binarized_data(threshold)
+        if self.mask_inactivity:
+            data = self.activity.where(self.mask > 0)
         else:
-            data = self.data
-
-        # n_epochs = int(pd.Timedelta('5H')/self.frequency)
+            data = self.activity
 
         _, l5 = _lmx(data, '5h', lowest=True)
 
         return l5
 
-    def M10(self, binarize=True, threshold=4):
+    def M10(self):
         r"""M10
 
         Mean activity during the 10 most active hours of the day.
 
-        Parameters
-        ----------
-        binarize: bool, optional
-            If set to True, the data are binarized.
-            Default is True.
-        threshold: int, optional
-            If binarize is set to True, data above this threshold are set to 1
-            and to 0 otherwise.
-            Default is 4.
-
         Returns
         -------
         m10: float
-
 
         Notes
         -----
@@ -551,50 +487,27 @@ class MetricsMixin(object):
                Rest-Activity Rhythm in Healthy Elderly Males.
                Journal of Biological Rhythms, 12(2), 146–156.
                http://doi.org/10.1177/074873049701200206
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> rawAWD.M10()
-            0.XXXX
-            >>> rawAWD.M10(binarize=False)
-            0.XXXX
         """
 
-        if binarize is True:
-            data = self.binarized_data(threshold)
+        if self.mask_inactivity:
+            data = self.activity.where(self.mask > 0)
         else:
-            data = self.data
-
-        # n_epochs = int(pd.Timedelta('10H')/self.frequency)
+            data = self.activity
 
         _, m10 = _lmx(data, '10h', lowest=False)
 
         return m10
 
-    def RA(self, binarize=True, threshold=4):
+    def RA(self):
         r"""Relative rest/activity amplitude
 
         Relative amplitude between the mean activity during the 10 most active
         hours of the day and the mean activity during the 5 least active hours
         of the day.
 
-        Parameters
-        ----------
-        binarize: bool, optional
-            If set to True, the data are binarized.
-            Default is True.
-        threshold: int, optional
-            If binarize is set to True, data above this threshold are set to 1
-            and to 0 otherwise.
-            Default is 4.
-
         Returns
         -------
         ra: float
-
 
         Notes
         -----
@@ -613,31 +526,19 @@ class MetricsMixin(object):
                Rest-Activity Rhythm in Healthy Elderly Males.
                Journal of Biological Rhythms, 12(2), 146–156.
                http://doi.org/10.1177/074873049701200206
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> rawAWD.RA()
-            0.XXXX
-            >>> rawAWD.RA(binarize=False)
-            0.XXXX
         """
 
-        if binarize is True:
-            data = self.binarized_data(threshold)
+        if self.mask_inactivity:
+            data = self.activity.where(self.mask > 0)
         else:
-            data = self.data
-
-        # n_epochs = int(pd.Timedelta('5H')/self.frequency)
+            data = self.activity
 
         _, l5 = _lmx(data, '5h', lowest=True)
         _, m10 = _lmx(data, '10h', lowest=False)
 
         return (m10-l5)/(m10+l5)
 
-    def L5p(self, period='7D', binarize=True, threshold=4, verbose=False):
+    def L5p(self, period='7D', verbose=False):
         r"""L5 per period
 
         The L5 variable is calculated for each consecutive period found in the
@@ -648,13 +549,6 @@ class MetricsMixin(object):
         period: str, optional
             Time period for the calculation of IS
             Default is '7D'.
-        binarize: bool, optional
-            If set to True, the data are binarized.
-            Default is True.
-        threshold: int, optional
-            If binarize is set to True, data above this threshold are set to 1
-            and to 0 otherwise.
-            Default is 4.
         verbose: bool, optional
             If set to True, display the number of periods found in the activity
             recording, as well as the time not accounted for.
@@ -682,26 +576,12 @@ class MetricsMixin(object):
                Rest-Activity Rhythm in Healthy Elderly Males.
                Journal of Biological Rhythms, 12(2), 146–156.
                http://doi.org/10.1177/074873049701200206
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> rawAWD.duration()
-            Timedelta('12 days 18:41:00')
-            >>> rawAWD.L5p(period='5D',verbose=True)
-            Number of periods: 2
-            Time unaccounted for: 2 days, 19h, 0m, 0s
-            [0.XXXX, 0.XXXX]
         """
 
-        if binarize is True:
-            data = self.binarized_data(threshold)
+        if self.mask_inactivity:
+            data = self.activity.where(self.mask > 0)
         else:
-            data = self.data
-
-        # n_epochs = int(pd.Timedelta('5H')/self.frequency)
+            data = self.activity
 
         intervals = _interval_maker(data.index, period, verbose)
 
@@ -714,7 +594,7 @@ class MetricsMixin(object):
         ]
         return [res[1] for res in results]
 
-    def M10p(self, period='7D', binarize=True, threshold=4, verbose=False):
+    def M10p(self, period='7D', verbose=False):
         r"""M10 per period
 
         The M10 variable is calculated for each consecutive period found in the
@@ -725,13 +605,9 @@ class MetricsMixin(object):
         period: str, optional
             Time period for the calculation of IS
             Default is '7D'.
-        binarize: bool, optional
-            If set to True, the data are binarized.
-            Default is True.
-        threshold: int, optional
-            If binarize is set to True, data above this threshold are set to 1
-            and to 0 otherwise.
-            Default is 4.
+            If set to True, display the number of periods found in the activity
+            recording, as well as the time not accounted for.
+            Default is False.
         verbose: bool, optional
             If set to True, display the number of periods found in the activity
             recording, as well as the time not accounted for.
@@ -759,26 +635,12 @@ class MetricsMixin(object):
                Rest-Activity Rhythm in Healthy Elderly Males.
                Journal of Biological Rhythms, 12(2), 146–156.
                http://doi.org/10.1177/074873049701200206
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> rawAWD.duration()
-            Timedelta('12 days 18:41:00')
-            >>> rawAWD.M10p(period='5D',verbose=True)
-            Number of periods: 2
-            Time unaccounted for: 2 days, 19h, 0m, 0s
-            [0.XXXX, 0.XXXX]
         """
 
-        if binarize is True:
-            data = self.binarized_data(threshold)
+        if self.mask_inactivity:
+            data = self.activity.where(self.mask > 0)
         else:
-            data = self.data
-
-        # n_epochs = int(pd.Timedelta('10H')/self.frequency)
+            data = self.activity
 
         intervals = _interval_maker(data.index, period, verbose)
 
@@ -791,7 +653,7 @@ class MetricsMixin(object):
         ]
         return [res[1] for res in results]
 
-    def RAp(self, period='7D', binarize=True, threshold=4, verbose=False):
+    def RAp(self, period='7D', verbose=False):
         r"""RA per period
 
         The RA variable is calculated for each consecutive period found in the
@@ -802,13 +664,6 @@ class MetricsMixin(object):
         period: str, optional
             Time period for the calculation of IS
             Default is '7D'.
-        binarize: bool, optional
-            If set to True, the data are binarized.
-            Default is True.
-        threshold: int, optional
-            If binarize is set to True, data above this threshold are set to 1
-            and to 0 otherwise.
-            Default is 4.
         verbose: bool, optional
             If set to True, display the number of periods found in the activity
             recording, as well as the time not accounted for.
@@ -817,7 +672,6 @@ class MetricsMixin(object):
         Returns
         -------
         rap: list of float
-
 
         Notes
         -----
@@ -836,26 +690,12 @@ class MetricsMixin(object):
                Rest-Activity Rhythm in Healthy Elderly Males.
                Journal of Biological Rhythms, 12(2), 146–156.
                http://doi.org/10.1177/074873049701200206
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> rawAWD.duration()
-            Timedelta('12 days 18:41:00')
-            >>> rawAWD.RAp(period='5D',verbose=True)
-            Number of periods: 2
-            Time unaccounted for: 2 days, 19h, 0m, 0s
-            [0.XXXX, 0.XXXX]
         """
 
-        if binarize is True:
-            data = self.binarized_data(threshold)
+        if self.mask_inactivity:
+            data = self.activity.where(self.mask > 0)
         else:
-            data = self.data
-
-        # n_epochs = int(pd.Timedelta('5H')/self.frequency)
+            data = self.activity
 
         intervals = _interval_maker(data.index, period, verbose)
 
@@ -869,8 +709,7 @@ class MetricsMixin(object):
 
         return results
 
-    # @lru_cache(maxsize=6)
-    def IS(self, freq='1h', binarize=True, threshold=4):
+    def IS(self, freq='1h'):
         r"""Interdaily stability
 
         The Interdaily stability (IS) quantifies the repeatibilty of the
@@ -883,18 +722,10 @@ class MetricsMixin(object):
             Data resampling `frequency string
             <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_.
             Default is '1h'.
-        binarize: bool, optional
-            If set to True, the data are binarized.
-            Default is True.
-        threshold: int, optional
-            If binarize is set to True, data above this threshold are set to 1
-            and to 0 otherwise.
-            Default is 4.
 
         Returns
         -------
         is: float
-
 
         Notes
         -----
@@ -935,34 +766,12 @@ class MetricsMixin(object):
         .. [1] Witting W., Kwa I.H., Eikelenboom P., Mirmiran M., Swaab D.F.
                Alterations in the circadian rest–activity rhythm in aging and
                Alzheimer׳s disease. Biol Psychiatry. 1990;27:563–572.
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> rawAWD.IS()
-            0.6900175913031027
-            >>> rawAWD.IS(freq='30min', binarize=True, threshold=4)
-            0.6245582891144925
-            >>> rawAWD.IS(freq='1h', binarize=False)
-            0.5257020914453097
         """
 
-        #data = self.resample_activity(freq=freq)
         data = self.resample(data=self.activity, freq=freq)
         return _interdaily_stability(data)
 
-    def ISm(
-        self,
-        freqs=[
-            '1T', '2T', '3T', '4T', '5T', '6T', '8T', '9T', '10T',
-            '12T', '15T', '16T', '18T', '20T', '24T', '30T',
-            '32T', '36T', '40T', '45T', '48T', '60T'
-        ],
-        binarize=True,
-        threshold=4
-    ):
+    def ISm(self, freqs=None):
         r"""Average interdaily stability
 
         ISm [1]_ is the average of the IS values obtained with resampling
@@ -998,28 +807,18 @@ class MetricsMixin(object):
                Campos, T. F., & Araujo, J. F. (2014). Nonparametric methods in
                actigraphy: An update. Sleep science (Sao Paulo, Brazil), 7(3),
                158-64.
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> rawAWD.ISm()
-            0.5758268227551039
-            >>> rawAWD.ISm(binarize=False)
-            0.3915874151855646
-            >>> rawAWD.ISm(freqs=['10min','30min','1h'], binarize=False)
-            0.44598210450842063
         """
-
-        data = [
-            self.resampled_data(freq, binarize, threshold) for freq in freqs
-        ]
+        if freqs is None:
+            freqs = [
+                '1min', '2min', '3min', '4min', '5min', '6min', '8min', '9min', '10min',
+                '12min', '15min', '16min', '18min', '20min', '24min', '30min',
+                '32min', '36min', '40min', '45min', '48min', '60min'
+            ]
+        data = [self.resample(data=self.activity, freq=freq) for freq in freqs]
 
         return mean([_interdaily_stability(datum) for datum in data])
 
-    def ISp(self, period='7D', freq='1h',
-            binarize=True, threshold=4, verbose=False):
+    def ISp(self, period='7D', freq='1h', verbose=False):
         r"""Interdaily stability per period
 
         The IS is calculated for each consecutive period found in the
@@ -1031,16 +830,8 @@ class MetricsMixin(object):
             Time period for the calculation of IS
             Default is '7D'.
         freq: str, optional
-            Data resampling `frequency string
+            Data resampling `frequency strings
             <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_.
-            Default is '1h'.
-        binarize: bool, optional
-            If set to True, the data are binarized.
-            Default is True.
-        threshold: int, optional
-            If binarize is set to True, data above this threshold are set to 1
-            and to 0 otherwise.
-            Default is 4.
         verbose: bool, optional
             If set to True, display the number of periods found in the activity
             recording, as well as the time not accounted for.
@@ -1050,28 +841,17 @@ class MetricsMixin(object):
         -------
         isp: list of float
 
-
         Notes
         -----
 
         Periods are consecutive and all of the required duration. If the last
         consecutive period is shorter than required, the IS is not calculated
         for that period.
-
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> rawAWD.duration()
-            Timedelta('12 days 18:41:00')
-            >>> rawAWD.ISp(period='5D',verbose=True)
-            Number of periods: 2
-            Time unaccounted for: 2 days, 19h, 0m, 0s
-            [0.7565263007902066, 0.866544730769211]
         """
-        data = self.resampled_data(freq, binarize, threshold)
+        if self.mask_inactivity:
+            data = self.activity.where(self.mask > 0)
+        else:
+            data = self.activity
 
         intervals = _interval_maker(data.index, period, verbose)
 
@@ -1080,8 +860,7 @@ class MetricsMixin(object):
         ]
         return results
 
-    # @lru_cache(maxsize=6)
-    def IV(self, freq='1h', binarize=True, threshold=4):
+    def IV(self, freq='1h'):
         r"""Intradaily variability
 
         The Intradaily Variability (IV) quantifies the variability of the
@@ -1094,13 +873,6 @@ class MetricsMixin(object):
             Data resampling `frequency string
             <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_.
             Default is '1h'.
-        binarize: bool, optional
-            If set to True, the data are binarized.
-            Default is True.
-        threshold: int, optional
-            If binarize is set to True, data above this threshold are set to 1
-            and to 0 otherwise.
-            Default is 4.
 
         Returns
         -------
@@ -1140,20 +912,11 @@ class MetricsMixin(object):
         .. [1] Witting W., Kwa I.H., Eikelenboom P., Mirmiran M., Swaab D.F.
                Alterations in the circadian rest–activity rhythm in aging and
                Alzheimer׳s disease. Biol Psychiatry. 1990;27:563–572.
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> rawAWD.IV()
-            0.46185426426324316
-            >>> rawAWD.IV(freq='30min', binarize=True, threshold=4)
-            0.4150769573937417
-            >>> rawAWD.IV(freq='1h', binarize=False)
-            0.7859579446494547
         """
-        data = self.resampled_data(freq, binarize, threshold)
+        if self.mask_inactivity:
+            data = self.activity.where(self.mask > 0)
+        else:
+            data = self.activity
 
         return _intradaily_variability(data)
 
