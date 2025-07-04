@@ -26,9 +26,9 @@
 import pandas as pd
 import re
 from scipy import signal
-from ..activity.metrics import _lmx
-from ..activity.metrics import _interdaily_stability
-from ..activity.metrics import _intradaily_variability
+from ..activity.activity import _lmx
+from ..activity.activity import _interdaily_stability
+from ..activity.activity import _intradaily_variability
 from ..utils.utils import _average_daily_activity
 from ..utils.utils import _shift_time_axis
 
@@ -44,7 +44,11 @@ __all__ = ['Light', 'LightRecording']
 class Light(object):
     """ Mixin Class """
 
-    def average_daily_profile(self, channel, freq='5min', cyclic=False, time_origin=None):
+    def average_daily_profile(self,
+                              channel,
+                              freq='5min',
+                              cyclic=False,
+                              time_origin=None):
         r"""Average daily light profile
 
         Calculate the daily profile of light exposure. Data are averaged over
@@ -74,19 +78,7 @@ class Light(object):
         raw : pandas.Series
             A Series containing the daily light profile with a 24h/48h index.
         """
-        # Check if requested channel is available
-        if channel not in self.data.columns:
-            raise ValueError(
-                'The light channel you tried to access ({}) '.format(channel)
-                + 'is not available.\nAvailable channels:\n-{}'.format(
-                    '\n- '.join(self.data.columns)
-                )
-            )
-
-        if freq is not None:
-            data = self.resample(rsfreq=freq, agg='mean')
-        else:
-            data = self.light
+        data = self.resample(data=self.light, freq=freq)
 
         # Select requested channel
         data = data.loc[:, channel]
@@ -132,15 +124,13 @@ class Light(object):
 
             return _shift_time_axis(avgdaily, shift)
 
-    def average_daily_profile_auc(
-        self,
-        channel=None,
-        start_time=None,
-        stop_time=None,
-        binarize=False,
-        threshold=None,
-        time_origin=None
-    ):
+    def average_daily_profile_auc(self,
+                                  channel=None,
+                                  start_time=None,
+                                  stop_time=None,
+                                  time_origin=None,
+                                  freq=None
+                                  ):
         r"""AUC of the average daily light profile
 
         Calculate the area under the curve of the daily profile of light
@@ -158,13 +148,6 @@ class Light(object):
             If not set to None, compute AUC until stop time.
             Supported time string: 'HH:MM:SS'
             Default is None.
-        binarize: bool, optional
-            If set to True, the data are binarized.
-            Default is False.
-        threshold: int, optional
-            If binarize is set to True, data above this threshold are set to 1
-            and to 0 otherwise.
-            Default is None.
         time_origin: str or pd.Timedelta, optional
             If not None, origin of the time axis for the daily profile.
             Original time bins are translated as time delta with respect to
@@ -177,24 +160,7 @@ class Light(object):
         auc : float
             Area under the curve.
         """
-        # Check if requested channel is available
-        if channel not in self.data.columns:
-            raise ValueError(
-                'The light channel you tried to access ({}) '.format(channel)
-                + 'is not available.\nAvailable channels:\n-{}'.format(
-                    '\n- '.join(self.data.columns)
-                )
-            )
-
-        # Binarize (+resample) data, if required.
-        if binarize:
-            data = self.binarized_data(
-                threshold,
-                rsfreq=None,
-                agg='sum'
-            )
-        else:
-            data = self.data
+        data = self.resample(data=self.light, freq=freq)
 
         # Select requested channel
         data = data.loc[:, channel]

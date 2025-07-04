@@ -24,19 +24,17 @@ from . import recording
 from . import sleep
 from . import utils
 from . import tests
-from . import viz
 
 __all__ = [
     "analysis",
     "filters",
     "io",
     "light",
-    "metrics",
+    "activity",
     "recording",
     "sleep",
     "tests",
-    "utils",
-    "viz"
+    "utils"
 ]
 
 __version__ = '1.2.2'
