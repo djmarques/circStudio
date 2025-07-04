@@ -38,10 +38,7 @@ from ..mask import _add_mask_period
 from ..mask import _add_mask_periods
 from ..recording import BaseRecording
 
-__all__ = [
-    'Light',
-    'LightRecording'
-]
+__all__ = ['Light', 'LightRecording']
 
 
 class Light(object):
