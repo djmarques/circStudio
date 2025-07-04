@@ -10,7 +10,8 @@ class Mask:
         self.mask_inactivity = mask_inactivity
         self._mask = mask
 
-    def binarize(self, data, threshold):
+    @staticmethod
+    def binarize(data, threshold):
         binarized = pd.Series(
             np.where(data > threshold, 1, 0), index=data.index
         ).where(data.notna(), np.nan)

@@ -4,7 +4,6 @@ import re
 import warnings
 
 from ..base import BaseRaw
-from circStudio.light import LightRecording
 
 
 class RawAWD(BaseRaw):

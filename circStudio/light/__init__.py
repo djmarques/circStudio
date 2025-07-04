@@ -25,8 +25,7 @@
 ############################################################################
 """IO module for light data."""
 
-from .light import LightRecording
 from .light import Light
 
 
-__all__ = ["Light", "LightRecording"]
+__all__ = ["Light"]

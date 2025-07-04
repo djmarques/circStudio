@@ -3,7 +3,6 @@ import os
 import re
 
 from ..base import BaseRaw
-from circStudio.light import LightRecording
 
 
 class RawATR(BaseRaw):
@@ -34,6 +33,7 @@ class RawATR(BaseRaw):
         self,
         input_fname,
         mode='PIM',
+        light_mode='LIGHT',
         start_time=None,
         period=None
     ):
@@ -118,7 +118,7 @@ class RawATR(BaseRaw):
         )
 
         # LIGHT
-        index_light = index_data.filter(["LIGHT"])
+        #index_light = index_data.filter(["LIGHT"])
 
         # call __init__ function of the base class
         super().__init__(
@@ -126,10 +126,7 @@ class RawATR(BaseRaw):
             period=period,
             frequency=freq,
             activity=index_data[mode],
-            light=LightRecording(
-                data=index_light,
-                frequency=index_light.index.freq
-            ) if index_light is not None else None
+            light=index_data[light_mode]
         )
 
     @property
@@ -213,7 +210,6 @@ class RawATR(BaseRaw):
 
 def read_raw_atr(
     input_fname,
-    mode='PIM',
     start_time=None,
     period=None
 ):
@@ -245,7 +241,6 @@ def read_raw_atr(
 
     return RawATR(
         input_fname=input_fname,
-        mode=mode,
         start_time=start_time,
         period=period
     )

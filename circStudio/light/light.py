@@ -32,23 +32,13 @@ from ..activity.activity import _intradaily_variability
 from ..utils.utils import _average_daily_activity
 from ..utils.utils import _shift_time_axis
 
-import warnings
-from ..mask import _create_dummy_mask
-from ..mask import _add_mask_period
-from ..mask import _add_mask_periods
-from ..recording import BaseRecording
-
 __all__ = ['Light', 'LightRecording']
 
 
 class Light(object):
     """ Mixin Class """
 
-    def average_daily_profile(self,
-                              channel,
-                              freq='5min',
-                              cyclic=False,
-                              time_origin=None):
+    def average_daily_profile(self, freq='5min', cyclic=False, time_origin=None):
         r"""Average daily light profile
 
         Calculate the daily profile of light exposure. Data are averaged over
@@ -56,8 +46,6 @@ class Light(object):
 
         Parameters
         ----------
-        channel: str,
-            Channel to be used (i.e column of the input data).
         freq: str, optional
             Data resampling frequency.
             Cf. #timeseries-offset-aliases in
@@ -79,9 +67,6 @@ class Light(object):
             A Series containing the daily light profile with a 24h/48h index.
         """
         data = self.resample(data=self.light, freq=freq)
-
-        # Select requested channel
-        data = data.loc[:, channel]
 
         if time_origin is None:
 
@@ -124,13 +109,7 @@ class Light(object):
 
             return _shift_time_axis(avgdaily, shift)
 
-    def average_daily_profile_auc(self,
-                                  channel=None,
-                                  start_time=None,
-                                  stop_time=None,
-                                  time_origin=None,
-                                  freq=None
-                                  ):
+    def average_daily_profile_auc(self, start_time=None, stop_time=None, time_origin=None, freq=None):
         r"""AUC of the average daily light profile
 
         Calculate the area under the curve of the daily profile of light
@@ -138,8 +117,6 @@ class Light(object):
 
         Parameters
         ----------
-        channel: str,
-            Channel to be used (i.e column of the input data).
         start_time: str, optional
             If not set to None, compute AUC from start time.
             Supported time string: 'HH:MM:SS'
@@ -161,9 +138,6 @@ class Light(object):
             Area under the curve.
         """
         data = self.resample(data=self.light, freq=freq)
-
-        # Select requested channel
-        data = data.loc[:, channel]
 
         # Compute average daily profile
         avgdaily = _average_daily_activity(data, cyclic=False)
@@ -204,7 +178,11 @@ class Light(object):
         if stop_time is not None:
             stop_time = pd.Timedelta(stop_time)
 
-        return avgdaily.loc[start_time:stop_time].sum()
+        # In order to avoid indexing with None, check for that too
+        if start_time is not None or stop_time is not None:
+            return avgdaily.loc[start_time:stop_time].sum()
+        else:
+            return avgdaily.sum()
 
     def _light_exposure(self, threshold=None, start_time=None, stop_time=None):
         r"""Light exposure
@@ -234,24 +212,18 @@ class Light(object):
             threshold and/or outside time window.
         """
         if threshold is not None:
-            data_mask = self.data.mask(self.data < threshold)
+            data_mask = self.light.mask(self.data < threshold)
         else:
-            data_mask = self.data
+            data_mask = self.light
 
         if start_time is stop_time is None:
             return data_mask
         elif (start_time is None) or (stop_time is None):
-            raise ValueError(
-                'Both start and stop times have to be specified, if any.'
-            )
+            raise ValueError('Both start and stop times have to be specified, if any.')
         else:
-            return data_mask.between_time(
-                start_time=start_time, end_time=stop_time, include_end=False
-            )
+            return data_mask.between_time(start_time=start_time, end_time=stop_time, include_end=False)
 
-    def light_exposure_level(
-        self, threshold=None, start_time=None, stop_time=None, agg='mean'
-    ):
+    def light_exposure_level(self, threshold=None, start_time=None, stop_time=None, agg='mean'):
         r"""Light exposure level
 
         Calculate the aggregated (mean, median, etc) light exposure level
@@ -935,187 +907,3 @@ class Light(object):
         )
 
         return filt
-
-class LightRecording(Light, BaseRecording):
-    """ Base class for light recordings.
-
-    Parameters
-    ----------
-    name: str
-        Name of the light recording.
-    data: pandas.DataFrame
-        Dataframe containing the light data found in the recording.
-
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def get_channel(self, channel):
-        r"""Light channel accessor
-
-        Get access to the requested channel.
-
-        Parameters
-        ----------
-        channel: str.
-            Channel to access.
-
-        Returns
-        -------
-        light: pd.Series
-            Series with the requested channel.
-
-        """
-        if channel not in self.data.columns:
-            raise ValueError(
-                'The light channel you tried to access ({}) '.format(channel)
-                + 'is not available.\n Available channels:{}'.format(
-                    '\n- {}'.format('\n- '.join(self.data.columns))
-                )
-            )
-
-        return self.data.loc[:, channel]
-
-    def get_channels(self, channels=None):
-        r"""Light channel accessor
-
-        Get access to the requested channels.
-
-        Parameters
-        ----------
-        channels: list of str, optional.
-            Channel list. If set to None, use all available channels.
-            Default is None.
-
-        Returns
-        -------
-        light: pd.DataFrame
-            Dataframe with the requested channels.
-
-        """
-
-        # Select channels of interest
-        if channels is None:
-            channels_sel = self.data.columns
-        else:
-            # Check if some required channels are not available:
-            channels_unavail = set(channels)-set(self.data.columns)
-            if channels_unavail == set(channels):
-                raise ValueError(
-                    'None of the requested channels ({}) is available.'.format(
-                        ', '.join(channels)
-                    )
-                )
-            elif len(channels_unavail) > 0:
-                warnings.warn(
-                    'Required but unavailable channel(s): {}'.format(
-                        ', '.join(channels_unavail)
-                    )
-                )
-            channels_sel = [ch for ch in self.data.columns if ch in channels]
-
-        return self.data.loc[:, channels_sel]
-
-    def get_channel_list(self):
-        r"""List of light channels"""
-        return self.data.columns
-
-    def _check_light_mask(self):
-        """ Check if mask is not None"""
-        if self.mask is None:
-            raise ValueError(
-                "No light mask available. Please create one with the function"
-                + " 'create_light_mask' before adding mask periods."
-            )
-
-    def create_light_mask(self):
-        """Create a blank mask for all light channels.
-
-        This mask has the same length as its underlying data and can be used
-        to offuscate meaningless periods.
-
-        The mask is empty (filled with 1s) and is meant to be edited by adding
-        mask periods manually.
-
-        """
-
-        # Create a mask filled with ones by default.
-        self.mask = _create_dummy_mask(self.data)
-
-    def add_light_mask_period(self, start, stop, channel=None):
-        """Add a masking period.
-
-        This period extends between the specified start and stop times.
-        It is possible to target a specific channel. If None is used, the
-        masking period is set on all channels.
-
-        Parameters
-        ----------
-        start: str
-            Start time (YYYY-MM-DD HH:MM:SS) of the masking period.
-        stop: str
-            Stop time (YYYY-MM-DD HH:MM:SS) of the masking period.
-        channel: str, optional
-            Set masking period to a specific channel (i.e. column).
-            If set to None, the period is set on all channels.
-            Default is None.
-        """
-
-        # Check if mask is not None
-        self._check_light_mask()
-
-        # Define correct channel
-        if channel is not None:
-            current_channel = channel
-        else:
-            current_channel = self.get_channel_list()
-
-        # Add specified period
-        _add_mask_period(
-            self.mask,
-            start=start,
-            stop=stop,
-            channel=current_channel
-        )
-
-    def add_light_mask_periods(
-        self, input_fname, channel=None, *args, **kwargs
-    ):
-        """Add masking periods from a file.
-
-        Function to read masking periods (start and stop times) from a Mask log
-        file. Supports different file format (.ods, .xls(x), .csv).
-
-        Parameters
-        ----------
-        input_fname: str
-            Path to the log file.
-        channel: str, optional
-            Set masking period to a specific channel (i.e. column).
-            If set to None, the period is set on all channels.
-            Default is None.
-        *args
-            Variable length argument list passed to the subsequent reader
-            function.
-        **kwargs
-            Arbitrary keyword arguments passed to the subsequent reader
-            function.
-        """
-
-        # Check if mask is not None
-        self._check_light_mask()
-
-        # Define correct channel
-        if channel is not None:
-            current_channel = channel
-        else:
-            current_channel = self.get_channel_list()
-
-        # Add specified period
-        _add_mask_periods(
-            input_fname=input_fname,
-            mask=self.mask,
-            channel=current_channel,
-            *args, **kwargs
-        )
