@@ -98,7 +98,6 @@ def _lmx(data, period, lowest=True):
 
 def _interval_maker(index, period, verbose):
     """ """
-    # TODO: test if period is a valid string
 
     (num_periods, td) = divmod((index[-1] - index[0]), pd.Timedelta(period))
     if verbose:
@@ -1245,7 +1244,6 @@ class Activity(object):
         kRA = _transition_prob_sustain_region(pRA, pRA_weights, frac=frac, it=it)
         return np.log(kRA / (1 - kRA)) if logit else kRA
 
-    # TODO: implement function to binarize data (since it is mandatory in this function)
     def kAR(
         self,
         threshold,
