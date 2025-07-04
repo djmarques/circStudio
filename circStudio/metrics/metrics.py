@@ -11,16 +11,18 @@ from statistics import mean
 import statsmodels.api as sm
 
 __all__ = [
-    'Activity',
-    '_average_daily_total_activity',
-    '_interdaily_stability',
-    '_intradaily_variability',
-    '_lmx', '_interval_maker',
-    '_count_consecutive_values',
-    '_count_consecutive_zeros',
-    '_transition_prob',
-    '_transition_prob_sustain_region',
-    '_td_format']
+    "Activity",
+    "_average_daily_total_activity",
+    "_interdaily_stability",
+    "_intradaily_variability",
+    "_lmx",
+    "_interval_maker",
+    "_count_consecutive_values",
+    "_count_consecutive_zeros",
+    "_transition_prob",
+    "_transition_prob_sustain_region",
+    "_td_format",
+]
 
 
 def _average_daily_total_activity(data, rescale, exclude_ends):
@@ -28,21 +30,21 @@ def _average_daily_total_activity(data, rescale, exclude_ends):
 
     # Shortcut: if rescale is false, compute the daily average
     if rescale is False:
-        daily_sum = data.resample('1D').sum()
+        daily_sum = data.resample("1D").sum()
     else:
         # Aggregate data daily:
         # - compute the daily sum
         # - count the number of epochs included in each day
-        daily_agg = data.resample('1D').agg(['count', 'sum'])
+        daily_agg = data.resample("1D").agg(["count", "sum"])
 
         # Compute weights as a function of the number of epochs per day:
         # weight =  (#epochs/day) / (#count/day)
         # NB: needed to account for potentially masked periods.
-        daily_agg['weigth'] = (pd.Timedelta('24h')/data.index.freq)
-        daily_agg['weigth'] /= daily_agg['count']
+        daily_agg["weigth"] = pd.Timedelta("24h") / data.index.freq
+        daily_agg["weigth"] /= daily_agg["count"]
 
         # Rescale activity
-        daily_sum = daily_agg['sum']*daily_agg['weigth']
+        daily_sum = daily_agg["sum"] * daily_agg["weigth"]
 
     # Exclude first and last days
     if exclude_ends:
@@ -54,15 +56,15 @@ def _average_daily_total_activity(data, rescale, exclude_ends):
 def _interdaily_stability(data):
     r"""Calculate the interdaily stability"""
 
-    d_24h = data.groupby([
-        data.index.hour,
-        data.index.minute,
-        data.index.second]
-    ).mean().var()
+    d_24h = (
+        data.groupby([data.index.hour, data.index.minute, data.index.second])
+        .mean()
+        .var()
+    )
 
     d_1h = data.var()
 
-    return (d_24h / d_1h)
+    return d_24h / d_1h
 
 
 def _intradaily_variability(data):
@@ -72,7 +74,7 @@ def _intradaily_variability(data):
 
     d_1h = data.var()
 
-    return (c_1h / d_1h)
+    return c_1h / d_1h
 
 
 def _lmx(data, period, lowest=True):
@@ -81,16 +83,16 @@ def _lmx(data, period, lowest=True):
 
     avgdaily = _average_daily_activity(data=data, cyclic=True)
 
-    n_epochs = int(pd.Timedelta(period)/avgdaily.index.freq)
+    n_epochs = int(pd.Timedelta(period) / avgdaily.index.freq)
 
-    mean_activity = avgdaily.rolling(period).sum().shift(-n_epochs+1)
+    mean_activity = avgdaily.rolling(period).sum().shift(-n_epochs + 1)
 
     if lowest:
         t_start = mean_activity.idxmin()
     else:
         t_start = mean_activity.idxmax()
 
-    lmx = mean_activity[t_start]/n_epochs
+    lmx = mean_activity[t_start] / n_epochs
     return t_start, lmx
 
 
@@ -98,23 +100,25 @@ def _interval_maker(index, period, verbose):
     """ """
     # TODO: test if period is a valid string
 
-    (num_periods, td) = divmod(
-        (index[-1] - index[0]), pd.Timedelta(period)
-    )
+    (num_periods, td) = divmod((index[-1] - index[0]), pd.Timedelta(period))
     if verbose:
-        print("Number of periods: {0}\n Time unaccounted for: {1}".format(
-            num_periods,
-            '{} days, {}h, {}m, {}s'.format(
-                td.days,
-                td.seconds//3600,
-                (td.seconds//60) % 60,
-                td.seconds % 60
+        print(
+            "Number of periods: {0}\n Time unaccounted for: {1}".format(
+                num_periods,
+                "{} days, {}h, {}m, {}s".format(
+                    td.days,
+                    td.seconds // 3600,
+                    (td.seconds // 60) % 60,
+                    td.seconds % 60,
+                ),
             )
-        ))
+        )
 
-    intervals = [(
-        index[0] + (i)*pd.Timedelta(period),
-        index[0] + (i+1)*pd.Timedelta(period))
+    intervals = [
+        (
+            index[0] + (i) * pd.Timedelta(period),
+            index[0] + (i + 1) * pd.Timedelta(period),
+        )
         for i in range(0, num_periods)
     ]
 
@@ -122,7 +126,7 @@ def _interval_maker(index, period, verbose):
 
 
 def _count_consecutive_values(data):
-    """ Create a count list for identical consecutive numbers
+    """Create a count list for identical consecutive numbers
     together with a state for each series:
      - 1 if the sum of the consecutive series numbers is positive
      - 0 otherwise
@@ -131,18 +135,18 @@ def _count_consecutive_values(data):
     consecutive_values = data.groupby(
         # create identical 'labels' for identical consecutive numbers
         [data.diff().ne(0).cumsum()]
-    ).agg(['count', lambda x: (np.sum(x) > 0).astype(int)])
+    ).agg(["count", lambda x: (np.sum(x) > 0).astype(int)])
     # rename columns
-    consecutive_values.columns = ['counts', 'state']
+    consecutive_values.columns = ["counts", "state"]
 
     return consecutive_values
 
 
 def _count_consecutive_zeros(data):
     ccz = _count_consecutive_values(data)
-    ccz['end'] = ccz['counts'].cumsum()
-    ccz['start'] = ccz['end'].shift(1).fillna(0).astype(int)
-    return ccz[ccz['state'] < 1]
+    ccz["end"] = ccz["counts"].cumsum()
+    ccz["start"] = ccz["end"].shift(1).fillna(0).astype(int)
+    return ccz[ccz["state"] < 1]
 
 
 def _transition_prob(data, from_zero_to_one):
@@ -151,9 +155,9 @@ def _transition_prob(data, from_zero_to_one):
     ccv = _count_consecutive_values(data)
     # filter out sequences of active epochs
     if from_zero_to_one is True:
-        bouts = ccv[ccv['state'] < 1]['counts']
+        bouts = ccv[ccv["state"] < 1]["counts"]
     else:
-        bouts = ccv[ccv['state'] > 0]['counts']
+        bouts = ccv[ccv["state"] > 0]["counts"]
     # Count the number of sequences of length N for N=1...Nmax
     Nt = bouts.groupby(bouts).count()
     # Create its reverse cumulative sum so that Nt at index t is equal to
@@ -161,17 +165,17 @@ def _transition_prob(data, from_zero_to_one):
     Nt = np.cumsum(Nt[::-1])[::-1]
     # Rest->Activity (or Activity->Rest) transition probability at time t,
     # defined as the number of sequences for which R->A at time t+1 / Nt
-    prob = Nt.diff(-1)/Nt
+    prob = Nt.diff(-1) / Nt
     # Correct pRA for discontinuities due to sparse data
     prob = prob.dropna() / np.diff(prob.index.tolist())
     # Define the weights as the square root of the number of runs
     # contributing to each probability estimate
-    prob_weights = np.sqrt(Nt+Nt.shift(-1)).dropna()
+    prob_weights = np.sqrt(Nt + Nt.shift(-1)).dropna()
 
     return prob, prob_weights
 
 
-def _transition_prob_sustain_region(prob, prob_weights, frac=.3, it=0):
+def _transition_prob_sustain_region(prob, prob_weights, frac=0.3, it=0):
 
     # Fit the 'prob' distribution with a LOWESS
     lowess = sm.nonparametric.lowess(
@@ -183,18 +187,21 @@ def _transition_prob_sustain_region(prob, prob_weights, frac=.3, it=0):
 
     # Check which residuals are below 1 sigma
     prob_residuals_below_one_std = _count_consecutive_values(
-        ((prob-lowess).abs() < std).astype(int)
+        ((prob - lowess).abs() < std).astype(int)
     )
 
     # Find the index of the longest series of consecutive values below 1 SD
-    index = prob_residuals_below_one_std[
-        prob_residuals_below_one_std['state'] > 0
-    ]['counts'].idxmax()-1
+    index = (
+        prob_residuals_below_one_std[prob_residuals_below_one_std["state"] > 0][
+            "counts"
+        ].idxmax()
+        - 1
+    )
 
     # Calculate the cumulative sum of the indices of series of consecutive
     # values of residuals below 1 SD in order to find the number of points
     # before the "index".
-    prob_cumsum = prob_residuals_below_one_std['counts'].cumsum()
+    prob_cumsum = prob_residuals_below_one_std["counts"].cumsum()
 
     # Calculate the start and end indices
     if index < prob_cumsum.index.min():
@@ -202,32 +209,25 @@ def _transition_prob_sustain_region(prob, prob_weights, frac=.3, it=0):
     else:
         start_index = prob_cumsum[index]
     # start_index = prob_cumsum[index]+1
-    end_index = prob_cumsum[index+1]
+    end_index = prob_cumsum[index + 1]
 
     kProb = np.average(
-        prob[start_index:end_index],
-        weights=prob_weights[start_index:end_index]
+        prob[start_index:end_index], weights=prob_weights[start_index:end_index]
     )
     return kProb
 
 
 def _td_format(td):
-    return '{:02}:{:02}:{:02}'.format(
-        td.components.hours,
-        td.components.minutes,
-        td.components.seconds
+    return "{:02}:{:02}:{:02}".format(
+        td.components.hours, td.components.minutes, td.components.seconds
     )
 
 
 class Activity(object):
-    """ Class containing all the functions to compute activity metrics. """
+    """Class containing all the functions to compute activity metrics."""
 
     def average_daily_activity(
-        self,
-        freq='5min',
-        cyclic=False,
-        time_origin=None,
-        whs='1h'
+        self, freq="5min", cyclic=False, time_origin=None, whs="1h"
     ):
         r"""Average daily activity distribution
 
@@ -271,51 +271,47 @@ class Activity(object):
             if cyclic is True:
                 # TODO: implement code for time origin with cyclic option of change error type
                 raise NotImplementedError(
-                    'Setting a time origin while cyclic option is True is not '
-                    'implemented.'
+                    "Setting a time origin while cyclic option is True is not "
+                    "implemented."
                 )
 
             avgdaily = _average_daily_activity(data, cyclic=False)
 
             if isinstance(time_origin, str):
                 # Regex pattern for HH:MM:SS time string
-                pattern = re.compile(
-                    r"^([0-1]\d|2[0-3])(?::([0-5]\d))(?::([0-5]\d))$"
-                )
+                pattern = re.compile(r"^([0-1]\d|2[0-3])(?::([0-5]\d))(?::([0-5]\d))$")
 
-                if time_origin == 'AonT':
+                if time_origin == "AonT":
                     # Convert width half size from Timedelta to a nr of points
-                    whs = int(pd.Timedelta(whs)/data.index.freq)
+                    whs = int(pd.Timedelta(whs) / data.index.freq)
                     time_origin = _activity_onset_time(avgdaily, whs=whs)
-                elif time_origin == 'AoffT':
+                elif time_origin == "AoffT":
                     # Convert width half size from Timedelta to a nr of points
-                    whs = int(pd.Timedelta(whs)/data.index.freq)
+                    whs = int(pd.Timedelta(whs) / data.index.freq)
                     time_origin = _activity_offset_time(avgdaily, whs=whs)
                 elif pattern.match(time_origin):
                     time_origin = pd.Timedelta(time_origin)
                 else:
                     raise ValueError(
-                        'Time origin format ({}) not supported.\n'.format(
-                            time_origin
-                        )
-                        + 'Supported format: {}.'.format('HH:MM:SS')
+                        "Time origin format ({}) not supported.\n".format(time_origin)
+                        + "Supported format: {}.".format("HH:MM:SS")
                     )
 
             elif not isinstance(time_origin, pd.Timedelta):
                 raise ValueError(
-                    'Time origin is neither a time string with a supported'
-                    'format, nor a pd.Timedelta.'
+                    "Time origin is neither a time string with a supported"
+                    "format, nor a pd.Timedelta."
                 )
 
             # Round time origin to the required frequency
             time_origin = time_origin.round(data.index.freq)
 
-            shift = int((pd.Timedelta('12h')-time_origin)/data.index.freq)
+            shift = int((pd.Timedelta("12h") - time_origin) / data.index.freq)
 
             return _shift_time_axis(avgdaily, shift)
 
     # TODO: this should be moved to the light class
-    def average_daily_light(self, freq='5min', cyclic=False):
+    def average_daily_light(self, freq="5min", cyclic=False):
         r"""Average daily light distribution
 
         Calculate the daily profile of light exposure (in lux). Data are
@@ -345,7 +341,7 @@ class Activity(object):
 
         return avgdaily_light
 
-    def ADAT(self, freq='10min', rescale=True, exclude_ends=False):
+    def ADAT(self, freq="10min", rescale=True, exclude_ends=False):
         """Total average daily activity
 
         Calculate the total activity counts, averaged over all the days.
@@ -373,11 +369,12 @@ class Activity(object):
             data = self.activity
 
         adat = _average_daily_total_activity(
-            data, rescale=rescale, exclude_ends=exclude_ends)
+            data, rescale=rescale, exclude_ends=exclude_ends
+        )
 
         return adat
 
-    def ADATp(self, period='7D', rescale=True, exclude_ends=False, verbose=False):
+    def ADATp(self, period="7D", rescale=True, exclude_ends=False, verbose=False):
         """Total average daily activity per period
 
         Calculate the total activity counts, averaged over each consecutive
@@ -416,10 +413,9 @@ class Activity(object):
 
         results = [
             _average_daily_total_activity(
-                data[time[0]:time[1]],
-                rescale=rescale,
-                exclude_ends=exclude_ends
-            ) for time in intervals
+                data[time[0] : time[1]], rescale=rescale, exclude_ends=exclude_ends
+            )
+            for time in intervals
         ]
 
         return results
@@ -457,7 +453,7 @@ class Activity(object):
         else:
             data = self.activity
 
-        _, l5 = _lmx(data, '5h', lowest=True)
+        _, l5 = _lmx(data, "5h", lowest=True)
 
         return l5
 
@@ -494,7 +490,7 @@ class Activity(object):
         else:
             data = self.activity
 
-        _, m10 = _lmx(data, '10h', lowest=False)
+        _, m10 = _lmx(data, "10h", lowest=False)
 
         return m10
 
@@ -533,12 +529,12 @@ class Activity(object):
         else:
             data = self.activity
 
-        _, l5 = _lmx(data, '5h', lowest=True)
-        _, m10 = _lmx(data, '10h', lowest=False)
+        _, l5 = _lmx(data, "5h", lowest=True)
+        _, m10 = _lmx(data, "10h", lowest=False)
 
-        return (m10-l5)/(m10+l5)
+        return (m10 - l5) / (m10 + l5)
 
-    def L5p(self, period='7D', verbose=False):
+    def L5p(self, period="7D", verbose=False):
         r"""L5 per period
 
         The L5 variable is calculated for each consecutive period found in the
@@ -586,15 +582,11 @@ class Activity(object):
         intervals = _interval_maker(data.index, period, verbose)
 
         results = [
-            _lmx(
-                data[time[0]:time[1]],
-                '5h',
-                lowest=True
-            ) for time in intervals
+            _lmx(data[time[0] : time[1]], "5h", lowest=True) for time in intervals
         ]
         return [res[1] for res in results]
 
-    def M10p(self, period='7D', verbose=False):
+    def M10p(self, period="7D", verbose=False):
         r"""M10 per period
 
         The M10 variable is calculated for each consecutive period found in the
@@ -645,15 +637,11 @@ class Activity(object):
         intervals = _interval_maker(data.index, period, verbose)
 
         results = [
-            _lmx(
-                data[time[0]:time[1]],
-                '10h',
-                lowest=False
-            ) for time in intervals
+            _lmx(data[time[0] : time[1]], "10h", lowest=False) for time in intervals
         ]
         return [res[1] for res in results]
 
-    def RAp(self, period='7D', verbose=False):
+    def RAp(self, period="7D", verbose=False):
         r"""RA per period
 
         The RA variable is calculated for each consecutive period found in the
@@ -702,14 +690,14 @@ class Activity(object):
         results = []
 
         for time in intervals:
-            data_subset = data[time[0]:time[1]]
-            _, l5 = _lmx(data_subset, '5h', lowest=True)
-            _, m10 = _lmx(data_subset, '10h', lowest=False)
-            results.append((m10-l5)/(m10+l5))
+            data_subset = data[time[0] : time[1]]
+            _, l5 = _lmx(data_subset, "5h", lowest=True)
+            _, m10 = _lmx(data_subset, "10h", lowest=False)
+            results.append((m10 - l5) / (m10 + l5))
 
         return results
 
-    def IS(self, freq='1h'):
+    def IS(self, freq="1h"):
         r"""Interdaily stability
 
         The Interdaily stability (IS) quantifies the repeatibilty of the
@@ -810,15 +798,34 @@ class Activity(object):
         """
         if freqs is None:
             freqs = [
-                '1min', '2min', '3min', '4min', '5min', '6min', '8min', '9min', '10min',
-                '12min', '15min', '16min', '18min', '20min', '24min', '30min',
-                '32min', '36min', '40min', '45min', '48min', '60min'
+                "1min",
+                "2min",
+                "3min",
+                "4min",
+                "5min",
+                "6min",
+                "8min",
+                "9min",
+                "10min",
+                "12min",
+                "15min",
+                "16min",
+                "18min",
+                "20min",
+                "24min",
+                "30min",
+                "32min",
+                "36min",
+                "40min",
+                "45min",
+                "48min",
+                "60min",
             ]
         data = [self.resample(data=self.activity, freq=freq) for freq in freqs]
 
         return mean([_interdaily_stability(datum) for datum in data])
 
-    def ISp(self, period='7D', freq='1h', verbose=False):
+    def ISp(self, period="7D", freq="1h", verbose=False):
         r"""Interdaily stability per period
 
         The IS is calculated for each consecutive period found in the
@@ -855,12 +862,10 @@ class Activity(object):
 
         intervals = _interval_maker(data.index, period, verbose)
 
-        results = [
-            _interdaily_stability(data[time[0]:time[1]]) for time in intervals
-        ]
+        results = [_interdaily_stability(data[time[0] : time[1]]) for time in intervals]
         return results
 
-    def IV(self, freq='1h'):
+    def IV(self, freq="1h"):
         r"""Intradaily variability
 
         The Intradaily Variability (IV) quantifies the variability of the
@@ -920,16 +925,7 @@ class Activity(object):
 
         return _intradaily_variability(data)
 
-    def IVm(
-        self,
-        freqs=[
-            '1T', '2T', '3T', '4T', '5T', '6T', '8T', '9T', '10T',
-            '12T', '15T', '16T', '18T', '20T', '24T', '30T',
-            '32T', '36T', '40T', '45T', '48T', '60T'
-        ],
-        binarize=True,
-        threshold=4
-    ):
+    def IVm(self, freqs=None):
         r"""Average intradaily variability
 
         IVm [1]_ is the average of the IV values obtained with resampling
@@ -940,13 +936,6 @@ class Activity(object):
         freq: str, optional
             Data resampling `frequency strings
             <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_.
-        binarize: bool, optional
-            If set to True, the data are binarized.
-            Default is True.
-        threshold: int, optional
-            If binarize is set to True, data above this threshold are set to 1
-            and to 0 otherwise.
-            Default is set to 4.
 
         Returns
         -------
@@ -965,28 +954,38 @@ class Activity(object):
                Campos, T. F., & Araujo, J. F. (2014). Nonparametric methods in
                actigraphy: An update. Sleep science (Sao Paulo, Brazil), 7(3),
                158-64.
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> rawAWD.IVm()
-            0.3482306825356382
-            >>> rawAWD.IVm(binarize=False)
-            0.6414533006190071
-            >>> rawAWD.IVm(freqs=['10min','30min','1h'], binarize=False)
-            0.7124465677737196
         """
+        if freqs is None:
+            freqs = [
+                "1min",
+                "2min",
+                "3Tmin",
+                "4min",
+                "5min",
+                "6min",
+                "8min",
+                "9min",
+                "10min",
+                "12min",
+                "15min",
+                "16min",
+                "18min",
+                "20min",
+                "24min",
+                "30min",
+                "32min",
+                "36min",
+                "40min",
+                "45min",
+                "48min",
+                "60min",
+            ]
 
-        data = [
-            self.resampled_data(freq, binarize, threshold) for freq in freqs
-        ]
+        data = [self.resample(data=self.activity, freq=freq) for freq in freqs]
 
         return mean([_intradaily_variability(datum) for datum in data])
 
-    def IVp(self, period='7D', freq='1h',
-            binarize=True, threshold=4, verbose=False):
+    def IVp(self, period="7D", freq="1h", verbose=False):
         r"""Intradaily variability per period
 
         The IV is calculated for each consecutive period found in the
@@ -1001,13 +1000,6 @@ class Activity(object):
             Data resampling `frequency string
             <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_.
             Default is '1h'.
-        binarize: bool, optional
-            If set to True, the data are binarized.
-            Default is True.
-        threshold: int, optional
-            If binarize is set to True, data above this threshold are set to 1
-            and to 0 otherwise.
-            Default is 4.
         verbose: bool, optional
             If set to True, display the number of periods found in the activity
             recording, as well as the time not accounted for.
@@ -1017,39 +1009,25 @@ class Activity(object):
         -------
         ivp: list of float
 
-
         Notes
         -----
 
         Periods are consecutive and all of the required duration. If the last
         consecutive period is shorter than required, the IV is not calculated
         for that period.
-
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> rawAWD.duration()
-            Timedelta('12 days 18:41:00')
-            >>> rawAWD.IVp(period='5D',verbose=True)
-            Number of periods: 2
-            Time unaccounted for: 2 days, 19h, 0m, 0s
-            [0.4011232866522594, 0.5340044506337185]
         """
 
-        data = self.resampled_data(freq, binarize, threshold)
+        data = self.resample(data=self.activity, freq=freq)
 
         intervals = _interval_maker(data.index, period, verbose)
 
         results = [
-            _intradaily_variability(data[time[0]:time[1]])
-            for time in intervals
+            _intradaily_variability(data[time[0] : time[1]]) for time in intervals
         ]
+
         return results
 
-    def pRA(self, threshold, start=None, period=None):
+    def pRA(self, threshold=0, start=None, period=None):
         r"""Rest->Activity transition probability distribution
 
         Conditional probability, pRA(t), that an individual would be
@@ -1097,38 +1075,18 @@ class Activity(object):
                Quantification of the Fragmentation of Rest-Activity Patterns in
                Elderly Individuals Using a State Transition Analysis. Sleep,
                34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> pRA, pRA_weights = rawAWD.pRA(4, start='00:00:00', period='8H')
-            >>> pRA
-            counts
-            1      0.169043
-            2      0.144608
-            3      0.163324
-            (...)
-            481    0.001157
-            Name: counts, dtype: float64
         """
 
         # Restrict data range to period 'Start, Start+Period'
         if start is not None:
-            end = _td_format(
-                pd.Timedelta(start)+pd.Timedelta(period)
-            )
+            end = _td_format(pd.Timedelta(start) + pd.Timedelta(period))
 
-            data = self.binarized_data(
-                threshold
-            ).between_time(start, end)
+            data = self.binarize(data=self.activity, threshold=threshold).between_time(start, end)
         else:
-            data = self.binarized_data(threshold)
+            data = self.binarize(data=self.activity, threshold=threshold)
+
         # Rest->Activity transition probability:
-        pRA, pRA_weights = _transition_prob(
-            data, True
-        )
+        pRA, pRA_weights = _transition_prob(data, True)
 
         return pRA, pRA_weights
 
@@ -1180,44 +1138,31 @@ class Activity(object):
                Quantification of the Fragmentation of Rest-Activity Patterns in
                Elderly Individuals Using a State Transition Analysis. Sleep,
                34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> pAR, pAR_weights = rawAWD.pAR(4, start='00:00:00', period='8H')
-            >>> pAR
-            counts
-            1      0.169043
-            2      0.144608
-            3      0.163324
-            (...)
-            481    0.001157
-            Name: counts, dtype: float64
         """
 
         # Restrict data range to period 'Start, Start+Period'
         if start is not None:
-            end = _td_format(
-                pd.Timedelta(start)+pd.Timedelta(period)
-            )
+            end = _td_format(pd.Timedelta(start) + pd.Timedelta(period))
 
-            data = self.binarized_data(
-                threshold
-            ).between_time(start, end)
+            data = self.binarize(data=self.activity, threshold=threshold).between_time(start, end)
         else:
-            data = self.binarized_data(threshold)
+            data = self.binarize(data=self.activity, threshold=threshold)
+
         # Activity->Rest transition probability:
-        pAR, pAR_weights = _transition_prob(
-            data, False
-        )
+        pAR, pAR_weights = _transition_prob(data, False)
 
         return pAR, pAR_weights
 
     def kRA(
-        self, threshold, start=None, period=None, frac=.3, it=0, logit=False,
-        freq=None, offset='15min'
+        self,
+        threshold=0,
+        start=None,
+        period=None,
+        frac=0.3,
+        it=0,
+        logit=False,
+        freq=None,
+        offset="15min",
     ):
         r"""Rest->Activity transition probability
 
@@ -1273,50 +1218,44 @@ class Activity(object):
                Quantification of the Fragmentation of Rest-Activity Patterns in
                Elderly Individuals Using a State Transition Analysis. Sleep,
                34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> rawAWD.kRA(4)
-            0.09144435545010564
-            >>> rawAWD.kRA(4, start='00:00:00', period='8H')
-            0.13195826220778709
         """
 
-        if start is not None and re.match(r'AonT|AoffT', start):
+        if start is not None and re.match(r"AonT|AoffT", start):
             aont = self.AonT(freq=freq, binarize=True, threshold=threshold)
             aofft = self.AoffT(freq=freq, binarize=True, threshold=threshold)
             offset = pd.Timedelta(offset)
-            if start == 'AonT':
-                start_time = str(aont+offset).split(' ')[-1]
+            if start == "AonT":
+                start_time = str(aont + offset).split(" ")[-1]
                 period = str(
-                    pd.Timedelta('24h') - ((aont+offset) - (aofft-offset))
-                ).split(' ')[-1]
-            elif start == 'AoffT':
-                start_time = str(aofft+offset).split(' ')[-1]
+                    pd.Timedelta("24h") - ((aont + offset) - (aofft - offset))
+                ).split(" ")[-1]
+            elif start == "AoffT":
+                start_time = str(aofft + offset).split(" ")[-1]
                 period = str(
-                    pd.Timedelta('24h') - ((aofft+offset) - (aont-offset))
-                ).split(' ')[-1]
+                    pd.Timedelta("24h") - ((aofft + offset) - (aont - offset))
+                ).split(" ")[-1]
         else:
             start_time = start
 
         # Calculate the pRA probabilities and their weights.
         pRA, pRA_weights = self.pRA(threshold, start=start_time, period=period)
+
         # Fit the pRA distribution with a LOWESS and return mean value for
         # the constant region (i.e. the region where |pRA-lowess|<1SD)
-        kRA = _transition_prob_sustain_region(
-            pRA,
-            pRA_weights,
-            frac=frac,
-            it=it
-            )
-        return np.log(kRA/(1-kRA)) if logit else kRA
+        kRA = _transition_prob_sustain_region(pRA, pRA_weights, frac=frac, it=it)
+        return np.log(kRA / (1 - kRA)) if logit else kRA
 
+    # TODO: implement function to binarize data (since it is mandatory in this function)
     def kAR(
-        self, threshold, start=None, period=None, frac=.3, it=0, logit=False,
-        freq=None, offset='15min'
+        self,
+        threshold,
+        start=None,
+        period=None,
+        frac=0.3,
+        it=0,
+        logit=False,
+        freq=None,
+        offset="15min",
     ):
         r"""Rest->Activity transition probability
 
@@ -1372,32 +1311,22 @@ class Activity(object):
                Quantification of the Fragmentation of Rest-Activity Patterns in
                Elderly Individuals Using a State Transition Analysis. Sleep,
                34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> rawAWD.kAR(4)
-            0.041397590252332916
-            >>> rawAWD.kAR(4, start='08:00:00', period='12H')
-            0.04372712642257519
         """
 
-        if start is not None and re.match(r'AonT|AoffT', start):
+        if start is not None and re.match(r"AonT|AoffT", start):
             aont = self.AonT(freq=freq, binarize=True, threshold=threshold)
             aofft = self.AoffT(freq=freq, binarize=True, threshold=threshold)
             offset = pd.Timedelta(offset)
-            if start == 'AonT':
-                start_time = str(aont+offset).split(' ')[-1]
+            if start == "AonT":
+                start_time = str(aont + offset).split(" ")[-1]
                 period = str(
-                    pd.Timedelta('24h') - ((aont+offset) - (aofft-offset))
-                ).split(' ')[-1]
-            elif start == 'AoffT':
-                start_time = str(aofft+offset).split(' ')[-1]
+                    pd.Timedelta("24h") - ((aont + offset) - (aofft - offset))
+                ).split(" ")[-1]
+            elif start == "AoffT":
+                start_time = str(aofft + offset).split(" ")[-1]
                 period = str(
-                    pd.Timedelta('24h') - ((aofft+offset) - (aont-offset))
-                ).split(' ')[-1]
+                    pd.Timedelta("24h") - ((aofft + offset) - (aont - offset))
+                ).split(" ")[-1]
         else:
             start_time = start
 
@@ -1405,10 +1334,5 @@ class Activity(object):
         pAR, pAR_weights = self.pAR(threshold, start=start_time, period=period)
         # Fit the pAR distribution with a LOWESS and return mean value for
         # the constant region (i.e. the region where |pAR-lowess|<1SD)
-        kAR = _transition_prob_sustain_region(
-            pAR,
-            pAR_weights,
-            frac=frac,
-            it=it
-            )
-        return np.log(kAR/(1-kAR)) if logit else kAR
+        kAR = _transition_prob_sustain_region(pAR, pAR_weights, frac=frac, it=it)
+        return np.log(kAR / (1 - kAR)) if logit else kAR

@@ -228,19 +228,11 @@ class ScoringMixin(object):
         with:
 
         * :math:`x_{i}` is the activity count at time :math:`i`.
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> raw.AonT()
-            Timedelta('0 days 07:15:00')
-            >>> raw.AonT(binarize=False)
-            Timedelta('0 days 07:05:00')
-
         """
-        data = self.resampled_data(freq, binarize, threshold)
+        if binarize:
+            data = self.resample(data=self.binarize(data = self.activity, threshold = threshold), freq=freq)
+        else:
+            data = self.resample(data=self.activity, freq=freq)
 
         dailyprof = _average_daily_activity(data, cyclic=False)
 
@@ -290,20 +282,12 @@ class ScoringMixin(object):
         with:
 
         * :math:`x_{i}` is the activity count at time :math:`i`.
-
-        Examples
-        --------
-
-            >>> import circStudio
-            >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-            >>> raw.AoffT()
-            Timedelta('0 days 23:20:00')
-            >>> raw.AoffT(binarize=False)
-            Timedelta('0 days 23:05:00')
-
         """
 
-        data = self.resampled_data(freq, binarize, threshold)
+        if binarize:
+            data = self.resample(data=self.binarize(data=self.activity, threshold = threshold), freq=freq)
+        else:
+            data = self.resample(data=self.activity, freq=freq)
 
         dailyprof = _average_daily_activity(data, cyclic=False)
 

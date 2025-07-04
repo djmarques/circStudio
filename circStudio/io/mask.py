@@ -10,8 +10,13 @@ class Mask:
         self.mask_inactivity = mask_inactivity
         self._mask = mask
 
+    def binarize(self, data, threshold):
+        binarized = pd.Series(
+            np.where(data > threshold, 1, 0), index=data.index
+        ).where(data.notna(), np.nan)
+        return binarized
 
-    def resample(self, data, freq=None):
+    def resample(self, data, binarize=False, freq=None):
         r"""Resample data at the specified frequency, with or without mask."""
 
         # Return original time series if freq is not specified or lower than the sampling frequency
