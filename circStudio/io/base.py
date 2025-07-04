@@ -3,7 +3,7 @@ import numpy as np
 
 from pandas.tseries.frequencies import to_offset
 from ..filters import FiltersMixin
-from ..metrics import Activity
+from ..activity import Activity
 from ..sleep import SleepDiary, ScoringMixin, SleepBoutMixin
 from ..light import Light
 from .mask import Mask

@@ -19,7 +19,7 @@ from . import analysis
 from . import filters
 from . import io
 from . import light
-from . import metrics
+from . import activity
 from . import recording
 from . import sleep
 from . import utils

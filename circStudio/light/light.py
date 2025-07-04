@@ -26,9 +26,9 @@
 import pandas as pd
 import re
 from scipy import signal
-from ..metrics.metrics import _lmx
-from ..metrics.metrics import _interdaily_stability
-from ..metrics.metrics import _intradaily_variability
+from ..activity.metrics import _lmx
+from ..activity.metrics import _interdaily_stability
+from ..activity.metrics import _intradaily_variability
 from ..utils.utils import _average_daily_activity
 from ..utils.utils import _shift_time_axis
 
