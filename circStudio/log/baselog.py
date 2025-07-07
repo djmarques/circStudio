@@ -4,7 +4,7 @@ import pandas as pd
 import pyexcel as pxl
 
 
-class BaseLog():
+class BaseLog:
     """ Base class for log files containing time stamps.
 
     Parameters
