@@ -96,7 +96,6 @@ setup(
 
     # Specify package directories manually or use find_packages().
     #
-    # packages=['actimetry'],
     packages=find_packages(exclude=['docs', 'tests']),  # Required
 
     # This field lists other packages that your project depends on to run.

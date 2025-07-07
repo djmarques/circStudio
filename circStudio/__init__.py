@@ -20,7 +20,6 @@ from . import filters
 from . import io
 from . import light
 from . import activity
-from . import recording
 from . import sleep
 from . import utils
 from . import tests
@@ -31,10 +30,9 @@ __all__ = [
     "io",
     "light",
     "activity",
-    "recording",
     "sleep",
     "tests",
     "utils"
 ]
 
-__version__ = '1.2.2'
+__version__ = '1.0.0'
