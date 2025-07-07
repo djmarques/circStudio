@@ -569,7 +569,7 @@ class Light(object):
 
         return MLiTp
 
-    def get_light_extremum(self, extremum):
+    def get_light_extremum(self, extremum, freq=None):
         r"""Light extremum.
 
         Return the index and the value of the requested extremum (min or max).
@@ -585,30 +585,22 @@ class Light(object):
         ext : pd.DataFrame
             A pandas DataFrame with extremum info per channel.
         """
-        extremum_list = ['min', 'max']
-        if extremum not in extremum_list:
-            raise ValueError(
-                'Requested extremum ({}) not available.'.format(extremum)
-                + ' Available options are:\n- min\n- max'
-            )
-        extremum_att = 'idxmax' if extremum == 'max' else 'idxmin'
+        # Resample if needed
+        if freq is None:
+            data = self.resample(data=self.light)
+        else:
+            data = self.resample(data=self.light, freq=freq)
 
-        extremum_per_ch = []
-        for ch in self.light.columns:
-            index_ext = getattr(self.light.loc[:, ch], extremum_att)()
-            extremum_per_ch.append(
-                pd.Series(
-                    {
-                        'channel': ch,
-                        'index': index_ext,
-                        'value': self.light.loc[index_ext, ch]
-                    }
-                )
-            )
+        # Return either the maximum or minimum, as well as the respective timestamp
+        if extremum == 'max':
+            return data.idxmax(), data.max()
+        elif extremum == 'min':
+            return data.idxmin(), data.min()
+        else:
+            raise ValueError('Extremum must be "min" or "max"')
 
-        return pd.concat(extremum_per_ch, axis=1).T
 
-    def LMX(self, length='5h', lowest=True):
+    def LMX(self, length='5h', lowest=True, freq=None):
         r"""Least or Most light period of length X
 
         Onset and mean hourly light exposure levels during the X least or most
@@ -645,53 +637,42 @@ class Light(object):
                http://doi.org/10.1177/074873049701200206
 
         """
+        # Resample if needed
+        if freq is None:
+            data = self.resample(data=self.light)
+        else:
+            data = self.resample(data=self.light, freq=freq)
 
-        # This would give an hourly mean per epoch, which does not correspond to the notion of M10
-        # It would constitute an artifact of using circStudio - so, just the mean lux value of the
-        # Brightest hours of the day is preferred.
-        #epoch_per_hour = pd.Timedelta('1h')/self.light.index.freq
+        # Calculate time of LMX and the value of LMX
+        lmx_ts, lmx = _lmx(data, length, lowest=lowest)
 
-        lmx_per_ch = []
-        for ch in self.light.columns:
-            lmx_ts, lmx = _lmx(self.light.loc[:, ch], length, lowest=lowest)
-            lmx_per_ch.append(
-                pd.Series(
-                    {
-                        'channel': ch,
-                        'index': lmx_ts,
-                        'value': lmx
-                        #'value': lmx * epoch_per_hour
-                    }
-                )
-            )
+        # Return these values back to the user
+        return lmx_ts, lmx
 
-        return pd.concat(lmx_per_ch, axis=1).T
 
-    def _RAR(self, rar_func, rar_name, binarize=False, threshold=0):
-        r""" Generic RAR function
+    def _RAR(self, rar_func, rar_name, binarize=False, threshold=0, freq=None):
+        r""" Generic rest-activity rhythm (RAR) function
 
-        Apply a generic RAR function to the light data, per channel.
+        Apply a generic RAR function to the light data.
         """
+        # TODO: This code needs to be tidied up
+        # Binarize if asked
         if binarize:
             data = self.binarize(data=self.light, threshold=threshold)
         else:
             data = self.light
 
-        rar_per_ch = []
-        for ch in self.light.columns:
-            rar = rar_func(data.loc[:, ch])
-            rar_per_ch.append(
-                pd.Series(
-                    {
-                        'channel': ch,
-                        rar_name: rar
-                    }
-                )
-            )
+        # Resample if needed
+        if freq is None:
+            data = self.resample(data=data)
+        else:
+            data = self.resample(data=data, freq=freq)
 
-        return pd.concat(rar_per_ch, axis=1).T
+        # Apply the RAR function
+        return rar_func(data)
 
-    def IS(self, binarize=False, threshold=0):
+
+    def light_interdaily_stability(self, binarize=False, threshold=0):
         r"""Interdaily stability
 
         The Interdaily stability (IS) quantifies the repeatibilty of the
@@ -758,12 +739,12 @@ class Light(object):
 
         return self._RAR(
             _interdaily_stability,
-            'IS',
+            'interdaily_stability',
             binarize=binarize,
             threshold=threshold
         )
 
-    def IV(self, binarize=False, threshold=0):
+    def light_intradaily_variability(self, binarize=False, threshold=0):
         r"""Intradaily variability
 
         The Intradaily Variability (IV) quantifies the variability of the
@@ -822,7 +803,7 @@ class Light(object):
         """
         return self._RAR(
             _intradaily_variability,
-            'IV',
+            'intradaily_variability',
             binarize=binarize,
             threshold=threshold
         )
