@@ -39,17 +39,17 @@ class Light(object):
     """ Mixin Class """
 
     def _light_data(self, binarize=False, threshold=0, freq=None):
-        # Binarize data using the threshold provided
+        # Binarize data using a given threshold
         if binarize:
             data = self.binarize(data=self.light, threshold=threshold)
         else:
             data = self.light
 
-        # Resample and mask
+        # Resample and apply existing mask if enabled
         if freq is None:
-            data = self.resample(data=data)
+            return self.resample(data=data)
         else:
-            data = self.resample(data=data, freq=freq)
+            return self.resample(data=data, freq=freq)
 
 
     def average_daily_profile(self, freq='5min', cyclic=False, time_origin=None):
@@ -80,7 +80,7 @@ class Light(object):
         raw : pandas.Series
             A Series containing the daily light profile with a 24h/48h index.
         """
-        data = self.resample(data=self.light, freq=freq)
+        data = self._light_data(freq=freq)
 
         if time_origin is None:
 
@@ -151,7 +151,7 @@ class Light(object):
         auc : float
             Area under the curve.
         """
-        data = self.resample(data=self.light, freq=freq)
+        data = self._light_data(freq=freq)
 
         # Compute average daily profile
         avgdaily = _average_daily_activity(data, cyclic=False)
@@ -521,9 +521,10 @@ class Light(object):
                https://doi.org/10.1371/journal.pone.0092251
 
         """
+        data = self._light_data(freq=freq)
 
         # Binarized data and convert to float in order to handle 'DivideByZero'
-        I_jk = self.binarize(data=self.light, threshold=threshold).astype('float64')
+        I_jk = self.binarize(data=data, threshold=threshold).astype('float64')
 
         MLiT = self.get_time_barycentre(I_jk)
 
@@ -571,9 +572,10 @@ class Light(object):
                https://doi.org/10.1371/journal.pone.0092251
 
         """
+        data = self._light_data(freq=freq)
 
         # Binarized data and convert to float in order to handle 'DivideByZero'
-        I_jk = self.binarize(data=self.light, threshold=threshold).astype('float64')
+        I_jk = self.binarize(data=data, threshold=threshold).astype('float64')
 
         # Group data per day:
         MLiTp = I_jk.groupby(I_jk.index.date).apply(self.get_time_barycentre)
@@ -599,11 +601,7 @@ class Light(object):
         ext : pd.DataFrame
             A pandas DataFrame with extremum info per channel.
         """
-        # Resample if needed
-        if freq is None:
-            data = self.resample(data=self.light)
-        else:
-            data = self.resample(data=self.light, freq=freq)
+        data = self._light_data(freq=freq)
 
         # Return either the maximum or minimum, as well as the respective timestamp
         if extremum == 'max':
@@ -651,11 +649,7 @@ class Light(object):
                http://doi.org/10.1177/074873049701200206
 
         """
-        # Resample if needed
-        if freq is None:
-            data = self.resample(data=self.light)
-        else:
-            data = self.resample(data=self.light, freq=freq)
+        data = self._light_data(freq=freq)
 
         # Calculate time of LMX and the value of LMX
         lmx_ts, lmx = _lmx(data, length, lowest=lowest)
@@ -669,18 +663,7 @@ class Light(object):
 
         Apply a generic RAR function to the light data.
         """
-        # TODO: This code needs to be tidied up
-        # Binarize if asked
-        if binarize:
-            data = self.binarize(data=self.light, threshold=threshold)
-        else:
-            data = self.light
-
-        # Resample if needed
-        if freq is None:
-            data = self.resample(data=data)
-        else:
-            data = self.resample(data=data, freq=freq)
+        data = self._light_data(binarize=binarize, threshold=threshold, freq=freq)
 
         # Apply the RAR function
         return rar_func(data)
@@ -821,84 +804,3 @@ class Light(object):
             binarize=binarize,
             threshold=threshold
         )
-
-    @staticmethod
-    def _filter_butterworth(data, fs, fc_low, fc_high, N):
-        # Filter order (Attenuation: -20*N dB/decade)
-        # See https://dsp.stackexchange.com/questions/60455/
-        # how-to-choose-order-and-cut-off-frequency-for-low-pass-butterworth-filter)
-
-        # Create Butterworth filter (order: N)
-        # whose type (highpass, lowpass, bandpass)
-        # depends on the input arguments
-        if (fc_low is None) and (fc_high is not None):
-            # Set a lowpass filter
-            Wn = fc_high
-            btype = 'lowpass'
-        elif (fc_low is not None) and (fc_high is None):
-            # Set a highpass filter
-            Wn = fc_low
-            btype = 'highpass'
-        elif (fc_low is not None) and (fc_high is not None):
-            # Set a bandpass filter
-            Wn = [fc_low, fc_high]
-            btype = 'bandpass'
-        else:
-            raise ValueError(
-                "Both high and low critical frequencies were set to None."
-            )
-
-        sos = signal.butter(
-            N//2, Wn=Wn, btype=btype, fs=fs, output='sos'
-        )
-
-        data_smooth = signal.sosfiltfilt(sos, data)
-
-        return data_smooth
-
-    def filter_butterworth(self, fc_low, fc_high, N, channels=None):
-        r"""Butterworth filtering
-
-        Forward-backward digital filtering using a Nth order Butterworth filter
-
-        Parameters
-        ----------
-        fc_low: float
-            Critical frequency (lower).
-        fc_high: float
-            Critical fequency (higher).
-        N: int
-            Order of the filter
-        channels: list of str, optional.
-            Channel list. If set to None, use all available channels.
-            Default is None.
-
-        Returns
-        -------
-        filt: pd.DataFrame
-            Filtered signal, per channel.
-
-        Notes
-        -----
-
-        This function is essentially a wrapper to the scipy.signal.butter
-        function. For more information, see [1]_.
-
-        References
-        ----------
-
-        .. [1] https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.butter.html
-
-        """  # noqa
-
-        # Select channels of interest and
-        # apply filtering to all available channels
-        filt = self.get_channels(channels).apply(
-            self._filter_butterworth,
-            axis=0,
-            raw=True,
-            fs=1/pd.Timedelta(self.light.index.freq).total_seconds(),
-            fc_low=fc_low, fc_high=fc_high, N=N
-        )
-
-        return filt
