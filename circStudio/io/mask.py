@@ -22,7 +22,18 @@ class Mask:
 
         # Return original time series if freq is not specified or lower than the sampling frequency
         if freq is None or pd.Timedelta(to_offset(freq)) <= self.frequency:
-            return data
+            # If asked to mask inactivity, return only the values where the mask is 1
+            if self.mask_inactivity:
+                # Check if the mask exists and apply it
+                if self._mask is not None:
+                    return data.where(self._mask > 0)
+                else:
+                    # Return original data in case no mask is found.
+                    print("No mask was found. Create a new mask.")
+                    return data
+            else:
+                # Return original data is mask_inactivity is set to False
+                return data
 
         else:
             # After the initial checks, resample activity trace (sum all the counts within the resampling window)
@@ -47,7 +58,7 @@ class Mask:
 
             # When resampling, do not exclude all the resampled timepoints within the new resampling window
             else:
-                resampled_mask = self._mask.resample(freq, origin="start").min()
+                resampled_mask = self._mask.resample(freq, origin="start").max()
 
                 # Return the masked resampled activity trace
                 return resampled_data.where(resampled_mask > 0)
