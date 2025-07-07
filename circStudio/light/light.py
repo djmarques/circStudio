@@ -212,7 +212,7 @@ class Light(object):
             threshold and/or outside time window.
         """
         if threshold is not None:
-            data_mask = self.light.mask(self.data < threshold)
+            data_mask = self.light.mask(self.light < threshold)
         else:
             data_mask = self.light
 
@@ -292,11 +292,11 @@ class Light(object):
             A pandas DataFrame with summary statistics per channel.
         """
         if isinstance(bins, str):
-            summary_stats = self.data.resample(bins).agg(agg_func)
+            summary_stats = self.light.resample(bins).agg(agg_func)
         elif isinstance(bins, list):
             df_col = []
             for idx, (start, end) in enumerate(bins):
-                df_bins = self.data.loc[start:end, :].apply(
+                df_bins = self.light.loc[start:end, :].apply(
                     agg_func
                 ).pivot_table(columns=agg_func)
                 channels = {}
@@ -317,7 +317,7 @@ class Light(object):
 
         return summary_stats
 
-    def TAT(
+    def time_above_threshold(
         self, threshold=None, start_time=None, stop_time=None, oformat=None
     ):
         r"""Time above light threshold.
@@ -366,15 +366,15 @@ class Light(object):
 
         if oformat == 'minute':
             tat = light_exposure_counts * \
-                pd.Timedelta(self.data.index.freq)/pd.Timedelta('1min')
+                pd.Timedelta(self.light.index.freq)/pd.Timedelta('1min')
         elif oformat == 'timedelta':
-            tat = light_exposure_counts * pd.Timedelta(self.data.index.freq)
+            tat = light_exposure_counts * pd.Timedelta(self.light.index.freq)
         else:
             tat = light_exposure_counts
 
         return tat
 
-    def TATp(
+    def time_above_threshold_by_period(
         self, threshold=None, start_time=None, stop_time=None, oformat=None
     ):
         r"""Time above light threshold (per day).
@@ -421,19 +421,19 @@ class Light(object):
             threshold=threshold,
             start_time=start_time,
             stop_time=stop_time
-        ).groupby(self.data.index.date).count()
+        ).groupby(self.light.index.date).count()
 
         if oformat == 'minute':
             tatp = light_exposure_counts_per_day * \
-                pd.Timedelta(self.data.index.freq)/pd.Timedelta('1min')
+                pd.Timedelta(self.light.index.freq)/pd.Timedelta('1min')
         elif oformat == 'timedelta':
-            tatp = light_exposure_counts_per_day * pd.Timedelta(self.data.index.freq)
+            tatp = light_exposure_counts_per_day * pd.Timedelta(self.light.index.freq)
         else:
             tatp = light_exposure_counts_per_day
 
         return tatp
 
-    def VAT(self, threshold=None):
+    def values_above_threshold(self, threshold=None):
         r"""Values above light threshold.
 
         Returns the light exposure values above the threshold.
@@ -468,7 +468,7 @@ class Light(object):
 
         return bc
 
-    def MLiT(self, threshold):
+    def mean_light_timing(self, threshold):
         r"""Mean light timing.
 
         Mean light timing above threshold, MLiT^C.
@@ -509,7 +509,7 @@ class Light(object):
         """
 
         # Binarized data and convert to float in order to handle 'DivideByZero'
-        I_jk = self.binarized_data(threshold=threshold).astype('float64')
+        I_jk = self.binarize(data=self.light, threshold=threshold).astype('float64')
 
         MLiT = self.get_time_barycentre(I_jk)
 
@@ -518,7 +518,7 @@ class Light(object):
 
         return MLiT
 
-    def MLiTp(self, threshold):
+    def mean_light_timing_by_period(self, threshold):
         r"""Mean light timing per day.
 
         Mean light timing above threshold, MLiT^C, per calendar day.
@@ -559,7 +559,7 @@ class Light(object):
         """
 
         # Binarized data and convert to float in order to handle 'DivideByZero'
-        I_jk = self.binarized_data(threshold=threshold).astype('float64')
+        I_jk = self.binarize(data=self.light, threshold=threshold).astype('float64')
 
         # Group data per day:
         MLiTp = I_jk.groupby(I_jk.index.date).apply(self.get_time_barycentre)
@@ -594,14 +594,14 @@ class Light(object):
         extremum_att = 'idxmax' if extremum == 'max' else 'idxmin'
 
         extremum_per_ch = []
-        for ch in self.data.columns:
-            index_ext = getattr(self.data.loc[:, ch], extremum_att)()
+        for ch in self.light.columns:
+            index_ext = getattr(self.light.loc[:, ch], extremum_att)()
             extremum_per_ch.append(
                 pd.Series(
                     {
                         'channel': ch,
                         'index': index_ext,
-                        'value': self.data.loc[index_ext, ch]
+                        'value': self.light.loc[index_ext, ch]
                     }
                 )
             )
@@ -649,11 +649,11 @@ class Light(object):
         # This would give an hourly mean per epoch, which does not correspond to the notion of M10
         # It would constitute an artifact of using circStudio - so, just the mean lux value of the
         # Brightest hours of the day is preferred.
-        #epoch_per_hour = pd.Timedelta('1h')/self.data.index.freq
+        #epoch_per_hour = pd.Timedelta('1h')/self.light.index.freq
 
         lmx_per_ch = []
-        for ch in self.data.columns:
-            lmx_ts, lmx = _lmx(self.data.loc[:, ch], length, lowest=lowest)
+        for ch in self.light.columns:
+            lmx_ts, lmx = _lmx(self.light.loc[:, ch], length, lowest=lowest)
             lmx_per_ch.append(
                 pd.Series(
                     {
@@ -673,12 +673,12 @@ class Light(object):
         Apply a generic RAR function to the light data, per channel.
         """
         if binarize:
-            data = self.binarized_data(threshold=threshold)
+            data = self.binarize(data=self.light, threshold=threshold)
         else:
-            data = self.data
+            data = self.light
 
         rar_per_ch = []
-        for ch in self.data.columns:
+        for ch in self.light.columns:
             rar = rar_func(data.loc[:, ch])
             rar_per_ch.append(
                 pd.Series(
@@ -902,7 +902,7 @@ class Light(object):
             self._filter_butterworth,
             axis=0,
             raw=True,
-            fs=1/pd.Timedelta(self.data.index.freq).total_seconds(),
+            fs=1/pd.Timedelta(self.light.index.freq).total_seconds(),
             fc_low=fc_low, fc_high=fc_high, N=N
         )
 
