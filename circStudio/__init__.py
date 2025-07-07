@@ -21,7 +21,7 @@ from . import io
 from . import light
 from . import activity
 from . import sleep
-from . import utils
+from . import tools
 from . import tests
 
 __all__ = [

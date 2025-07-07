@@ -29,8 +29,8 @@ from scipy import signal
 from ..activity.activity import _lmx
 from ..activity.activity import _interdaily_stability
 from ..activity.activity import _intradaily_variability
-from ..utils.utils import _average_daily_activity
-from ..utils.utils import _shift_time_axis
+from ..tools.utils import _average_daily_activity
+from ..tools.utils import _shift_time_axis
 
 __all__ = ['Light', 'LightRecording']
 
