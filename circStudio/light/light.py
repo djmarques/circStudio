@@ -482,7 +482,7 @@ class Light(object):
 
         return bc
 
-    def mean_light_timing(self, threshold):
+    def mean_light_timing(self, threshold, freq=None):
         r"""Mean light timing.
 
         Mean light timing above threshold, MLiT^C.
@@ -533,7 +533,7 @@ class Light(object):
 
         return MLiT
 
-    def mean_light_timing_by_period(self, threshold):
+    def mean_light_timing_by_period(self, threshold, freq=None):
         r"""Mean light timing per day.
 
         Mean light timing above threshold, MLiT^C, per calendar day.
