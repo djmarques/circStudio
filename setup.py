@@ -43,7 +43,6 @@ setup(
     # project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
     version=find_version("circStudio", "__init__.py"),
-    # version='0.1',
 
     # One-line description
     description='Analysis package for actigraphy data',
@@ -60,10 +59,10 @@ setup(
     #
     # This field corresponds to the "Home-Page" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#home-page-optional
-    url='https://github.com/ghammad/pyActigraphy',
+    url='https://github.com/djmarques/circStudio',
 
-    author='Grégory Hammad',
-    author_email='gregory.hammad@hotmail.fr',
+    author='Daniel Marques',
+    author_email='daniel.marques@gimm.pt',
 
     # Classifiers help users find your project by categorizing it.
     #
@@ -105,14 +104,9 @@ setup(
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
-        'joblib', 'lmfit', 'pandas>=1.4.0', 'plotly', 'numpy', 'pyexcel',
-        'pyexcel-ods3', 'pyexcel-xlsx', 'scipy', 'spm1d', 'statsmodels>=0.10',
-    ],  # Optional
+        'lmfit', 'pandas>=1.4.0', 'plotly', 'numpy', 'pyexcel', 'scipy', 'statsmodels>=0.10'],
 
     # Data files included in your packages that need to be installed.
-    #
-    # If using Python 2.6 or earlier, then these have to be included in
-    # MANIFEST.in as well.
     package_data={  # Optional
         'circStudio': ['tests/data/*']
     },
