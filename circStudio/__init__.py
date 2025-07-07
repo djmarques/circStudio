@@ -32,7 +32,7 @@ __all__ = [
     "activity",
     "sleep",
     "tests",
-    "utils"
+    "tools"
 ]
 
 __version__ = '1.0.0'

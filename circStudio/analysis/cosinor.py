@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from joblib import Parallel, delayed
 from lmfit import fit_report, minimize, Parameters
 
 

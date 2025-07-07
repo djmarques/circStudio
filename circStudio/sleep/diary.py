@@ -3,7 +3,7 @@ import pandas as pd
 import pyexcel as pxl
 
 
-class SleepDiary():
+class SleepDiary:
     """Class for reading sleep diaries."""
     def __init__(self, input_fname, start_time, periods, frequency, header_size=2, state_index= None, state_colour= None):
 

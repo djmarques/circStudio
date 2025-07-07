@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-# from ..scoring_base import _window_convolution
 
 
 def _window_convolution(x, scale, window):
