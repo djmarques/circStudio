@@ -45,6 +45,8 @@ class Light(object):
         else:
             data = self.light
 
+        print(data)
+
         # Resample and apply existing mask if enabled
         if freq is None:
             return self.resample(data=data)

@@ -169,12 +169,7 @@ class RawAWD(BaseRaw):
             period=period,
             frequency=pd.Timedelta(freq),
             activity=data.loc[:, 'Activity'],
-            light=LightRecording(
-                name=name,
-                uuid=uuid,
-                data=data.loc[:, 'Light'].to_frame(name='whitelight'),
-                frequency=freq
-            ) if 'Light' in data.columns else None
+            light=data.loc[:, 'Light'].to_frame(name='whitelight') if 'Light' in data.columns else None
         )
 
     @property
