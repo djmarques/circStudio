@@ -52,7 +52,7 @@ class Activity(object):
             data=data, freq=freq, cyclic=cyclic, time_origin=time_origin, whs=whs
         )
 
-    def ADAT(self, rescale=True, exclude_ends=False):
+    def adat(self, rescale=True, exclude_ends=False):
         """Total average daily activity
 
         Calculate the total activity counts, averaged over all the days.
@@ -116,7 +116,7 @@ class Activity(object):
             verbose=verbose,
         )
 
-    def l5(self, freq=None):
+    def activity_l5(self, freq=None):
         r"""L5
 
         Mean activity during the 5 least active hours of the day.
@@ -147,7 +147,7 @@ class Activity(object):
         data = self.resample(data=self.activity, freq=freq)
         return l5(data=data)
 
-    def m10(self, freq=None):
+    def activity_m10(self, freq=None):
         r"""M10
 
         Mean activity during the 10 most active hours of the day.
@@ -180,7 +180,7 @@ class Activity(object):
 
         return m10
 
-    def relative_amplitude(self, freq=None):
+    def activity_ra(self, freq=None):
         r"""Relative rest/activity amplitude
 
         Relative amplitude between the mean activity during the 10 most active
@@ -213,7 +213,7 @@ class Activity(object):
         data = self.resample(data=self.activity, freq=freq)
         return relative_amplitude(data=data)
 
-    def l5p(self, period="7D", freq=None, verbose=False):
+    def activity_l5p(self, period="7D", freq=None, verbose=False):
         r"""L5 per period
 
         The L5 variable is calculated for each consecutive period found in the
@@ -255,7 +255,7 @@ class Activity(object):
         data = self.resample(data=self.activity, freq=freq)
         return l5p(data=data, period=period, verbose=verbose)
 
-    def m10p(self, period="7D", freq=None, verbose=False):
+    def activity_m10p(self, period="7D", freq=None, verbose=False):
         r"""M10 per period
 
         The M10 variable is calculated for each consecutive period found in the
@@ -301,7 +301,7 @@ class Activity(object):
         intervals = _interval_maker(data.index, period, verbose)
         return m10p(data=data, period=period, verbose=verbose)
 
-    def relative_amplitude_per_period(self, period="7D", freq=None, verbose=False):
+    def activity_ra_per_period(self, period="7D", freq=None, verbose=False):
         r"""RA per period
 
         The RA variable is calculated for each consecutive period found in the
@@ -342,7 +342,7 @@ class Activity(object):
         data = self.resample(data=self.activity, freq=freq)
         return relative_amplitude_by_period(data=data, period=period, verbose=verbose)
 
-    def interdaily_stability(self, freq="1h"):
+    def activity_is(self, freq="1h"):
         r"""Interdaily stability
 
         The Interdaily stability (IS) quantifies the repeatibilty of the
@@ -403,7 +403,7 @@ class Activity(object):
         data = self.resample(data=self.activity, freq=freq)
         return interdaily_stability(data=data)
 
-    def average_interdaily_stability(self, freqs=None):
+    def activity_avg_is(self, freqs=None):
         r"""Average interdaily stability
 
         ISm [1]_ is the average of the IS values obtained with resampling
@@ -468,7 +468,7 @@ class Activity(object):
         data = [self.resample(data=self.activity, freq=freq) for freq in freqs]
         return mean([interdaily_stability(datum) for datum in data])
 
-    def interdaily_stability_per_period(self, period="7D", freq="1h", verbose=False):
+    def activity_is_per_period(self, period="7D", freq="1h", verbose=False):
         r"""Interdaily stability per period
 
         The IS is calculated for each consecutive period found in the
@@ -503,7 +503,7 @@ class Activity(object):
             data=data, period=period, verbose=verbose
         )
 
-    def intradaily_variability(self, freq="1h"):
+    def activity_iv(self, freq="1h"):
         r"""Intradaily variability
 
         The Intradaily Variability (IV) quantifies the variability of the
@@ -563,7 +563,7 @@ class Activity(object):
 
         return intradaily_variability(data)
 
-    def average_intradaily_variability(self, freqs=None):
+    def activity_avg_iv(self, freqs=None):
         r"""Average intradaily variability
 
         IVm [1]_ is the average of the IV values obtained with resampling
@@ -623,7 +623,7 @@ class Activity(object):
 
         return mean([intradaily_variability(datum) for datum in data])
 
-    def intradaily_variability_per_period(self, period="7D", freq="1h", verbose=False):
+    def activity_iv_per_period(self, period="7D", freq="1h", verbose=False):
         r"""Intradaily variability per period (method)
 
         The IV is calculated for each consecutive period found in the

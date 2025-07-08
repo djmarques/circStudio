@@ -613,3 +613,4 @@ def intradaily_variability_per_period(data, period="7D", verbose=False):
 
     results = [intradaily_variability(data[time[0] : time[1]]) for time in intervals]
     return results
+
