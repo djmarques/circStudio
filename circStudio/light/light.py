@@ -26,11 +26,8 @@
 import pandas as pd
 import re
 from scipy import signal
-from ..activity.activity import _lmx
-from ..activity.activity import _interdaily_stability
-from ..activity.activity import _intradaily_variability
-from ..tools.tools import _average_daily_activity
-from ..tools.tools import _shift_time_axis
+from ..activity.activity import *
+from ..analysis.tools import *
 
 __all__ = ['Light', 'LightRecording']
 

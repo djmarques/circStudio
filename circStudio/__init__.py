@@ -21,7 +21,6 @@ from . import io
 from . import light
 from . import activity
 from . import sleep
-from . import tools
 from . import tests
 
 __all__ = [
@@ -32,7 +31,6 @@ __all__ = [
     "activity",
     "sleep",
     "tests",
-    "tools"
 ]
 
 __version__ = '1.0.0'

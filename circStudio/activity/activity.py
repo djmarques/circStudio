@@ -2,10 +2,7 @@ import pandas as pd
 import numpy as np
 import re
 
-from ..tools.tools import _average_daily_activity
-from ..tools.tools import _activity_onset_time
-from ..tools.tools import _activity_offset_time
-from ..tools.tools import _shift_time_axis
+from ..analysis.tools import *
 from ..analysis.metrics import *
 
 from statistics import mean

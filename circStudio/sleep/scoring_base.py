@@ -5,9 +5,7 @@ from .scoring import csm, roenneberg, sleep_midpoint, sri
 from .scoring.utils import rescore
 from scipy.ndimage import binary_closing, binary_opening
 from ..filters import _create_inactivity_mask
-from ..tools.tools import _average_daily_activity
-from ..tools.tools import _activity_onset_time
-from ..tools.tools import _activity_offset_time
+from ..analysis.tools import *
 
 
 def _td_format(td):
