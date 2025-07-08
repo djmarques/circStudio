@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
+from pandas.tseries.frequencies import to_offset
+
 
 __all__ = [
     "_average_daily_activity",
