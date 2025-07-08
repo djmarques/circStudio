@@ -19,7 +19,7 @@ __all__ = [
     "interdaily_stability",
     "interdaily_stability_per_period",
     "intradaily_variability",
-    "intradaily_variability_per_period"
+    "intradaily_variability_per_period",
 ]
 
 
@@ -105,7 +105,7 @@ def daily_profile(data, freq="5min", cyclic=False, time_origin=None, whs="1h"):
         return _shift_time_axis(avgdaily, shift)
 
 
-def adat(data, freq="10min", rescale=True, exclude_ends=False):
+def adat(data, rescale=True, exclude_ends=False):
     """Total average daily activity
 
     Calculate the total activity counts, averaged over all the days.
@@ -126,7 +126,9 @@ def adat(data, freq="10min", rescale=True, exclude_ends=False):
     -------
     adat : int
     """
-    return _average_daily_total_activity(data, rescale=rescale, exclude_ends=exclude_ends)
+    return _average_daily_total_activity(
+        data, rescale=rescale, exclude_ends=exclude_ends
+    )
 
 
 def adatp(data, period="7D", rescale=True, exclude_ends=False, verbose=False):
@@ -609,7 +611,5 @@ def intradaily_variability_per_period(data, period="7D", verbose=False):
     """
     intervals = _interval_maker(data.index, period, verbose)
 
-    results = [
-        intradaily_variability(data[time[0] : time[1]]) for time in intervals
-    ]
+    results = [intradaily_variability(data[time[0] : time[1]]) for time in intervals]
     return results

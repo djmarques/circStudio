@@ -12,7 +12,9 @@ import statsmodels.api as sm
 class Activity(object):
     """Class containing all the functions to compute activity metrics."""
 
-    def average_daily_activity(self, freq="5min", cyclic=False, time_origin=None, whs="1h"):
+    def average_daily_activity(
+        self, freq="5min", cyclic=False, time_origin=None, whs="1h"
+    ):
         r"""Average daily activity distribution
 
         Calculate the daily profile of activity. Data are averaged over all the
@@ -46,11 +48,11 @@ class Activity(object):
             A Series containing the daily activity profile with a 24h index.
         """
         data = self.resample(data=self.activity, freq=freq)
+        return daily_profile(
+            data=data, freq=freq, cyclic=cyclic, time_origin=time_origin, whs=whs
+        )
 
-        return daily_profile(data=data, freq=freq, cyclic=cyclic, time_origin=time_origin, whs=whs)
-
-
-    def ADAT(self, freq="10min", rescale=True, exclude_ends=False):
+    def ADAT(self, rescale=True, exclude_ends=False):
         """Total average daily activity
 
         Calculate the total activity counts, averaged over all the days.
@@ -71,16 +73,12 @@ class Activity(object):
         -------
         adat : int
         """
-        # TODO: attempt to use the new resample function instead
-        if self.mask_inactivity:
-            data = self.activity.where(self.mask > 0)
-        else:
-            data = self.activity
+        data = self.resample(data=self.activity, freq=freq)
+        return adat(data=data, rescale=rescale, exclude_ends=exclude_ends)
 
-        return adat(data=data, freq=freq, rescale=rescale, exclude_ends=exclude_ends)
-
-
-    def adatp(self, period="7D", rescale=True, exclude_ends=False, verbose=False):
+    def adatp(
+        self, period="7D", freq=None, rescale=True, exclude_ends=False, verbose=False
+    ):
         """Total average daily activity per period
 
         Calculate the total activity counts, averaged over each consecutive
@@ -109,15 +107,16 @@ class Activity(object):
         -------
         adatp : list of int
         """
-        # TODO: attempt to use the new resample function instead
-        if self.mask_inactivity:
-            data = self.activity.where(self.mask > 0)
-        else:
-            data = self.activity
+        data = self.resample(data=self.activity, freq=freq)
+        return adatp(
+            data=data,
+            period=period,
+            rescale=rescale,
+            exclude_ends=exclude_ends,
+            verbose=verbose,
+        )
 
-        return adatp(data=data, period=period, rescale=rescale, exclude_ends=exclude_ends, verbose=verbose)
-
-    def l5(self):
+    def l5(self, freq=None):
         r"""L5
 
         Mean activity during the 5 least active hours of the day.
@@ -145,14 +144,10 @@ class Activity(object):
                http://doi.org/10.1177/074873049701200206
         """
 
-        if self.mask_inactivity:
-            data = self.activity.where(self.mask > 0)
-        else:
-            data = self.activity
-
+        data = self.resample(data=self.activity, freq=freq)
         return l5(data=data)
 
-    def m10(self):
+    def m10(self, freq=None):
         r"""M10
 
         Mean activity during the 10 most active hours of the day.
@@ -180,16 +175,12 @@ class Activity(object):
                http://doi.org/10.1177/074873049701200206
         """
 
-        if self.mask_inactivity:
-            data = self.activity.where(self.mask > 0)
-        else:
-            data = self.activity
-
+        data = self.resample(data=self.activity, freq=freq)
         _, m10 = _lmx(data, "10h", lowest=False)
 
         return m10
 
-    def relative_amplitude(self):
+    def relative_amplitude(self, freq=None):
         r"""Relative rest/activity amplitude
 
         Relative amplitude between the mean activity during the 10 most active
@@ -219,14 +210,10 @@ class Activity(object):
                http://doi.org/10.1177/074873049701200206
         """
 
-        if self.mask_inactivity:
-            data = self.activity.where(self.mask > 0)
-        else:
-            data = self.activity
-
+        data = self.resample(data=self.activity, freq=freq)
         return relative_amplitude(data=data)
 
-    def l5p(self, period="7D", verbose=False):
+    def l5p(self, period="7D", freq=None, verbose=False):
         r"""L5 per period
 
         The L5 variable is calculated for each consecutive period found in the
@@ -265,15 +252,10 @@ class Activity(object):
                Journal of Biological Rhythms, 12(2), 146–156.
                http://doi.org/10.1177/074873049701200206
         """
-
-        if self.mask_inactivity:
-            data = self.activity.where(self.mask > 0)
-        else:
-            data = self.activity
-
+        data = self.resample(data=self.activity, freq=freq)
         return l5p(data=data, period=period, verbose=verbose)
 
-    def m10p(self, period="7D", verbose=False):
+    def m10p(self, period="7D", freq=None, verbose=False):
         r"""M10 per period
 
         The M10 variable is calculated for each consecutive period found in the
@@ -315,17 +297,11 @@ class Activity(object):
                Journal of Biological Rhythms, 12(2), 146–156.
                http://doi.org/10.1177/074873049701200206
         """
-
-        if self.mask_inactivity:
-            data = self.activity.where(self.mask > 0)
-        else:
-            data = self.activity
-
+        data = self.resample(data=self.activity, freq=freq)
         intervals = _interval_maker(data.index, period, verbose)
-
         return m10p(data=data, period=period, verbose=verbose)
 
-    def relative_amplitude_per_period(self, period="7D", verbose=False):
+    def relative_amplitude_per_period(self, period="7D", freq=None, verbose=False):
         r"""RA per period
 
         The RA variable is calculated for each consecutive period found in the
@@ -363,14 +339,8 @@ class Activity(object):
                Journal of Biological Rhythms, 12(2), 146–156.
                http://doi.org/10.1177/074873049701200206
         """
-
-        if self.mask_inactivity:
-            data = self.activity.where(self.mask > 0)
-        else:
-            data = self.activity
-
+        data = self.resample(data=self.activity, freq=freq)
         return relative_amplitude_by_period(data=data, period=period, verbose=verbose)
-
 
     def interdaily_stability(self, freq="1h"):
         r"""Interdaily stability
@@ -430,7 +400,6 @@ class Activity(object):
                Alterations in the circadian rest–activity rhythm in aging and
                Alzheimer׳s disease. Biol Psychiatry. 1990;27:563–572.
         """
-
         data = self.resample(data=self.activity, freq=freq)
         return interdaily_stability(data=data)
 
@@ -497,7 +466,6 @@ class Activity(object):
                 "60min",
             ]
         data = [self.resample(data=self.activity, freq=freq) for freq in freqs]
-
         return mean([interdaily_stability(datum) for datum in data])
 
     def interdaily_stability_per_period(self, period="7D", freq="1h", verbose=False):
@@ -531,8 +499,9 @@ class Activity(object):
         for that period.
         """
         data = self.resample(data=self.activity, freq=freq)
-        return interdaily_stability_per_period(data=data, period=period, verbose=verbose)
-
+        return interdaily_stability_per_period(
+            data=data, period=period, verbose=verbose
+        )
 
     def intradaily_variability(self, freq="1h"):
         r"""Intradaily variability
@@ -688,7 +657,6 @@ class Activity(object):
         data = self.resample(data=self.activity, freq=freq)
         return intradaily_variability(data=data, period=period, verbose=verbose)
 
-
     def pRA(self, threshold=0, start=None, period=None):
         r"""Rest->Activity transition probability distribution
 
@@ -743,7 +711,9 @@ class Activity(object):
         if start is not None:
             end = _td_format(pd.Timedelta(start) + pd.Timedelta(period))
 
-            data = self.binarize(data=self.activity, threshold=threshold).between_time(start, end)
+            data = self.binarize(data=self.activity, threshold=threshold).between_time(
+                start, end
+            )
         else:
             data = self.binarize(data=self.activity, threshold=threshold)
 
@@ -806,7 +776,9 @@ class Activity(object):
         if start is not None:
             end = _td_format(pd.Timedelta(start) + pd.Timedelta(period))
 
-            data = self.binarize(data=self.activity, threshold=threshold).between_time(start, end)
+            data = self.binarize(data=self.activity, threshold=threshold).between_time(
+                start, end
+            )
         else:
             data = self.binarize(data=self.activity, threshold=threshold)
 
