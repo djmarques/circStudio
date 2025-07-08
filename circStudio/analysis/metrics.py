@@ -1,22 +1,21 @@
 import pandas as pd
 import numpy as np
 import re
-from ..analysis.tools import *
-from auxiliary_functions import *
-import auxiliary_functions
+from .tools import *
 from statistics import mean
 import statsmodels.api as sm
 
 
 __all__ = [
     "daily_profile",
-    "ADAT",
-    "ADATp",
+    "adat",
+    "adatp",
     "l5",
     "l5p",
     "m10",
     "m10p",
     "relative_amplitude",
+    "relative_amplitude_by_period",
     "interdaily_stability",
     "interdaily_stability_per_period",
     "intradaily_variability",
@@ -24,7 +23,6 @@ __all__ = [
 ]
 
 
-# GENERIC METRICS
 def daily_profile(data, freq="5min", cyclic=False, time_origin=None, whs="1h"):
     r"""Average daily activity/light/temperature distribution
 
@@ -360,6 +358,7 @@ def m10p(data, period="7D", verbose=False):
 
     results = [_lmx(data[time[0] : time[1]], "10h", lowest=False) for time in intervals]
     return [res[1] for res in results]
+
 
 def relative_amplitude_by_period(data, period="7D", verbose=False):
     r"""RA per period

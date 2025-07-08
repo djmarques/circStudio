@@ -35,20 +35,20 @@ __all__ = ['Light', 'LightRecording']
 class Light(object):
     """ Mixin Class """
 
+    # TODO: this function must be updated
     def _light_data(self, binarize=False, threshold=0, freq=None):
         # Binarize data using a given threshold
         if binarize:
-            data = self.binarize(data=self.light, threshold=threshold)
+            data = _binarize(data=self.light, threshold=threshold)
         else:
             data = self.light
 
-        print(data)
 
         # Resample and apply existing mask if enabled
         if freq is None:
-            return self.resample(data=data)
+            return _resample(data=data)
         else:
-            return self.resample(data=data, freq=freq)
+            return _resample(data=data, freq=freq)
 
 
     def average_daily_profile(self, freq='5min', cyclic=False, time_origin=None):

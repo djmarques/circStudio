@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from pandas.tseries.frequencies import to_offset
-from ..analysis.auxiliary_functions import *
+from ..analysis.tools import *
 
 
 class Mask:
