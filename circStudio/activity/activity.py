@@ -1,10 +1,8 @@
 import pandas as pd
 import numpy as np
 import re
-
 from ..analysis.tools import *
 from ..analysis.metrics import *
-
 from statistics import mean
 import statsmodels.api as sm
 
