@@ -127,7 +127,7 @@ def _resample(data,
 
     else:
         # After the initial checks, resample activity trace (sum all the counts within the resampling window)
-        resampled_data = data.resample(freq, origin="start").sum()
+        resampled_data = data.resample(new_freq, origin="start").sum()
 
         # If mask inactivity is set to False, return the resampled trace
         if not mask_inactivity:
@@ -141,14 +141,14 @@ def _resample(data,
         # When resampling, exclude all the resampled timepoints within the new resampling window
         elif mask_inactivity and exclude_if_mask:
             # Capture the minimum (0) for each resampling bin
-            resampled_mask = mask.resample(freq, origin="start").min()
+            resampled_mask = mask.resample(new_freq, origin="start").min()
 
             # Return the masked resampled activity trace
             return resampled_data.where(resampled_mask > 0)
 
         # When resampling, do not exclude all the resampled timepoints within the new resampling window
         else:
-            resampled_mask = mask.resample(freq, origin="start").max()
+            resampled_mask = mask.resample(new_freq, origin="start").max()
 
             # Return the masked resampled activity trace
             return resampled_data.where(resampled_mask > 0)
