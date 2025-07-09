@@ -8,6 +8,7 @@ import statsmodels.api as sm
 
 __all__ = [
     "daily_profile",
+    "daily_profile_auc",
     "adat",
     "adatp",
     "l5",
@@ -23,7 +24,7 @@ __all__ = [
 ]
 
 
-def daily_profile(data, freq="5min", cyclic=False, time_origin=None, whs="1h"):
+def daily_profile(data, cyclic=False, time_origin=None, whs="1h"):
     r"""Average daily activity/light/temperature distribution
 
     Calculate the daily profile of activity. Data are averaged over all the
@@ -103,6 +104,80 @@ def daily_profile(data, freq="5min", cyclic=False, time_origin=None, whs="1h"):
         shift = int((pd.Timedelta("12h") - time_origin) / data.index.freq)
 
         return _shift_time_axis(avgdaily, shift)
+
+
+def daily_profile_auc(data, start_time=None, stop_time=None, time_origin=None):
+    r"""AUC of the average daily light profile
+
+    Calculate the area under the curve of the daily profile of light
+    exposure. Data are averaged over all the days.
+
+    Parameters
+    ----------
+    start_time: str, optional
+        If not set to None, compute AUC from start time.
+        Supported time string: 'HH:MM:SS'
+        Default is None.
+    stop_time: str, optional
+        If not set to None, compute AUC until stop time.
+        Supported time string: 'HH:MM:SS'
+        Default is None.
+    time_origin: str or pd.Timedelta, optional
+        If not None, origin of the time axis for the daily profile.
+        Original time bins are translated as time delta with respect to
+        this new origin.
+        Default is None
+        Supported time string: 'HH:MM:SS'
+
+    Returns
+    -------
+    auc : float
+        Area under the curve.
+    """
+    # Compute average daily profile
+    avgdaily = _average_daily_activity(data, cyclic=False)
+
+    if time_origin is not None:
+
+        if isinstance(time_origin, str):
+            # Regex pattern for HH:MM:SS time string
+            pattern = re.compile(
+                r"^([0-1]\d|2[0-3])(?::([0-5]\d))(?::([0-5]\d))$"
+            )
+
+            if pattern.match(time_origin):
+                time_origin = pd.Timedelta(time_origin)
+            else:
+                raise ValueError(
+                    'Time origin format ({}) not supported.\n'.format(
+                        time_origin
+                    ) + 'Supported format: HH:MM:SS.'
+                )
+
+        elif not isinstance(time_origin, pd.Timedelta):
+            raise ValueError(
+                'Time origin is neither a time string with a supported '
+                'format, nor a pd.Timedelta.'
+            )
+
+        # Round time origin to the required frequency
+        time_origin = time_origin.round(data.index.freq)
+
+        shift = int((pd.Timedelta('12h')-time_origin)/data.index.freq)
+
+        avgdaily = _shift_time_axis(avgdaily, shift)
+
+    # Restrict profile to start/stop times
+    if start_time is not None:
+        start_time = pd.Timedelta(start_time)
+    if stop_time is not None:
+        stop_time = pd.Timedelta(stop_time)
+
+    # In order to avoid indexing with None, check for that too
+    if start_time is not None or stop_time is not None:
+        return avgdaily.loc[start_time:stop_time].sum()
+    else:
+        return avgdaily.sum()
 
 
 def adat(data, rescale=True, exclude_ends=False):
@@ -613,4 +688,5 @@ def intradaily_variability_per_period(data, period="7D", verbose=False):
 
     results = [intradaily_variability(data[time[0] : time[1]]) for time in intervals]
     return results
+
 

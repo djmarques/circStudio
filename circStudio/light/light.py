@@ -33,9 +33,8 @@ __all__ = ['Light', 'LightRecording']
 
 
 class Light(object):
-    """ Mixin Class """
+    """ Light Class """
 
-    # TODO: this function must be updated
     def _light_data(self, binarize=False, threshold=0, freq=None):
         # Binarize data using a given threshold
         if binarize:
@@ -50,152 +49,6 @@ class Light(object):
         else:
             return _resample(data=data, freq=freq)
 
-
-    def average_daily_profile(self, freq='5min', cyclic=False, time_origin=None):
-        r"""Average daily light profile
-
-        Calculate the daily profile of light exposure. Data are averaged over
-        all the days.
-
-        Parameters
-        ----------
-        freq: str, optional
-            Data resampling frequency.
-            Cf. #timeseries-offset-aliases in
-            <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>.
-        cyclic: bool, optional
-            If set to True, two daily profiles are concatenated to ensure
-            continuity between the last point of the day and the first one.
-            Default is False.
-        time_origin: str or pd.Timedelta, optional
-            If not None, origin of the time axis for the daily profile.
-            Original time bins are translated as time delta with respect to
-            this new origin.
-            Default is None
-            Supported time string: 'HH:MM:SS'
-
-        Returns
-        -------
-        raw : pandas.Series
-            A Series containing the daily light profile with a 24h/48h index.
-        """
-        data = self._light_data(freq=freq)
-
-        if time_origin is None:
-
-            return _average_daily_activity(data, cyclic=cyclic)
-
-        else:
-            if cyclic is True:
-                raise NotImplementedError(
-                    'Setting a time origin while cyclic option is True is not '
-                    'implemented yet.'
-                )
-
-            avgdaily = _average_daily_activity(data, cyclic=False)
-
-            if isinstance(time_origin, str):
-                # Regex pattern for HH:MM:SS time string
-                pattern = re.compile(
-                    r"^([0-1]\d|2[0-3])(?::([0-5]\d))(?::([0-5]\d))$"
-                )
-
-                if pattern.match(time_origin):
-                    time_origin = pd.Timedelta(time_origin)
-                else:
-                    raise ValueError(
-                        'Time origin format ({}) not supported.\n'.format(
-                            time_origin
-                        ) + 'Supported format: HH:MM:SS.'
-                    )
-
-            elif not isinstance(time_origin, pd.Timedelta):
-                raise ValueError(
-                    'Time origin is neither a time string with a supported '
-                    'format, nor a pd.Timedelta.'
-                )
-
-            # Round time origin to the required frequency
-            time_origin = time_origin.round(data.index.freq)
-
-            shift = int((pd.Timedelta('12h')-time_origin)/data.index.freq)
-
-            return _shift_time_axis(avgdaily, shift)
-
-    def average_daily_profile_auc(self, start_time=None, stop_time=None, time_origin=None, freq=None):
-        r"""AUC of the average daily light profile
-
-        Calculate the area under the curve of the daily profile of light
-        exposure. Data are averaged over all the days.
-
-        Parameters
-        ----------
-        start_time: str, optional
-            If not set to None, compute AUC from start time.
-            Supported time string: 'HH:MM:SS'
-            Default is None.
-        stop_time: str, optional
-            If not set to None, compute AUC until stop time.
-            Supported time string: 'HH:MM:SS'
-            Default is None.
-        time_origin: str or pd.Timedelta, optional
-            If not None, origin of the time axis for the daily profile.
-            Original time bins are translated as time delta with respect to
-            this new origin.
-            Default is None
-            Supported time string: 'HH:MM:SS'
-
-        Returns
-        -------
-        auc : float
-            Area under the curve.
-        """
-        data = self._light_data(freq=freq)
-
-        # Compute average daily profile
-        avgdaily = _average_daily_activity(data, cyclic=False)
-
-        if time_origin is not None:
-
-            if isinstance(time_origin, str):
-                # Regex pattern for HH:MM:SS time string
-                pattern = re.compile(
-                    r"^([0-1]\d|2[0-3])(?::([0-5]\d))(?::([0-5]\d))$"
-                )
-
-                if pattern.match(time_origin):
-                    time_origin = pd.Timedelta(time_origin)
-                else:
-                    raise ValueError(
-                        'Time origin format ({}) not supported.\n'.format(
-                            time_origin
-                        ) + 'Supported format: HH:MM:SS.'
-                    )
-
-            elif not isinstance(time_origin, pd.Timedelta):
-                raise ValueError(
-                    'Time origin is neither a time string with a supported '
-                    'format, nor a pd.Timedelta.'
-                )
-
-            # Round time origin to the required frequency
-            time_origin = time_origin.round(data.index.freq)
-
-            shift = int((pd.Timedelta('12h')-time_origin)/data.index.freq)
-
-            avgdaily = _shift_time_axis(avgdaily, shift)
-
-        # Restrict profile to start/stop times
-        if start_time is not None:
-            start_time = pd.Timedelta(start_time)
-        if stop_time is not None:
-            stop_time = pd.Timedelta(stop_time)
-
-        # In order to avoid indexing with None, check for that too
-        if start_time is not None or stop_time is not None:
-            return avgdaily.loc[start_time:stop_time].sum()
-        else:
-            return avgdaily.sum()
 
     def _light_exposure(self, threshold=None, start_time=None, stop_time=None):
         r"""Light exposure
@@ -235,6 +88,71 @@ class Light(object):
             raise ValueError('Both start and stop times have to be specified, if any.')
         else:
             return data_mask.between_time(start_time=start_time, end_time=stop_time, include_end=False)
+
+
+    def light_daily_profile(self, freq='5min', cyclic=False, time_origin=None, whs="1h"):
+        r"""Average daily light profile
+
+        Calculate the daily profile of light exposure. Data are averaged over
+        all the days.
+
+        Parameters
+        ----------
+        freq: str, optional
+            Data resampling frequency.
+            Cf. #timeseries-offset-aliases in
+            <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>.
+        cyclic: bool, optional
+            If set to True, two daily profiles are concatenated to ensure
+            continuity between the last point of the day and the first one.
+            Default is False.
+        time_origin: str or pd.Timedelta, optional
+            If not None, origin of the time axis for the daily profile.
+            Original time bins are translated as time delta with respect to
+            this new origin.
+            Default is None
+            Supported time string: 'HH:MM:SS'
+
+        Returns
+        -------
+        raw : pandas.Series
+            A Series containing the daily light profile with a 24h/48h index.
+        """
+        data = self._light_data(freq=freq)
+        return daily_profile(data, cyclic=cyclic, time_origin=time_origin, whs=whs)
+
+
+    def light_daily_profile_auc(self, start_time=None, stop_time=None, time_origin=None, freq=None):
+        r"""AUC of the average daily light profile
+
+        Calculate the area under the curve of the daily profile of light
+        exposure. Data are averaged over all the days.
+
+        Parameters
+        ----------
+        start_time: str, optional
+            If not set to None, compute AUC from start time.
+            Supported time string: 'HH:MM:SS'
+            Default is None.
+        stop_time: str, optional
+            If not set to None, compute AUC until stop time.
+            Supported time string: 'HH:MM:SS'
+            Default is None.
+        time_origin: str or pd.Timedelta, optional
+            If not None, origin of the time axis for the daily profile.
+            Original time bins are translated as time delta with respect to
+            this new origin.
+            Default is None
+            Supported time string: 'HH:MM:SS'
+
+        Returns
+        -------
+        auc : float
+            Area under the curve.
+        """
+        data = self._light_data(freq=freq)
+        return daily_profile_auc(data=data, start_time=start_time, stop_time=stop_time, time_origin=time_origin)
+
 
     def light_exposure_level(self, threshold=None, start_time=None, stop_time=None, agg='mean'):
         r"""Light exposure level
@@ -277,6 +195,8 @@ class Light(object):
 
         return levels()
 
+
+    # TODO: this function must be rewritten
     def summary_statistics_per_time_bin(
         self,
         bins='24h',
