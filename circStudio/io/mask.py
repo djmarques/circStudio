@@ -171,11 +171,41 @@ class BaseLog:
 
 
 class Mask:
-    def __init__(self, exclude_if_mask, mask_inactivity, inactivity_length, mask):
+    def __init__(self, exclude_if_mask, mask_inactivity, binarize, threshold, inactivity_length, mask):
         self.exclude_if_mask = exclude_if_mask
         self._inactivity_length = inactivity_length
         self.mask_inactivity = mask_inactivity
+        self._original_activity = self.activity
+        self._original_light = self.light if self.light is not None else None
+        self.binarize = binarize
+        self.threshold = threshold if binarize else None
         self._mask = mask
+
+    def _filter_data(self, data, freq):
+        return _data_processor(
+            data=data,
+            binarize=self.binarize,
+            threshold=0,
+            current_freq=self.frequency,
+            new_freq=self.frequency if freq is None else freq,
+            mask=self._mask,
+            mask_inactivity=self.mask_inactivity,
+            exclude_if_mask=self.exclude_if_mask,
+        )
+
+    def apply_filters(self, freq=None):
+        self.mask_inactivity = True
+        self.activity = self._filter_data(self.activity, freq)
+        if light is not None:
+            self.light = self._filter_data(self.light, freq)
+
+
+    def reset_filters(self, new_freq=None):
+        self.mask_inactivity = False
+        self.activity = self._original_activity
+        if light is not None:
+            self.light = self._original_light
+
 
     @staticmethod
     def binarize(data, threshold):
@@ -184,7 +214,6 @@ class Mask:
     def resample(self, data, binarize=False, freq=None):
         r"""Resample data at the specified frequency, with or without mask."""
         return _resample(data,
-                         binarize=binarize,
                          new_freq=freq,
                          current_freq=self.frequency,
                          mask_inactivity=self.mask_inactivity,

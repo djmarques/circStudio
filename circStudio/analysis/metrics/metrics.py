@@ -951,10 +951,8 @@ def mean_light_timing(light, threshold, freq=None):
            https://doi.org/10.1371/journal.pone.0092251
 
     """
-    data = _data_processor(light=light, freq=freq)
-
     # Binarized data and convert to float in order to handle 'DivideByZero'
-    I_jk = _binarize(data=data, threshold=threshold).astype("float64")
+    I_jk = _binarize(data=light, threshold=threshold).astype("float64")
 
     MLiT = get_time_barycentre(I_jk)
 
@@ -1003,10 +1001,8 @@ def mean_light_timing_by_period(light, threshold, freq=None):
            https://doi.org/10.1371/journal.pone.0092251
 
     """
-    data = _data_processor(light=light, freq=freq)
-
     # Binarized data and convert to float in order to handle 'DivideByZero'
-    I_jk = _binarize(data=data, threshold=threshold).astype("float64")
+    I_jk = _binarize(data=light, threshold=threshold).astype("float64")
 
     # Group data per day:
     MLiTp = I_jk.groupby(I_jk.index.date).apply(get_time_barycentre)
@@ -1033,8 +1029,6 @@ def get_extremum(data, extremum, freq=None):
     ext : pd.DataFrame
         A pandas DataFrame with extremum info per channel.
     """
-    data = _data_processor(data=data, freq=freq)
-
     # Return either the maximum or minimum, as well as the respective timestamp
     if extremum == "max":
         return data.idxmax(), data.max()
@@ -1081,8 +1075,6 @@ def lmx(data, length="5h", lowest=True, freq=None):
            http://doi.org/10.1177/074873049701200206
 
     """
-    data = _data_processor(light=data, freq=freq)
-
     # Calculate time of LMX and the value of LMX
     lmx_ts, lmx = _lmx(data, length, lowest=lowest)
 

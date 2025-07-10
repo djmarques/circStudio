@@ -105,7 +105,6 @@ def _binarize(data, threshold):
 
 
 def _resample(data,
-              binarize=False,
               new_freq=None,
               current_freq=None,
               mask_inactivity=False,
@@ -122,7 +121,6 @@ def _resample(data,
                 return data.where(mask > 0)
             else:
                 # Return original data in case no mask is found.
-                print("No mask was found. Create a new mask.")
                 return data
         else:
             # Return original data is mask_inactivity is set to False
@@ -138,7 +136,6 @@ def _resample(data,
 
         # Catch the scenario where mask inactivity is true but no mask is found
         elif mask_inactivity and mask is None:
-            print("No mask was found. Create a new mask.")
             return resampled_data
 
         # When resampling, exclude all the resampled timepoints within the new resampling window
@@ -327,15 +324,22 @@ def _td_format(td):
     )
 
 
-def _data_processor(light, binarize=False, threshold=0, freq=None):
+def _data_processor(data,
+                    binarize=False,
+                    threshold=0,
+                    mask=None,
+                    current_freq = None,
+                    new_freq = None,
+                    mask_inactivity = False,
+                    exclude_if_mask = False
+                    ):
     """
-    This function binarizes or resamples light data.
+    This function binarizes or resamples data.
     Parameters
     ----------
-    self
+    data
     binarize
     threshold
-    freq
 
     Returns
     -------
@@ -343,15 +347,19 @@ def _data_processor(light, binarize=False, threshold=0, freq=None):
     """
     # Binarize data using a given threshold
     if binarize:
-        data = _binarize(data=light, threshold=threshold)
+        data = _binarize(data=data, threshold=threshold)
     else:
-        data = light
+        data = data
 
     # Resample and apply existing mask if enabled
-    if freq is None:
-        return _resample(data=data)
-    else:
-        return _resample(data=data)
+
+    return _resample(data=data,
+                     mask=mask,
+                     new_freq=new_freq,
+                     mask_inactivity=mask_inactivity,
+                     current_freq=current_freq,
+                     exclude_if_mask = exclude_if_mask)
+
 
 
 def _light_exposure(light, threshold=None, start_time=None, stop_time=None):

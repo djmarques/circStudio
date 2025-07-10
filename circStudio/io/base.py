@@ -1,6 +1,6 @@
 from circStudio.analysis.sleep import SleepDiary
 from .mask import Mask
-
+from ..analysis.tools import _data_processor
 
 class Raw(Mask):
     """Base class for raw actigraphy data."""
@@ -18,6 +18,8 @@ class Raw(Mask):
             exclude_if_mask=True,
             mask_inactivity=False,
             inactivity_length=None,
+            binarize=False,
+            threshold=0,
             mask=None,
         )
 
