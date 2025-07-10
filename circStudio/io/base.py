@@ -2,12 +2,12 @@ import pandas as pd
 import numpy as np
 
 from pandas.tseries.frequencies import to_offset
-from ..filters import FiltersMixin
+from .mask import Filters
 from ..sleep import SleepDiary, ScoringMixin, SleepBoutMixin
 from .mask import Mask
 
 
-class BaseRaw(SleepBoutMixin, ScoringMixin, FiltersMixin, Mask):
+class BaseRaw(Filters, Mask):
     """Base class for raw actigraphy data."""
 
     def __init__(self, period, frequency, activity, light, fpath=None, start_time=None, stop_time=None):

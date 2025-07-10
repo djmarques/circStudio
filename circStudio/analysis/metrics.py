@@ -22,7 +22,7 @@ __all__ = [
     "intradaily_variability",
     "intradaily_variability_per_period",
     "summary_statistics_per_time_bin",
-    "light_exposure_level"
+    "light_exposure_level",
 ]
 
 
@@ -143,29 +143,26 @@ def daily_profile_auc(data, start_time=None, stop_time=None, time_origin=None):
 
         if isinstance(time_origin, str):
             # Regex pattern for HH:MM:SS time string
-            pattern = re.compile(
-                r"^([0-1]\d|2[0-3])(?::([0-5]\d))(?::([0-5]\d))$"
-            )
+            pattern = re.compile(r"^([0-1]\d|2[0-3])(?::([0-5]\d))(?::([0-5]\d))$")
 
             if pattern.match(time_origin):
                 time_origin = pd.Timedelta(time_origin)
             else:
                 raise ValueError(
-                    'Time origin format ({}) not supported.\n'.format(
-                        time_origin
-                    ) + 'Supported format: HH:MM:SS.'
+                    "Time origin format ({}) not supported.\n".format(time_origin)
+                    + "Supported format: HH:MM:SS."
                 )
 
         elif not isinstance(time_origin, pd.Timedelta):
             raise ValueError(
-                'Time origin is neither a time string with a supported '
-                'format, nor a pd.Timedelta.'
+                "Time origin is neither a time string with a supported "
+                "format, nor a pd.Timedelta."
             )
 
         # Round time origin to the required frequency
         time_origin = time_origin.round(data.index.freq)
 
-        shift = int((pd.Timedelta('12h')-time_origin)/data.index.freq)
+        shift = int((pd.Timedelta("12h") - time_origin) / data.index.freq)
 
         avgdaily = _shift_time_axis(avgdaily, shift)
 
@@ -692,7 +689,7 @@ def intradaily_variability_per_period(data, period="7D", verbose=False):
     return results
 
 
-def summary_statistics_per_time_bin(light, bins='24h', agg_func=None):
+def summary_statistics_per_time_bin(light, bins="24h", agg_func=None):
     r"""Summary statistics.
 
     Calculate summary statistics (ex: mean, median, etc) according to a
@@ -716,25 +713,29 @@ def summary_statistics_per_time_bin(light, bins='24h', agg_func=None):
         A pandas DataFrame with summary statistics per channel.
     """
     if agg_func is None:
-        agg_func = ['mean', 'median', 'sum', 'std', 'min', 'max']
+        agg_func = ["mean", "median", "sum", "std", "min", "max"]
     if isinstance(bins, str):
         summary_stats = self.light.resample(bins).agg(agg_func)
     elif isinstance(bins, list):
         df_col = []
         for idx, (start, end) in enumerate(bins):
-            df_bins = self.light.loc[start:end, :].apply(
-                agg_func
-            ).pivot_table(columns=agg_func)
+            df_bins = (
+                self.light.loc[start:end, :]
+                .apply(agg_func)
+                .pivot_table(columns=agg_func)
+            )
 
             channels = df_bins
             channels = channels.loc[:, agg_func]
-            df_col.append(pd.concat(channels,axis=1))
+            df_col.append(pd.concat(channels, axis=1))
             summary_stats = pd.concat(df_col)
 
     return summary_stats
 
 
-def light_exposure_level(light, threshold=None, start_time=None, stop_time=None, agg='mean'):
+def light_exposure_level(
+    light, threshold=None, start_time=None, stop_time=None, agg="mean"
+):
     r"""Light exposure level
 
     Calculate the aggregated (mean, median, etc) light exposure level
@@ -766,10 +767,7 @@ def light_exposure_level(light, threshold=None, start_time=None, stop_time=None,
         A pandas Series with aggreagted light exposure levels per channel
     """
     light_exposure = _light_exposure(
-        light=light,
-        threshold=threshold,
-        start_time=start_time,
-        stop_time=stop_time
+        light=light, threshold=threshold, start_time=start_time, stop_time=stop_time
     )
 
     levels = getattr(light_exposure, agg)
@@ -777,7 +775,9 @@ def light_exposure_level(light, threshold=None, start_time=None, stop_time=None,
     return levels()
 
 
-def time_above_threshold(data, threshold=None, start_time=None, stop_time=None, oformat=None):
+def time_above_threshold(
+    data, threshold=None, start_time=None, stop_time=None, oformat=None
+):
     r"""Time above light threshold.
 
     Calculate the total light exposure time above the threshold.
@@ -809,32 +809,33 @@ def time_above_threshold(data, threshold=None, start_time=None, stop_time=None, 
     tat : pd.Series
         A pandas Series with aggreagted light exposure levels per channel
     """
-    available_formats = [None, 'minute', 'timedelta']
+    available_formats = [None, "minute", "timedelta"]
 
     if oformat not in available_formats:
         raise ValueError(
-            'Specified output format ({}) not supported. '.format(oformat)
-            + 'Available formats are: {}'.format(str(available_formats))
+            "Specified output format ({}) not supported. ".format(oformat)
+            + "Available formats are: {}".format(str(available_formats))
         )
 
     light_exposure_counts = _light_exposure(
-        light=data,
-        threshold=threshold,
-        start_time=start_time,
-        stop_time=stop_time
+        light=data, threshold=threshold, start_time=start_time, stop_time=stop_time
     ).count()
 
-    if oformat == 'minute':
-        tat = light_exposure_counts * \
-            pd.Timedelta(data.index.freq)/pd.Timedelta('1min')
-    elif oformat == 'timedelta':
+    if oformat == "minute":
+        tat = (
+            light_exposure_counts * pd.Timedelta(data.index.freq) / pd.Timedelta("1min")
+        )
+    elif oformat == "timedelta":
         tat = light_exposure_counts * pd.Timedelta(data.index.freq)
     else:
         tat = light_exposure_counts
 
     return tat
 
-def time_above_threshold_by_period(data, threshold=None, start_time=None, stop_time=None, oformat=None):
+
+def time_above_threshold_by_period(
+    data, threshold=None, start_time=None, stop_time=None, oformat=None
+):
     r"""Time above light threshold (per day).
 
     Calculate the total light exposure time above the threshold,
@@ -868,25 +869,29 @@ def time_above_threshold_by_period(data, threshold=None, start_time=None, stop_t
         A pandas DataFrame with aggreagted light exposure levels
         per channel and per day.
     """
-    available_formats = [None, 'minute', 'timedelta']
+    available_formats = [None, "minute", "timedelta"]
 
     if oformat not in available_formats:
         raise ValueError(
-            'Specified output format ({}) not supported. '.format(oformat)
-            + 'Available formats are: {}'.format(str(available_formats))
+            "Specified output format ({}) not supported. ".format(oformat)
+            + "Available formats are: {}".format(str(available_formats))
         )
 
-    light_exposure_counts_per_day = _light_exposure(
-        light=data,
-        threshold=threshold,
-        start_time=start_time,
-        stop_time=stop_time
-    ).groupby(data.index.date).count()
+    light_exposure_counts_per_day = (
+        _light_exposure(
+            light=data, threshold=threshold, start_time=start_time, stop_time=stop_time
+        )
+        .groupby(data.index.date)
+        .count()
+    )
 
-    if oformat == 'minute':
-        tatp = light_exposure_counts_per_day * \
-            pd.Timedelta(data.index.freq)/pd.Timedelta('1min')
-    elif oformat == 'timedelta':
+    if oformat == "minute":
+        tatp = (
+            light_exposure_counts_per_day
+            * pd.Timedelta(data.index.freq)
+            / pd.Timedelta("1min")
+        )
+    elif oformat == "timedelta":
         tatp = light_exposure_counts_per_day * pd.Timedelta(data.index.freq)
     else:
         tatp = light_exposure_counts_per_day
@@ -911,12 +916,14 @@ def values_above_threshold(data, threshold=None):
     vat : pd.Series
         A pandas Series with light exposure levels per channel
     """
-    return _light_exposure(light=data, threshold=threshold, start_time=None, stop_time=None)
+    return _light_exposure(
+        light=data, threshold=threshold, start_time=None, stop_time=None
+    )
 
 
 def get_time_barycentre(data):
     # Normalize each epoch to midnight.
-    Y_j = data.index-data.index.normalize()
+    Y_j = data.index - data.index.normalize()
     # Convert to indices.
     Y_j /= pd.Timedelta(data.index.freq)
     # Compute barycentre
@@ -967,12 +974,12 @@ def mean_light_timing(light, threshold, freq=None):
     data = _data_processor(light=light, freq=freq)
 
     # Binarized data and convert to float in order to handle 'DivideByZero'
-    I_jk = _binarize(data=data, threshold=threshold).astype('float64')
+    I_jk = _binarize(data=data, threshold=threshold).astype("float64")
 
     MLiT = get_time_barycentre(I_jk)
 
     # Scaling factor: MLiT is now expressed in minutes since midnight.
-    MLiT /= (pd.Timedelta('1min')/I_jk.index.freq)
+    MLiT /= pd.Timedelta("1min") / I_jk.index.freq
 
     return MLiT
 
@@ -1019,13 +1026,13 @@ def mean_light_timing_by_period(light, threshold, freq=None):
     data = _data_processor(light=light, freq=freq)
 
     # Binarized data and convert to float in order to handle 'DivideByZero'
-    I_jk = _binarize(data=data, threshold=threshold).astype('float64')
+    I_jk = _binarize(data=data, threshold=threshold).astype("float64")
 
     # Group data per day:
     MLiTp = I_jk.groupby(I_jk.index.date).apply(get_time_barycentre)
 
     # Scaling factor: MLiT is now expressed in minutes since midnight.
-    MLiTp /= (pd.Timedelta('1min')/I_jk.index.freq)
+    MLiTp /= pd.Timedelta("1min") / I_jk.index.freq
 
     return MLiTp
 
@@ -1049,15 +1056,15 @@ def get_extremum(data, extremum, freq=None):
     data = _data_processor(data=data, freq=freq)
 
     # Return either the maximum or minimum, as well as the respective timestamp
-    if extremum == 'max':
+    if extremum == "max":
         return data.idxmax(), data.max()
-    elif extremum == 'min':
+    elif extremum == "min":
         return data.idxmin(), data.min()
     else:
         raise ValueError('Extremum must be "min" or "max"')
 
 
-def lmx(data, length='5h', lowest=True, freq=None):
+def lmx(data, length="5h", lowest=True, freq=None):
     r"""Least or Most light period of length X
 
     Onset and mean hourly light exposure levels during the X least or most
