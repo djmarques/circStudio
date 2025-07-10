@@ -2,11 +2,10 @@ import pandas as pd
 import os
 import re
 import warnings
-
 from ..base import Raw
 
 
-class RawAWD(Raw):
+class AWD(Raw):
     r"""Raw object from .AWD file (recorded by ActiWatches)
 
     Parameters
@@ -82,21 +81,19 @@ class RawAWD(Raw):
 
         # get absolute file path
         input_fname = os.path.abspath(input_fname)
-        # [TO-DO] check if file exists
-        # [TO-DO] check it is has the right file extension .awd
 
         # extract header and data size
         with open(input_fname) as f:
             header = [next(f) for x in range(header_size)]
 
-        # extract informations from the header
-        name = RawAWD.__extract_awd_name(header)
-        freq = RawAWD.__extract_awd_frequency(header)
-        uuid = RawAWD.__extract_awd_uuid(header)
-        start = RawAWD.__extract_awd_start_time(header)
+        # extract information from the header
+        freq = AWD._extract_awd_frequency(header)
+        uuid = AWD._extract_awd_uuid(header)
+        start = AWD._extract_awd_start_time(header)
+
         if uuid:
             # extract model from UUID:
-            self.__device_type = RawAWD.__extract_awd_model(uuid)
+            self._device_type = AWD._extract_awd_model(uuid)
 
         if freq is None:
             if frequency is not None:
@@ -110,18 +107,19 @@ class RawAWD(Raw):
                 )
 
         # set up channel configuration as a function of the device
-        all_channels = RawAWD.device_default_channels.copy()
-        use_channels = RawAWD.device_default_channels.copy()
-        if self.__device_type in RawAWD.device_additional_channel.keys():
+        all_channels = AWD.device_default_channels.copy()
+        use_channels = AWD.device_default_channels.copy()
+
+        if self._device_type in AWD.device_additional_channel.keys():
             # whitespace delimiter introduces the comma as an additional col.
             all_channels[1:1] = [
-                'sep', RawAWD.device_additional_channel[self.__device_type]
+                'sep', AWD.device_additional_channel[self._device_type]
             ]
             use_channels[1:1] = [
-                RawAWD.device_additional_channel[self.__device_type]
+                AWD.device_additional_channel[self._device_type]
             ]
 
-        # extract data
+        # Create a DataFrame containing actigraphy data
         data = pd.read_csv(
             filepath_or_buffer=input_fname,
             encoding='utf-8',
@@ -142,11 +140,7 @@ class RawAWD(Raw):
                 }
         )
 
-        data.index = pd.date_range(
-            start=start,
-            periods=len(data),
-            freq=freq
-        )
+        data.index = pd.date_range(start=start, periods=len(data), freq=freq)
 
         if start_time is not None:
             start_time = pd.to_datetime(start_time)
@@ -162,8 +156,9 @@ class RawAWD(Raw):
 
         data = data.loc[start_time:stop_time]
 
-        # call __init__ function of the base class
+        # Create a new RAW object using the information extracted
         super().__init__(
+            df = data,
             fpath=input_fname,
             start_time=start_time,
             period=period,
@@ -175,31 +170,31 @@ class RawAWD(Raw):
     @property
     def model(self):
         """Actiwatch Model as inferred from the header info."""
-        return RawAWD.device_code[self.__device_type]
+        return AWD.device_code[self._device_type]
 
     @staticmethod
-    def __extract_awd_name(header):
+    def _extract_awd_name(header):
         return header[0].replace('\n', '')
 
     @staticmethod
-    def __extract_awd_frequency(header):
+    def _extract_awd_frequency(header):
         freq = header[3].replace('\n', '').strip()
-        if freq not in RawAWD.frequency_code.keys():
+        if freq not in AWD.frequency_code.keys():
             print("Could not find acquisition frequency in header info.")
             return None
         else:
-            return RawAWD.frequency_code[freq]
+            return AWD.frequency_code[freq]
 
     @staticmethod
-    def __extract_awd_uuid(header):
+    def _extract_awd_uuid(header):
         return header[5].replace('\n', '')
 
     @staticmethod
-    def __extract_awd_start_time(header):
+    def _extract_awd_start_time(header):
         return pd.to_datetime(header[1] + ' ' + header[2])
 
     @staticmethod
-    def __extract_awd_model(uuid):
+    def _extract_awd_model(uuid):
         # extract model from UUID:
         wrn_msg = (
             'Only the first data column will be used, assuming it corresponds '
@@ -208,7 +203,7 @@ class RawAWD(Raw):
         match = re.match(pattern=r'^([A-Za-z])[0-9a-fA-F]+', string=uuid)
         if match:  # check if UUID matches the expected pattern
             dcode = match.groups()[0].upper()
-            if dcode in RawAWD.device_code.keys():
+            if dcode in AWD.device_code.keys():
                 return dcode
             else:
                 warnings.warn(
@@ -218,7 +213,7 @@ class RawAWD(Raw):
                     + '\n'.join(
                         [
                             '- {}: {}'.format(k, dev)
-                            for k, dev in RawAWD.device_code.items()
+                            for k, dev in AWD.device_code.items()
                         ]
                     )
                     + '\n'
@@ -235,7 +230,7 @@ class RawAWD(Raw):
             return 'X'
 
 
-def read_raw_awd(
+def read_awd(
     input_fname,
     header_size=7,
     frequency=None,
@@ -274,7 +269,7 @@ def read_raw_awd(
         An object containing raw AWD data
     """
 
-    return RawAWD(
+    return AWD(
         input_fname=input_fname,
         header_size=header_size,
         frequency=frequency,

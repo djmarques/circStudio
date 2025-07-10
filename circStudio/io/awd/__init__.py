@@ -1,11 +1,4 @@
-"""Module to read AWD files."""
+from .awd import AWD
+from .awd import read_awd
 
-# Author: Grégory Hammad <gregory.hammad@uliege.be>
-#
-# License: BSD (3-clause)
-
-from .awd import RawAWD
-
-from .awd import read_raw_awd
-
-__all__ = ["RawAWD", "read_raw_awd"]
+__all__ = ["AWD", "read_awd"]

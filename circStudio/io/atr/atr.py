@@ -63,7 +63,7 @@ class ATR(Raw):
         #Extract information from the header
         freq = pd.Timedelta(int(header['INTERVAL'][0]), unit='s')
 
-        # Create a Pandas.DataFrame containing actigraphy data
+        # Create a DataFrame containing actigraphy data
         data = pd.read_csv(input_fname,
             skiprows=len(header)+2,
             sep=';',
