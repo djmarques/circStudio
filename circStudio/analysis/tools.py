@@ -347,7 +347,7 @@ def _data_processor(data,
     """
     # Binarize data using a given threshold
     if binarize:
-        data = _binarize(data=data, threshold=threshold)
+        return _binarize(data=data, threshold=threshold)
     else:
         data = data
 
@@ -359,7 +359,6 @@ def _data_processor(data,
                      mask_inactivity=mask_inactivity,
                      current_freq=current_freq,
                      exclude_if_mask = exclude_if_mask)
-
 
 
 def _light_exposure(light, threshold=None, start_time=None, stop_time=None):
