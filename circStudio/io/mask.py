@@ -215,10 +215,16 @@ class Mask:
                       new_freq=None,
                       binarize=False,
                       threshold=0,
+                      apply_mask=False,
                       impute_nan=False,
                       exclude_if_mask=False,
                       imputation_method='mean'):
-        self._mask_inactivity = True
+        if apply_mask:
+            if self._mask is None:
+                print('No mask was found. Create a new mask.')
+            else:
+                self._mask_inactivity = True
+
         if self.activity is not None:
             self.activity = self._filter_data(self.activity,
                                               new_freq=new_freq,
