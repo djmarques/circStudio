@@ -55,7 +55,7 @@ raw_uniform_corrupted.raw_data.loc[
 
 # Mask corrupted periods
 raw_uniform_corrupted.inactivity_length = "1h"
-raw_uniform_corrupted.mask_inactivity = True
+raw_uniform_corrupted._mask_inactivity = True
 
 
 # Test  ADAT

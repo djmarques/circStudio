@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 from pandas.tseries.frequencies import to_offset
+from torch.nn.functional import threshold
+
 from ..analysis.tools import *
 
 
@@ -174,35 +176,72 @@ class Mask:
     def __init__(self, exclude_if_mask, mask_inactivity, binarize, threshold, inactivity_length, mask):
         self.exclude_if_mask = exclude_if_mask
         self._inactivity_length = inactivity_length
-        self.mask_inactivity = mask_inactivity
+        self._mask_inactivity = mask_inactivity
         self._original_activity = self.activity
         self._original_light = self.light if self.light is not None else None
         self.binarize = binarize
         self.threshold = threshold if binarize else None
+        self.impute_nan = False
+        self.imputation_method = 'mean'
         self._mask = mask
 
-    def _filter_data(self, data, freq):
+    def _filter_data(self,
+                     data,
+                     new_freq,
+                     binarize,
+                     impute_nan,
+                     threshold,
+                     exclude_if_mask,
+                     imputation_method):
+        self.threshold = threshold
+        self.binarize = binarize
+        self.impute_nan = impute_nan
+        self.imputation_method = imputation_method
+        self.exclude_if_mask = exclude_if_mask
+
         return _data_processor(
             data=data,
             binarize=self.binarize,
-            threshold=0,
+            threshold=self.threshold,
             current_freq=self.frequency,
-            new_freq=self.frequency if freq is None else freq,
+            new_freq=self.frequency if new_freq is None else new_freq,
             mask=self._mask,
-            mask_inactivity=self.mask_inactivity,
+            mask_inactivity=self._mask_inactivity,
+            impute_nan=self.impute_nan,
+            imputation_method=self.imputation_method,
             exclude_if_mask=self.exclude_if_mask,
         )
 
-    def apply_filters(self, freq=None):
-        self.mask_inactivity = True
-        self.activity = self._filter_data(self.activity, freq)
+    def apply_filters(self,
+                      new_freq=None,
+                      binarize=False,
+                      threshold=0,
+                      impute_nan=False,
+                      exclude_if_mask=False,
+                      imputation_method='mean'):
+        self._mask_inactivity = True
+        if self.activity is not None:
+            self.activity = self._filter_data(self.activity,
+                                              new_freq=new_freq,
+                                              binarize=binarize,
+                                              threshold=threshold,
+                                              impute_nan=impute_nan,
+                                              exclude_if_mask=False,
+                                              imputation_method=imputation_method)
         if self.light is not None:
-            self.light = self._filter_data(self.light, freq)
+            self.light = self._filter_data(self.light,
+                                           new_freq=new_freq,
+                                           binarize=binarize,
+                                           threshold=threshold,
+                                           impute_nan=impute_nan,
+                                           exclude_if_mask=False,
+                                           imputation_method=imputation_method)
 
 
     def reset_filters(self, new_freq=None):
-        self.mask_inactivity = False
-        self.activity = self._original_activity
+        self._mask_inactivity = False
+        if self.activity is not None:
+            self.activity = self._original_activity
         if self.light is not None:
             self.light = self._original_light
 
@@ -236,7 +275,7 @@ class Mask:
         self._mask = None
         # Set switch to False if None
         if value is None:
-            self.mask_inactivity = False
+            self._mask_inactivity = False
 
 
     def create_inactivity_mask(self, duration):

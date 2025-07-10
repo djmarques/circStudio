@@ -40,7 +40,7 @@ raw_sinewave_mask = circStudio.io.Raw(
 def test_mask_is_automatic():
 
     raw_sinewave_mask.create_inactivity_mask(duration='90min')
-    raw_sinewave_mask.mask_inactivity = True
+    raw_sinewave_mask._mask_inactivity = True
 
     assert raw_sinewave_mask.IS(
         freq='1min', binarize=False
@@ -56,7 +56,7 @@ def test_mask_is_manual():
         start='2018-01-03 06:00:00', stop='2018-01-03 14:00:00'
     )
     # Activate mask
-    raw_sinewave_mask.mask_inactivity = True
+    raw_sinewave_mask._mask_inactivity = True
 
     assert raw_sinewave_mask.IS(
         freq='1min', binarize=False

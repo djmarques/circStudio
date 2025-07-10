@@ -24,7 +24,8 @@ __all__ = [
     "_td_format",
     "_data_processor",
     "_light_exposure",
-    "_create_inactivity_mask"
+    "_create_inactivity_mask",
+    "_impute_nan"
 ]
 
 def _average_daily_activity(data, cyclic=False):
@@ -323,6 +324,8 @@ def _td_format(td):
         td.components.hours, td.components.minutes, td.components.seconds
     )
 
+def _impute_nan(data, method='mean'):
+    return data.fillna(data.groupby(data.index.time).transform(method))
 
 def _data_processor(data,
                     binarize=False,
@@ -331,7 +334,9 @@ def _data_processor(data,
                     current_freq = None,
                     new_freq = None,
                     mask_inactivity = False,
-                    exclude_if_mask = False
+                    exclude_if_mask = False,
+                    impute_nan = False,
+                    imputation_method = 'mean'
                     ):
     """
     This function binarizes or resamples data.
@@ -353,12 +358,17 @@ def _data_processor(data,
 
     # Resample and apply existing mask if enabled
 
-    return _resample(data=data,
+    resampled_data = _resample(data=data,
                      mask=mask,
                      new_freq=new_freq,
                      mask_inactivity=mask_inactivity,
                      current_freq=current_freq,
                      exclude_if_mask = exclude_if_mask)
+    if impute_nan:
+        return _impute_nan(data=resampled_data, method=imputation_method)
+    else:
+        return resampled_data
+
 
 
 def _light_exposure(light, threshold=None, start_time=None, stop_time=None):
