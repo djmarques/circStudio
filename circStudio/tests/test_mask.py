@@ -24,7 +24,7 @@ mask_nepochs = (mask_end-mask_start)/frequency
 
 sine_wave_mask.loc[mask_start:mask_end] = 0
 
-raw_sinewave_mask = circStudio.io.BaseRaw(
+raw_sinewave_mask = circStudio.io.Raw(
     name='raw_sinewave',
     uuid='XXXXXXXX',
     format='CUSTOM',

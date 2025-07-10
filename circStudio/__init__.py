@@ -17,13 +17,16 @@
 #
 from . import analysis
 from . import io
-from .analysis import sleep
-from . import tests
+from .analysis import *
+#from .analysis import sleep
+#from . import tests
+#from .analysis.metrics.metrics import *
 
-__all__ = [
-    "analysis",
-    "io",
-    "tests",
-]
+
+#__all__ = [
+ #   "analysis",
+  #  "io",
+   # "tests",
+#]
 
 __version__ = '1.0.0'

@@ -29,7 +29,7 @@ sine_wave = generate_series(
     sampling_period=sampling_period
 )
 
-raw_gaussian = circStudio.io.BaseRaw(
+raw_gaussian = circStudio.io.Raw(
     name='raw_gaussian',
     uuid='XXXXXXXX',
     format='CUSTOM',
@@ -40,7 +40,7 @@ raw_gaussian = circStudio.io.BaseRaw(
     data=gaussian_noise,
     light=None
 )
-raw_squarewave = circStudio.io.BaseRaw(
+raw_squarewave = circStudio.io.Raw(
     name='raw_square',
     uuid='XXXXXXXX',
     format='CUSTOM',
@@ -51,7 +51,7 @@ raw_squarewave = circStudio.io.BaseRaw(
     data=square_wave,
     light=None
 )
-raw_sinewave = circStudio.io.BaseRaw(
+raw_sinewave = circStudio.io.Raw(
     name='raw_sinewave',
     uuid='XXXXXXXX',
     format='CUSTOM',

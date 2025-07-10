@@ -11,7 +11,7 @@ start_time = '2020-01-01 00:00:00'
 period = pd.Timedelta('7D')
 
 # Uniform data over 7 days
-raw_uniform = circStudio.io.BaseRaw(
+raw_uniform = circStudio.io.Raw(
     name='raw_uniform',
     uuid='XXXXXXXX',
     format='CUSTOM',
@@ -31,7 +31,7 @@ raw_uniform = circStudio.io.BaseRaw(
 
 # Uniform data over 7 days, corrupted (i.e set activity counts to zeros)
 # during the first and last days
-raw_uniform_corrupted = circStudio.io.BaseRaw(
+raw_uniform_corrupted = circStudio.io.Raw(
     name='raw_uniform',
     uuid='XXXXXXXX',
     format='CUSTOM',

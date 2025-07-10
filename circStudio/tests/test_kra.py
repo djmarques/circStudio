@@ -24,7 +24,7 @@ sequences = generate_series(
     sampling_period=sampling_period
 )
 
-seq = circStudio.io.BaseRaw(
+seq = circStudio.io.Raw(
     name='raw_sequence',
     uuid='XXXXXXXX',
     format='CUSTOM',

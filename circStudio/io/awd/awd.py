@@ -3,10 +3,10 @@ import os
 import re
 import warnings
 
-from ..base import BaseRaw
+from ..base import Raw
 
 
-class RawAWD(BaseRaw):
+class RawAWD(Raw):
     r"""Raw object from .AWD file (recorded by ActiWatches)
 
     Parameters

@@ -17,7 +17,7 @@ sine_wave = generate_series(
     sampling_period=sampling_period
 )
 
-raw_sinewave = circStudio.io.BaseRaw(
+raw_sinewave = circStudio.io.Raw(
     name='raw_sinewave',
     uuid='XXXXXXXX',
     format='CUSTOM',

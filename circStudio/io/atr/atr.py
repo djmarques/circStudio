@@ -2,10 +2,10 @@ import pandas as pd
 import os
 import re
 
-from ..base import BaseRaw
+from ..base import Raw
 
 
-class RawATR(BaseRaw):
+class RawATR(Raw):
     r"""Raw object from .txt file recorded by ActTrust (Condor Instruments)
 
     Parameters
