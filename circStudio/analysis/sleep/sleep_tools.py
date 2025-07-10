@@ -1,6 +1,16 @@
 import numpy as np
 import pandas as pd
 
+__all__ = [
+    "_actiware_automatic_threshold",
+    "_padded_data",
+    "_ratio_sequences_of_zeroes",
+    "_estimate_zeta",
+    "_window_convolution",
+    "_window_convolution",
+    "_oakley",
+    "filter_ts_duration"
+]
 
 def _actiware_automatic_threshold(data, scale_factor=0.88888):
     r'''Automatic Wake Threshold Value calculation
@@ -98,68 +108,6 @@ def _estimate_zeta(data, seq_length_max, n_boostrap=100, level=0.05):
 def _window_convolution(x, scale, window, offset=0.0):
 
     return scale * np.dot(x, window) + offset
-
-
-def _cole_kripke(data, scale, window, threshold):
-    """Automatic scoring methods from Cole and Kripke"""
-
-    ck = data.rolling(
-        window.size, center=True
-    ).apply(_window_convolution, args=(scale, window), raw=True)
-
-    return (ck < threshold).astype(int)
-
-
-def _sadeh(data, offset, weights, threshold):
-    """Activity-Based Sleep-Wake Identification"""
-
-    r = data.rolling(11, center=True)
-
-    mean_W5 = r.mean()
-
-    NAT = r.apply(lambda x: np.size(np.where((x > 50) & (x < 100))), raw=True)
-
-    sd_Last6 = data.rolling(6).std()
-
-    logAct = data.shift(-1).apply(lambda x: np.log(1+x))
-
-    sadeh = pd.concat(
-        [mean_W5, NAT, sd_Last6, logAct],
-        axis=1,
-        keys=['mean_W5', 'NAT', 'sd_Last6', 'logAct']
-    )
-
-    sadeh['PS'] = sadeh.apply(
-        _window_convolution, axis=1, args=(1.0, weights, offset), raw=True
-    )
-
-    return (sadeh['PS'] > threshold).astype(int)
-
-
-def _scripps(data, scale, window, threshold):
-    """Scripps Clinic algorithm for sleep-wake scoring."""
-
-    scripps = data.rolling(
-        window.size, center=True
-    ).apply(_window_convolution, args=(scale, window), raw=True)
-
-    return (scripps < threshold).astype(int)
-
-
-def _oakley(data, window, threshold):
-    """Oakley's algorithm for sleep-wake scoring."""
-    if threshold == 'automatic':
-        threshold = _actiware_automatic_threshold(data)
-    elif not np.isscalar(threshold):
-        msg = "`threshold` should be a scalar or 'automatic'."
-        raise ValueError(msg)
-
-    scale = 1.
-    oakley = data.rolling(
-        window.size, center=True
-    ).apply(_window_convolution, args=(scale, window), raw=True)
-
-    return (oakley < threshold).astype(int)
 
 
 def filter_ts_duration(ts, duration_min='3H', duration_max='12H'):

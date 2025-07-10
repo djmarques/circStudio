@@ -1,2 +1,3 @@
 from .diary import SleepDiary
-from .sleep import Sleep, SleepBouts
+from .sleep import SleepBouts
+from .sleep_tools import *
