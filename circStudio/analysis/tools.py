@@ -22,6 +22,8 @@ __all__ = [
     "_transition_prob",
     "_transition_prob_sustain_region",
     "_td_format",
+    "_data_processor",
+    "_light_exposure"
 ]
 
 def _average_daily_activity(data, cyclic=False):
@@ -322,3 +324,70 @@ def _td_format(td):
     return "{:02}:{:02}:{:02}".format(
         td.components.hours, td.components.minutes, td.components.seconds
     )
+
+
+def _data_processor(light, binarize=False, threshold=0, freq=None):
+    """
+    This function binarizes or resamples light data.
+    Parameters
+    ----------
+    self
+    binarize
+    threshold
+    freq
+
+    Returns
+    -------
+    Resampled light time series
+    """
+    # Binarize data using a given threshold
+    if binarize:
+        data = _binarize(data=light, threshold=threshold)
+    else:
+        data = light
+
+    # Resample and apply existing mask if enabled
+    if freq is None:
+        return _resample(data=data)
+    else:
+        return _resample(data=data)
+
+
+def _light_exposure(light, threshold=None, start_time=None, stop_time=None):
+    r"""Light exposure
+
+    Calculate the light exposure level and time
+
+    Parameters
+    ----------
+    threshold: float, optional
+        If not set to None, discard data below threshold before computing
+        exposure levels.
+        Default is None.
+    start_time: str, optional
+        If not set to None, discard data before start time,
+        on a daily basis.
+        Supported time string: 'HH:MM:SS'
+        Default is None.
+    stop_time: str, optional
+        If not set to None, discard data after stop time, on a daily basis.
+        Supported time string: 'HH:MM:SS'
+        Default is None.
+
+    Returns
+    -------
+    masked_data : pandas.DataFrame
+        A DataFrame where the original data are set to Nan if below
+        threshold and/or outside time window.
+    """
+    if threshold is not None:
+        data_mask = light.mask(light < threshold)
+    else:
+        data_mask = light
+
+    if start_time is stop_time is None:
+        return data_mask
+    elif (start_time is None) or (stop_time is None):
+        raise ValueError('Both start and stop times have to be specified, if any.')
+    else:
+        return data_mask.between_time(start_time=start_time, end_time=stop_time, include_end=False)

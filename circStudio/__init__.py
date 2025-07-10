@@ -18,8 +18,6 @@
 from . import analysis
 from . import filters
 from . import io
-from . import light
-from . import activity
 from . import sleep
 from . import tests
 
@@ -27,8 +25,7 @@ __all__ = [
     "analysis",
     "filters",
     "io",
-    "light",
-    "activity",
+    "models",
     "sleep",
     "tests",
 ]

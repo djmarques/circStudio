@@ -21,6 +21,8 @@ __all__ = [
     "interdaily_stability_per_period",
     "intradaily_variability",
     "intradaily_variability_per_period",
+    "summary_statistics_per_time_bin",
+    "light_exposure_level"
 ]
 
 
@@ -690,3 +692,412 @@ def intradaily_variability_per_period(data, period="7D", verbose=False):
     return results
 
 
+def summary_statistics_per_time_bin(light, bins='24h', agg_func=None):
+    r"""Summary statistics.
+
+    Calculate summary statistics (ex: mean, median, etc) according to a
+    user-defined (regular or arbitrary) binning.
+
+    Parameters
+    ----------
+    bins: str or list of tuples, optional
+        If set to a string, bins is used to define a regular binning where
+        every bin is of length "bins". Ex: "2h".
+        Otherwise, the list of 2-tuples is used to define an arbitrary
+        binning. Ex: \[('2000-01-01 00:00:00','2000-01-01 11:59:00')\].
+        Default is '24h'.
+    agg_func: list, optional
+        List of aggregation functions to be used on every bin.
+        Default is \['mean', 'median', 'sum', 'std', 'min', 'max'\].
+
+    Returns
+    -------
+    ss : pd.DataFrame
+        A pandas DataFrame with summary statistics per channel.
+    """
+    if agg_func is None:
+        agg_func = ['mean', 'median', 'sum', 'std', 'min', 'max']
+    if isinstance(bins, str):
+        summary_stats = self.light.resample(bins).agg(agg_func)
+    elif isinstance(bins, list):
+        df_col = []
+        for idx, (start, end) in enumerate(bins):
+            df_bins = self.light.loc[start:end, :].apply(
+                agg_func
+            ).pivot_table(columns=agg_func)
+
+            channels = df_bins
+            channels = channels.loc[:, agg_func]
+            df_col.append(pd.concat(channels,axis=1))
+            summary_stats = pd.concat(df_col)
+
+    return summary_stats
+
+
+def light_exposure_level(light, threshold=None, start_time=None, stop_time=None, agg='mean'):
+    r"""Light exposure level
+
+    Calculate the aggregated (mean, median, etc) light exposure level
+    per epoch.
+
+    Parameters
+    ----------
+    threshold: float, optional
+        If not set to None, discard data below threshold before computing
+        exposure levels.
+        Default is None.
+    start_time: str, optional
+        If not set to None, discard data before start time,
+        on a daily basis.
+        Supported time string: 'HH:MM:SS'
+        Default is None.
+    stop_time: str, optional
+        If not set to None, discard data after stop time, on a daily basis.
+        Supported time string: 'HH:MM:SS'
+        Default is None.
+    agg: str, optional
+        Aggregating function used to summarize exposure levels.
+        Available functions: 'mean', 'median', 'std', etc.
+        Default is 'mean'.
+
+    Returns
+    -------
+    levels : pd.Series
+        A pandas Series with aggreagted light exposure levels per channel
+    """
+    light_exposure = _light_exposure(
+        light=light,
+        threshold=threshold,
+        start_time=start_time,
+        stop_time=stop_time
+    )
+
+    levels = getattr(light_exposure, agg)
+
+    return levels()
+
+
+def time_above_threshold(data, threshold=None, start_time=None, stop_time=None, oformat=None):
+    r"""Time above light threshold.
+
+    Calculate the total light exposure time above the threshold.
+
+    Parameters
+    ----------
+    threshold: float, optional
+        If not set to None, discard data below threshold before computing
+        exposure levels.
+        Default is None.
+    start_time: str, optional
+        If not set to None, discard data before start time,
+        on a daily basis.
+        Supported time string: 'HH:MM:SS'
+        Default is None.
+    stop_time: str, optional
+        If not set to None, discard data after stop time, on a daily basis.
+        Supported time string: 'HH:MM:SS'
+        Default is None.
+    oformat: str, optional
+        Output format. Available formats: 'minute' or 'timedelta'.
+        If set to 'minute', the result is in number of minutes.
+        If set to 'timedelta', the result is a pd.Timedelta.
+        If set to None, the result is in number of epochs.
+        Default is None.
+
+    Returns
+    -------
+    tat : pd.Series
+        A pandas Series with aggreagted light exposure levels per channel
+    """
+    available_formats = [None, 'minute', 'timedelta']
+
+    if oformat not in available_formats:
+        raise ValueError(
+            'Specified output format ({}) not supported. '.format(oformat)
+            + 'Available formats are: {}'.format(str(available_formats))
+        )
+
+    light_exposure_counts = _light_exposure(
+        light=data,
+        threshold=threshold,
+        start_time=start_time,
+        stop_time=stop_time
+    ).count()
+
+    if oformat == 'minute':
+        tat = light_exposure_counts * \
+            pd.Timedelta(data.index.freq)/pd.Timedelta('1min')
+    elif oformat == 'timedelta':
+        tat = light_exposure_counts * pd.Timedelta(data.index.freq)
+    else:
+        tat = light_exposure_counts
+
+    return tat
+
+def time_above_threshold_by_period(data, threshold=None, start_time=None, stop_time=None, oformat=None):
+    r"""Time above light threshold (per day).
+
+    Calculate the total light exposure time above the threshold,
+    per calendar day.
+
+    Parameters
+    ----------
+    threshold: float, optional
+        If not set to None, discard data below threshold before computing
+        exposure levels.
+        Default is None.
+    start_time: str, optional
+        If not set to None, discard data before start time,
+        on a daily basis.
+        Supported time string: 'HH:MM:SS'
+        Default is None.
+    stop_time: str, optional
+        If not set to None, discard data after stop time, on a daily basis.
+        Supported time string: 'HH:MM:SS'
+        Default is None.
+    oformat: str, optional
+        Output format. Available formats: 'minute' or 'timedelta'.
+        If set to 'minute', the result is in number of minutes.
+        If set to 'timedelta', the result is a pd.Timedelta.
+        If set to None, the result is in number of epochs.
+        Default is None.
+
+    Returns
+    -------
+    tatp : pd.DataFrame
+        A pandas DataFrame with aggreagted light exposure levels
+        per channel and per day.
+    """
+    available_formats = [None, 'minute', 'timedelta']
+
+    if oformat not in available_formats:
+        raise ValueError(
+            'Specified output format ({}) not supported. '.format(oformat)
+            + 'Available formats are: {}'.format(str(available_formats))
+        )
+
+    light_exposure_counts_per_day = _light_exposure(
+        light=data,
+        threshold=threshold,
+        start_time=start_time,
+        stop_time=stop_time
+    ).groupby(data.index.date).count()
+
+    if oformat == 'minute':
+        tatp = light_exposure_counts_per_day * \
+            pd.Timedelta(data.index.freq)/pd.Timedelta('1min')
+    elif oformat == 'timedelta':
+        tatp = light_exposure_counts_per_day * pd.Timedelta(data.index.freq)
+    else:
+        tatp = light_exposure_counts_per_day
+
+    return tatp
+
+
+def values_above_threshold(data, threshold=None):
+    r"""Values above light threshold.
+
+    Returns the light exposure values above the threshold.
+
+    Parameters
+    ----------
+    threshold: float, optional
+        If not set to None, discard data below threshold before computing
+        exposure levels.
+        Default is None.
+
+    Returns
+    -------
+    vat : pd.Series
+        A pandas Series with light exposure levels per channel
+    """
+    return _light_exposure(light=data, threshold=threshold, start_time=None, stop_time=None)
+
+
+def get_time_barycentre(data):
+    # Normalize each epoch to midnight.
+    Y_j = data.index-data.index.normalize()
+    # Convert to indices.
+    Y_j /= pd.Timedelta(data.index.freq)
+    # Compute barycentre
+    bc = data.multiply(Y_j, axis=0).sum() / data.sum()
+
+    return bc
+
+
+def mean_light_timing(light, threshold, freq=None):
+    r"""Mean light timing.
+
+    Mean light timing above threshold, MLiT^C.
+
+
+    Parameters
+    ----------
+    threshold: float
+        Threshold value.
+
+    Returns
+    -------
+    MLiT : pd.DataFrame
+        A pandas DataFrame with MLiT^C per channel.
+
+    Notes
+    -----
+
+    The MLiT variable is defined in ref [1]_:
+
+    .. math::
+
+        MLiT^C = \frac{\sum_{j}^{m}\sum_{k}^{n} j\times I^{C}_{jk}}{
+        \sum_{j}^{m}\sum_{k}^{n} I^{C}_{jk}}
+
+    where :math:`I^{C}_{jk}` is equal to 1 if the light level is higher
+    than the threshold C, m is the total number of epochs per day and n is
+    the number of days covered by the data.
+
+    References
+    ----------
+
+    .. [1] Reid K.J., Santostasi G., Baron K.G., Wilson J., Kang J.,
+           Zee P.C., Timing and Intensity of Light Correlate with Body
+           Weight in Adults. PLoS ONE 9(4): e92251.
+           https://doi.org/10.1371/journal.pone.0092251
+
+    """
+    data = _data_processor(light=light, freq=freq)
+
+    # Binarized data and convert to float in order to handle 'DivideByZero'
+    I_jk = _binarize(data=data, threshold=threshold).astype('float64')
+
+    MLiT = get_time_barycentre(I_jk)
+
+    # Scaling factor: MLiT is now expressed in minutes since midnight.
+    MLiT /= (pd.Timedelta('1min')/I_jk.index.freq)
+
+    return MLiT
+
+
+def mean_light_timing_by_period(light, threshold, freq=None):
+    r"""Mean light timing per day.
+
+    Mean light timing above threshold, MLiT^C, per calendar day.
+
+
+    Parameters
+    ----------
+    threshold: float
+        Threshold value.
+
+    Returns
+    -------
+    MLiTp : pd.DataFrame
+        A pandas DataFrame with MLiT^C per channel and per day.
+
+    Notes
+    -----
+
+    The MLiT variable is defined in ref [1]_:
+
+    .. math::
+
+        MLiT^C = \frac{\sum_{j}^{m}\sum_{k}^{n} j\times I^{C}_{jk}}{
+        \sum_{j}^{m}\sum_{k}^{n} I^{C}_{jk}}
+
+    where :math:`I^{C}_{jk}` is equal to 1 if the light level is higher
+    than the threshold C, m is the total number of epochs per day and n is
+    the number of days covered by the data.
+
+    References
+    ----------
+
+    .. [1] Reid K.J., Santostasi G., Baron K.G., Wilson J., Kang J.,
+           Zee P.C., Timing and Intensity of Light Correlate with Body
+           Weight in Adults. PLoS ONE 9(4): e92251.
+           https://doi.org/10.1371/journal.pone.0092251
+
+    """
+    data = _data_processor(light=light, freq=freq)
+
+    # Binarized data and convert to float in order to handle 'DivideByZero'
+    I_jk = _binarize(data=data, threshold=threshold).astype('float64')
+
+    # Group data per day:
+    MLiTp = I_jk.groupby(I_jk.index.date).apply(get_time_barycentre)
+
+    # Scaling factor: MLiT is now expressed in minutes since midnight.
+    MLiTp /= (pd.Timedelta('1min')/I_jk.index.freq)
+
+    return MLiTp
+
+
+def get_extremum(data, extremum, freq=None):
+    r"""Light extremum.
+
+    Return the index and the value of the requested extremum (min or max).
+
+    Parameters
+    ----------
+    extremum: str
+        Name of the extremum.
+        Available: 'min' or 'max'.
+
+    Returns
+    -------
+    ext : pd.DataFrame
+        A pandas DataFrame with extremum info per channel.
+    """
+    data = _data_processor(data=data, freq=freq)
+
+    # Return either the maximum or minimum, as well as the respective timestamp
+    if extremum == 'max':
+        return data.idxmax(), data.max()
+    elif extremum == 'min':
+        return data.idxmin(), data.min()
+    else:
+        raise ValueError('Extremum must be "min" or "max"')
+
+
+def lmx(data, length='5h', lowest=True, freq=None):
+    r"""Least or Most light period of length X
+
+    Onset and mean hourly light exposure levels during the X least or most
+    bright hours of the day.
+
+    Parameters
+    ----------
+    length: str, optional
+        Period length.
+        Default is '5h'.
+    lowest: bool, optional
+        If lowest is set to True, the period of least light exposure is
+        considered. Otherwise, consider the period of most light exposure.
+        Default is True.
+
+    Returns
+    -------
+    lmx_t, lmx: (pd.Timedelta, float)
+        Onset and mean hourly light exposure level.
+
+    Notes
+    -----
+
+    The LMX variable is derived from the L5 and M10 defined in [1]_ as the
+    mean hourly activity levels during the 5/10 least/most active hours.
+
+    References
+    ----------
+
+    .. [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F.
+           (1997). Long-Term Fitness Training Improves the Circadian
+           Rest-Activity Rhythm in Healthy Elderly Males.
+           Journal of Biological Rhythms, 12(2), 146–156.
+           http://doi.org/10.1177/074873049701200206
+
+    """
+    data = _data_processor(light=data, freq=freq)
+
+    # Calculate time of LMX and the value of LMX
+    lmx_ts, lmx = _lmx(data, length, lowest=lowest)
+
+    # Return these values back to the user
+    return lmx_ts, lmx
