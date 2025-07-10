@@ -1,9 +1,8 @@
-from .mask import Filters
 from circStudio.analysis.sleep import SleepDiary
 from .mask import Mask
 
 
-class Raw(Filters, Mask):
+class Raw(Mask):
     """Base class for raw actigraphy data."""
 
     def __init__(self, df, period, frequency, activity, light, fpath=None, start_time=None, stop_time=None):
