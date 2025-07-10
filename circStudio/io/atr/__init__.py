@@ -1,11 +1,5 @@
-"""Module to read ActTrust files."""
+from .atr import ATR
 
-# Author: Grégory Hammad <gregory.hammad@uliege.be>
-#
-# License: BSD (3-clause)
+from .atr import read_atr
 
-from .atr import RawATR
-
-from .atr import read_raw_atr
-
-__all__ = ["RawATR", "read_raw_atr"]
+__all__ = ["ATR", "read_atr"]

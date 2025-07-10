@@ -15,7 +15,7 @@ rawATR = circStudio.io.read_raw_atr(atr_path)
 
 def test_instance_atr():
 
-    assert isinstance(rawATR, circStudio.io.atr.RawATR)
+    assert isinstance(rawATR, circStudio.io.atr.ATR)
 
 
 def test_read_raw_atr_name():
