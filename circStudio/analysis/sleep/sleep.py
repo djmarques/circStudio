@@ -460,6 +460,7 @@ def Oakley(data, threshold=40):
 
     return (oakley < threshold).astype(int)
 
+
 def CSM(ZCMn, settings="auto",score_rest=2,score_sleep=1,binarize=False):
     """Condor Sleep Model
 
@@ -557,18 +558,8 @@ def CSM(ZCMn, settings="auto",score_rest=2,score_sleep=1,binarize=False):
 
     return (states == score_sleep).astype(int) if binarize else states
 
-def SoD(
-    self,
-    freq='5min',
-    binarize=True,
-    bin_threshold=4,
-    whs=4,
-    start='12:00:00',
-    period='5h',
-    algo='Roenneberg',
-    *args,
-    **kwargs
-):
+
+def SoD(data, whs=4, start='12:00:00', period='5h', algo='Roenneberg', *args, **kwargs):
     r"""Sleep over Daytime
 
     Quantify the volume of epochs identified as sleep over daytime (SoD),
@@ -576,18 +567,6 @@ def SoD(
 
     Parameters
     ----------
-    freq: str, optional
-        Resampling frequency.
-        Default is '5min'
-    binarize: bool, optional
-        If set to True, the data are binarized when determining the
-        activity onset and offset times. Only valid if start='AonT' or
-        'AoffT'.
-        Default is True.
-    bin_threshold: int, optional
-        If binarize is set to True, data above this threshold are set to 1
-        and to 0 otherwise.
-        Default is 4.
     whs: int, optional
         Window half size. Only valid if start='AonT' or 'AoffT'.
         Default is 4
@@ -611,48 +590,21 @@ def SoD(
     sod: pandas.core.Series
         Time series containing the epochs of rest (1) and
         activity (0) over the specified period.
-
-    Examples
-    --------
-
-        >>> import circStudio
-        >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-        >>> SoD = rawAWD.SoD()
-        >>> SoD
-        2018-03-26 04:16:00    1
-        2018-03-26 04:17:00    1
-        2018-03-26 04:18:00    1
-        (...)
-        2018-04-05 16:59:00    0
-        2018-04-05 16:59:00    0
-        2018-04-05 17:00:00    0
-        Length: 3175, dtype: int64
-
     """
 
     # Retrieve sleep scoring function dynamically by name
-    sleep_algo = getattr(self, algo)
+    sleep_algo = globals()[algo]
 
     # Score activity
-    sleep_scoring = sleep_algo(*args, **kwargs)
+    sleep_scoring = sleep_algo(data=data, *args, **kwargs)
 
     # Regex pattern for HH:MM:SS time string
     pattern = re.compile(r"^([0-1]\d|2[0-3])(?::([0-5]\d))(?::([0-5]\d))$")
 
     if start == 'AonT':
-        td = self.AonT(
-            freq=freq,
-            whs=whs,
-            binarize=binarize,
-            threshold=bin_threshold
-        )
+        td = AonT(data=data, whs=whs)
     elif start == 'AoffT':
-        td = self.AoffT(
-            freq=freq,
-            whs=whs,
-            binarize=binarize,
-            threshold=bin_threshold
-        )
+        td = AoffT(data=data, whs=whs)
     elif pattern.match(start):
         td = pd.Timedelta(start)
     else:
@@ -666,18 +618,8 @@ def SoD(
 
     return sod
 
-def fSoD(
-    self,
-    freq='5min',
-    binarize=True,
-    bin_threshold=4,
-    whs=12,
-    start='12:00:00',
-    period='5h',
-    algo='Roenneberg',
-    *args,
-    **kwargs
-):
+
+def fSoD(data, whs=12, start='12:00:00', period='5h', algo='Roenneberg', *args, **kwargs):
     r"""Fraction of Sleep over Daytime
 
     Fractional volume of epochs identified as sleep over daytime (SoD),
@@ -685,18 +627,6 @@ def fSoD(
 
     Parameters
     ----------
-    freq: str, optional
-        Resampling frequency.
-        Default is '5min'
-    binarize: bool, optional
-        If set to True, the data are binarized when determining the
-        activity onset and offset times. Only valid if start='AonT' or
-        'AoffT'.
-        Default is True.
-    bin_threshold: int, optional
-        If binarize is set to True, data above this threshold are set to 1
-        and to 0 otherwise.
-        Default is 4.
     whs: int, optional
         Window half size.
         Default is 4
@@ -710,9 +640,9 @@ def fSoD(
     algo: str, optional
         Sleep scoring algorithm to use.
         Default is 'Roenneberg'.
-    args
+    *args
         Variable length argument list passed to the scoring algorithm.
-    kwargs
+    **kwargs
         Arbitrary keyword arguements passed to the scoring algorithm.
 
     Returns
@@ -720,63 +650,22 @@ def fSoD(
     fsod: float
         Fraction of epochs scored as sleep, relatively to the length of
         the specified period.
-
-    .. warning:: The value of this variable depends on the convention used
-                 by the underlying sleep scoring algorithm. The expected
-                 convention is the following:
-
-                 * epochs scored as 1 refer to inactivity/sleep
-
-                 Otherwise, this variable will actually return the fraction
-                 of epochs scored as activity. The fraction of sleep can
-                 simply be recovered by calculating (1-fSOD).
-
-
-    Examples
-    --------
-
-        >>> import circStudio
-        >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-        >>> raw.fSoD()
-        0.17763779527559054
-        >>> raw.fSoD(algo='ck')
-        0.23811023622047245
-
     """
+    sod = SoD(data=data, whs=whs,start=start, period=period,algo=algo, *args, **kwargs)
+    return sod.sum()/len(sod)
 
-    SoD = self.SoD(
-        freq=freq,
-        binarize=binarize,
-        bin_threshold=bin_threshold,
-        whs=whs,
-        start=start,
-        period=period,
-        algo=algo,
-        *args,
-        **kwargs
-    )
-
-    return SoD.sum()/len(SoD)
-
-def SleepFragmentation(self):
-    """Sleep Fragmentation is an index of restlessness during the sleep
-    period expressed as a percentage. The higher the index, the more sleep
-    is disrupted. ActiLife calculates three values for sleep fragmentation:
-    movement Index, a fragmentation index, and total sleep fragmentation
-    Index.
-    - The Movement Index (MI) is  the percentage of epochs with y-axis
-    counts greater than zero in the sleep period.
-    - The Fragmentation Index (FI) is the percentage of one minute periods
-    of sleep vs. all periods of sleep during the sleep period.
-    - The Total Sleep Fragmentation Index (SFI) is the sum of the MI and
-    the FI"""
-    pass
 
 def Crespo(
-    self,
-    zeta=15, zeta_r=30, zeta_a=2,
-    t=.33, alpha='8h', beta='1h',
-    estimate_zeta=False, seq_length_max=100,
+    data,
+    frequency,
+    zeta=15,
+    zeta_r=30,
+    zeta_a=2,
+    t=.33,
+    alpha='8h',
+    beta='1h',
+    estimate_zeta=False,
+    seq_length_max=100,
     verbose=False
 ):
     r"""Crespo algorithm for activity/rest identification
@@ -829,22 +718,6 @@ def Crespo(
            Automatic identification of activity–rest periods based on
            actigraphy. Medical & Biological Engineering & Computing, 50(4),
            329–340. http://doi.org/10.1007/s11517-012-0875-y
-
-    Examples
-    --------
-
-        >>> import circStudio
-        >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-        >>> crespo = rawAWD.Crespo()
-        >>> crespo
-        2018-03-26 14:16:00    1
-        2018-03-26 14:17:00    0
-        2018-03-26 14:18:00    0
-        (...)
-        2018-04-06 08:22:00    0
-        2018-04-06 08:23:00    0
-        2018-04-06 08:24:00    1
-        Length: 15489, dtype: int64
     """
 
     # 1. Pre-processing
@@ -855,21 +728,21 @@ def Crespo(
     # with the t-percentile value of the actigraphy data
     # zeta = 15
     if estimate_zeta:
-        zeta = _estimate_zeta(self.raw_data, seq_length_max)
+        zeta = _estimate_zeta(data, seq_length_max)
         if verbose:
             print("CRESPO: estimated zeta = {}".format(zeta))
     # Determine the sequences of consecutive zeroes
-    mask_zeta = _create_inactivity_mask(self.raw_data, zeta, 1)
+    mask_zeta = _create_inactivity_mask(data, zeta, 1)
 
     # Determine the user-specified t-percentile value
-    s_t = self.raw_data.quantile(t)
+    s_t = data.quantile(t)
 
     # Replace zeroes with the t-percentile value
-    x = self.raw_data.copy()
+    x = data.copy()
     x[mask_zeta > 0] = s_t
 
     # Median filter window length L_w
-    L_w = int(pd.Timedelta(alpha)/self.frequency)+1
+    L_w = int(pd.Timedelta(alpha)/frequency)+1
     L_w_over_2 = int((L_w-1)/2)
 
     # Pad the signal at the beginning and at the end with a sequence of
@@ -879,11 +752,9 @@ def Crespo(
     # alpha_epochs_half = int(alpha_epochs/2)
     # beta_epochs = int(pd.Timedelta(beta)/self.frequency)
 
-    s_t_max = self.raw_data.max()
+    s_t_max = data.max()
 
-    x_p = _padded_data(
-        self.raw_data, s_t_max, L_w_over_2, self.frequency
-    )
+    x_p = _padded_data(data, s_t_max, L_w_over_2, frequency)
 
     # 1.2 Rank-order processing and decision logic
     # Apply a median filter to the $x_p$ series
@@ -900,7 +771,7 @@ def Crespo(
     # 1.3 Morphological filtering
 
     # Morph. filter window length, L_p
-    L_p = int(pd.Timedelta(beta)/self.frequency)+1
+    L_p = int(pd.Timedelta(beta)/frequency)+1
 
     # Morph. filter, M_f
     M_f = np.ones(L_p)
@@ -927,8 +798,8 @@ def Crespo(
     # zeta_r = 30
     # zeta_a = 2
     if estimate_zeta:
-        zeta_r = _estimate_zeta(self.data[y_e < 1], seq_length_max)
-        zeta_a = _estimate_zeta(self.data[y_e > 0], seq_length_max)
+        zeta_r = _estimate_zeta(data[y_e < 1], seq_length_max)
+        zeta_a = _estimate_zeta(data[y_e > 0], seq_length_max)
         if verbose:
             print("CRESPO: estimated zeta@rest= {}".format(zeta_r))
             print("CRESPO: estimated zeta@actv= {}".format(zeta_a))
@@ -937,14 +808,10 @@ def Crespo(
     # and mark as invalid sequences of more $\zeta_x$ zeroes.
 
     # Use y_e series as a filter for the rest periods
-    mask_rest = _create_inactivity_mask(
-        self.raw_data[y_e < 1], zeta_r, 1
-    )
+    mask_rest = _create_inactivity_mask(data[y_e < 1], zeta_r, 1)
 
     # Use y_e series as a filter for the active periods
-    mask_actv = _create_inactivity_mask(
-        self.raw_data[y_e > 0], zeta_a, 1
-    )
+    mask_actv = _create_inactivity_mask(data[y_e > 0], zeta_a, 1)
 
     mask = pd.concat([mask_actv, mask_rest], verify_integrity=True)
 
@@ -954,16 +821,12 @@ def Crespo(
     # by the median filter.
     # Done before padding to avoid unaligned time series.
 
-    x_nan = self.raw_data.copy()
+    x_nan = data.copy()
     x_nan[mask < 1] = np.NaN
 
     # Pad the signal at the beginning and at the end with a sequence of 1h
     # of elements of value m = max(s(t)).
-    x_sp = _padded_data(
-        x_nan, s_t_max,
-        L_p-1,
-        self.frequency
-    )
+    x_sp = _padded_data(x_nan, s_t_max, L_p-1, frequency)
 
     # Apply an adaptative median filter to the $x_{sp}$ series
     # no need to use a time-aware window as there is no time gap
@@ -975,9 +838,7 @@ def Crespo(
     # the median needs to be calculate by hand.
     # The range is start, start+alpha as the window is centered.
     median_start = x_sp.iloc[0:L_w].expanding().median()
-    median_end = x_sp.iloc[-L_w-1:-1].sort_index(
-            ascending=False
-        ).expanding().median()[::-1]
+    median_end = x_sp.iloc[-L_w-1:-1].sort_index(ascending=False).expanding().median()[::-1]
 
     # replace values in the original x_fa series with the new values
     # within the range (start, start+alpha/2) only.
@@ -985,26 +846,18 @@ def Crespo(
     x_fa.iloc[-L_w_over_2-1:-1] = median_end.iloc[0:L_w_over_2]
 
     # restore original time range
-    x_fa = x_fa[self.data.index[0]:self.data.index[-1]]
+    x_fa = x_fa[data.index[0]:data.index[-1]]
 
     p_threshold = x_fa.quantile((pd.Timedelta(alpha)/pd.Timedelta('24h')))
 
     y_2 = pd.Series(np.where(x_fa > p_threshold, 1, 0), index=x_fa.index)
 
     # ### 2.3 Morphological filtering
-    y_2_close = binary_closing(
-        y_2,
-        structure=np.ones(2*(L_p-1)+1)
-    ).astype(int)
+    y_2_close = binary_closing(y_2, structure=np.ones(2*(L_p-1)+1)).astype(int)
 
-    y_2_open = binary_opening(
-        y_2_close,
-        structure=np.ones(2*(L_p-1)+1)
-    ).astype(int)
+    y_2_open = binary_opening(y_2_close, structure=np.ones(2*(L_p-1)+1)).astype(int)
 
-    crespo = pd.Series(
-        y_2_open,
-        index=y_2.index)
+    crespo = pd.Series(y_2_open, index=y_2.index)
 
     # Manual post-processing
     crespo.iloc[0] = 1
@@ -1013,10 +866,15 @@ def Crespo(
     return crespo
 
 def Crespo_AoT(
-    self,
-    zeta=15, zeta_r=30, zeta_a=2,
-    t=.33, alpha='8h', beta='1h',
-    estimate_zeta=False, seq_length_max=100,
+    data,
+    zeta=15,
+    zeta_r=30,
+    zeta_a=2,
+    t=.33,
+    alpha='8h',
+    beta='1h',
+    estimate_zeta=False,
+    seq_length_max=100,
     verbose=False
 ):
     """Automatic identification of activity onset/offset times, based on
@@ -1072,17 +930,18 @@ def Crespo_AoT(
            actigraphy. Medical & Biological Engineering & Computing, 50(4),
            329–340. http://doi.org/10.1007/s11517-012-0875-y
 
-    Examples
-    --------
-
     """
 
-    crespo = self.Crespo(
-        zeta=zeta, zeta_r=zeta_r, zeta_a=zeta_a,
-        t=t, alpha=alpha, beta=beta,
-        estimate_zeta=estimate_zeta, seq_length_max=seq_length_max,
-        verbose=verbose
-    )
+    crespo = Crespo(zeta=zeta,
+                    zeta_r=zeta_r,
+                    zeta_a=zeta_a,
+                    t=t,
+                    alpha=alpha,
+                    beta=beta,
+                    estimate_zeta=estimate_zeta,
+                    seq_length_max=seq_length_max,
+                    verbose=verbose
+                    )
 
     diff = crespo.diff(1)
 
@@ -1092,14 +951,13 @@ def Crespo_AoT(
     return (AonT, AoffT)
 
 def Roenneberg(
-    self,
+    data,
     trend_period='24h',
     min_trend_period='12h',
     threshold=0.15,
     min_seed_period='30Min',
     max_test_period='12h',
-    r_consec_below='30Min',
-    rsfreq=None
+    r_consec_below='30Min'
 ):
     """Automatic sleep detection.
 
@@ -1166,13 +1024,8 @@ def Roenneberg(
     --------
 
     """
-    if rsfreq is not None:
-        rsdata = self.resampled_data(freq=rsfreq)
-    else:
-        rsdata = self.data
-
     rbg = roenneberg(
-        rsdata,
+        data,
         trend_period=trend_period,
         min_trend_period=min_trend_period,
         threshold=threshold,
@@ -1181,20 +1034,16 @@ def Roenneberg(
         r_consec_below=r_consec_below
     )
 
-    if rsfreq is not None:
-        rbg = rbg.asfreq(self.data.index.freq, method='pad')
-
     return rbg
 
 def Roenneberg_AoT(
-    self,
+    data,
     trend_period='24h',
     min_trend_period='12h',
     threshold=0.15,
     min_seed_period='30Min',
     max_test_period='12h',
-    r_consec_below='30Min',
-    rsfreq=None
+    r_consec_below='30Min'
 ):
     """Automatic identification of activity onset/offset times, based on
     Roenneberg's algorithm.
@@ -1226,12 +1075,6 @@ def Roenneberg_AoT(
         Time range to consider, past the potential correlation peak when
         searching for the maximum correlation peak.
         Default is '30Min'.
-    rsfreq: str, optional
-        Resampling frequency used to evaluate the sleep periods. The final
-        time series with rest/activity scores is returned with a frequency
-        equal to one of the input data. If set to None, no resampling is
-        performed.
-        Default is None.
 
     Returns
     -------
@@ -1264,14 +1107,14 @@ def Roenneberg_AoT(
 
     """
 
-    rbg = self.Roenneberg(
+    rbg = Roenneberg(
+        data=data,
         trend_period=trend_period,
         min_trend_period=min_trend_period,
         threshold=threshold,
         min_seed_period=min_seed_period,
         max_test_period=max_test_period,
-        r_consec_below=r_consec_below,
-        rsfreq=rsfreq
+        r_consec_below=r_consec_below
     )
 
     diff = rbg.diff(1)
@@ -1281,16 +1124,10 @@ def Roenneberg_AoT(
 
     return (AonT, AoffT)
 
-def SleepProfile(
-    self,
-    freq='15min',
-    algo='Roenneberg',
-    *args,
-    **kwargs
-):
+
+def SleepProfile(data, freq='15min', algo='Roenneberg', *args, **kwargs):
     r"""Normalized sleep daily profile
 
-    XXXXX
 
     Parameters
     ----------
@@ -1309,38 +1146,22 @@ def SleepProfile(
     -------
     sleep_prof: YYY
 
-    Examples
-    --------
-
-        >>> import circStudio
-        >>> rawAWD = circStudio.io.read_raw_awd(fpath + 'SUBJECT_01.AWD')
-        >>> raw.SleepProfile()
-        ZZZZZZZZZZZZZZZZzZZZZZ
-
     """
 
     # Retrieve sleep scoring function dynamically by name
-    sleep_algo = getattr(self, algo)
+    sleep_algo = globals()[algo]
 
     # Score activity
-    sleep_scoring = sleep_algo(*args, **kwargs)
+    sleep_scoring = sleep_algo(data=data, *args, **kwargs)
 
     # Sleep profile over 24h
     sleep_prof = _average_daily_activity(data=sleep_scoring, cyclic=False)
 
-    # Resampled sleep profile
-    rs_sleep_profile = sleep_prof.resample(freq).mean()
+    # Retrun resampled sleep profile
+    return sleep_prof.resample(freq).mean()
 
-    return rs_sleep_profile
 
-def SleepRegularityIndex(
-    self,
-    freq='15min',
-    bin_threshold=None,
-    algo='Roenneberg',
-    *args,
-    **kwargs
-):
+def SleepRegularityIndex(data, freq='15min', bin_threshold=None, algo='Roenneberg', *args, **kwargs):
     r""" Sleep regularity index
 
     Likelihood that any two time-points (epoch-by-epoch) 24 hours apart are
@@ -1396,32 +1217,18 @@ def SleepRegularityIndex(
            Index in Older Adults and Associations with Cardiometabolic
            Risk. Scientific Reports, 8(1), 14158.
            https://doi.org/10.1038/s41598-018-32402-5
-
-    Examples
-    --------
-
     """
-
     # Retrieve sleep scoring function dynamically by name
-    sleep_algo = getattr(self, algo)
+    sleep_algo = globals()[algo]
 
     # Score activity
-    sleep_scoring = sleep_algo(*args, **kwargs)
+    sleep_scoring = sleep_algo(data=data, *args, **kwargs)
 
-    # SRI
-    sleep_regularity_index = sri(sleep_scoring, bin_threshold)
+    # Return sleep Regularity Index (SRI)
+    return sri(sleep_scoring, bin_threshold)
 
-    return sleep_regularity_index
 
-def SleepMidPoint(
-    self,
-    freq='15min',
-    bin_threshold=None,
-    to_td=True,
-    algo='Roenneberg',
-    *args,
-    **kwargs
-):
+def SleepMidPoint(data, freq='15min', bin_threshold=None, to_td=True, algo='Roenneberg', *args, **kwargs):
     r""" Sleep midpoint
 
     Center of the mean sleep periods
@@ -1450,25 +1257,6 @@ def SleepMidPoint(
     -------
     smp: float or Timedelta
 
-    Notes
-    -----
-
-    Sleep midpoint (SMP) is an index of sleep timing and is calculated
-    as the following [1]_:
-
-    .. math::
-
-        SMP = \frac{1440}{2\pi} arctan2\left(
-              \sum_{j=1}^M\sum_{i=1}^N
-              s_{i,j} \times sin\left(\frac{2\pi t_i}{1440}\right),
-              \sum_{j=1}^M\sum_{i=1}^N
-              s_{i,j} \times cos\left(\frac{2\pi t_i}{1440}\right)
-              \right)
-
-    with:
-        * :math:`t_j`, time of day in minutes at epoch j,
-        * :math:`\delta(s_{i,j}, s_{i+1,j}) = 1` if
-          :math:`s_{i,j} = s_{i+1,j}` and 0 otherwise.
 
     References
     ----------
@@ -1478,17 +1266,13 @@ def SleepMidPoint(
            Index in Older Adults and Associations with Cardiometabolic
            Risk. Scientific Reports, 8(1), 14158.
            https://doi.org/10.1038/s41598-018-32402-5
-
-    Examples
-    --------
-
     """
 
     # Retrieve sleep scoring function dynamically by name
-    sleep_algo = getattr(self, algo)
+    sleep_algo = globals()[algo]
 
     # Score activity
-    sleep_scoring = sleep_algo(*args, **kwargs)
+    sleep_scoring = sleep_algo(data=data, *args, **kwargs)
 
     # Sleep midpoint
     smp = sleep_midpoint(sleep_scoring, bin_threshold)

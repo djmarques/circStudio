@@ -8,7 +8,6 @@ __all__ = [
     "_estimate_zeta",
     "_window_convolution",
     "_window_convolution",
-    "_oakley",
     "filter_ts_duration"
 ]
 
