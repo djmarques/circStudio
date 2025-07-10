@@ -193,14 +193,14 @@ class Mask:
             exclude_if_mask=self.exclude_if_mask,
         )
 
-    def preprocess(self, freq=None):
+    def apply_filters(self, freq=None):
         self.mask_inactivity = True
         self.activity = self._filter_data(self.activity, freq)
         if self.light is not None:
             self.light = self._filter_data(self.light, freq)
 
 
-    def reset(self, new_freq=None):
+    def reset_filters(self, new_freq=None):
         self.mask_inactivity = False
         self.activity = self._original_activity
         if self.light is not None:
