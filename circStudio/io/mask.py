@@ -206,20 +206,6 @@ class Mask:
         if self.light is not None:
             self.light = self._original_light
 
-
-    @staticmethod
-    def binarize(data, threshold):
-        return _binarize(data, threshold)
-
-    def resample(self, data, binarize=False, freq=None):
-        r"""Resample data at the specified frequency, with or without mask."""
-        return _resample(data,
-                         new_freq=freq,
-                         current_freq=self.frequency,
-                         mask_inactivity=self.mask_inactivity,
-                         exclude_if_mask=self.exclude_if_mask,
-                         mask=self._mask)
-
     @property
     def mask(self):
         r"""Mask used to filter out inactive data."""
