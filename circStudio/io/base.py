@@ -1,9 +1,5 @@
-import pandas as pd
-import numpy as np
-
-from pandas.tseries.frequencies import to_offset
 from .mask import Filters
-from ..sleep import SleepDiary, ScoringMixin, SleepBoutMixin
+from circStudio.analysis.sleep import SleepDiary
 from .mask import Mask
 
 

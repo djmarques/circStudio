@@ -4,8 +4,7 @@ import re
 from .scoring import csm, roenneberg, sleep_midpoint, sri
 from .scoring.utils import rescore
 from scipy.ndimage import binary_closing, binary_opening
-from ..filters import _create_inactivity_mask
-from ..analysis.tools import *
+from circStudio.analysis.tools import *
 
 
 def _td_format(td):

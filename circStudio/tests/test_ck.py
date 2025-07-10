@@ -1,5 +1,5 @@
 import numpy as np
-from circStudio.sleep.scoring.utils import rescore
+from circStudio.analysis.sleep.scoring.utils import rescore
 
 # Webster's rules:
 # 1. After at least 4 minutes scored as wake, the next 1 minute scored as

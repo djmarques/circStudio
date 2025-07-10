@@ -16,17 +16,13 @@
 # Dev branch marker is: 'X.Y.devN' where N is an integer.
 #
 from . import analysis
-from . import filters
 from . import io
-from . import sleep
+from .analysis import sleep
 from . import tests
 
 __all__ = [
     "analysis",
-    "filters",
     "io",
-    "models",
-    "sleep",
     "tests",
 ]
 
