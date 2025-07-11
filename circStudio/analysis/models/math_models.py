@@ -13,7 +13,7 @@ class Model:
         # Extract time from light index
         if time is None or inputs is None:
             if light is not None:
-                self.time = np.asarray((light.index - light.index.min()).dt.total_seconds() / 3600)
+                self.time = np.asarray((light.index - light.index.min()).total_seconds() / 3600)
                 self.inputs = np.asarray(light.values)
             else:
                 raise ValueError("Must provide either light series or input and time.")
@@ -47,7 +47,7 @@ class Model:
         solution = odeint(system_with_light, initial_condition, time_vector)
         return solution
 
-    def get_initial_conditions(self, loop_number, light_vector, time_vector, change_params=False):
+    def get_initial_conditions(self, loop_number, light=None, light_vector=None, time_vector=None):
         """
         Equilibration is not the same as entrainment; it just confirms if the DLMO is at the same time.
         However, this tells us nothing about the uniformity of the state variables (we might still be in a region
@@ -56,10 +56,22 @@ class Model:
         In a way, this option just equilibrates the dlmo... our method allows us to check whether we are in a region
         of complete entrainment (the error is regular).
         :param loop_number: number of loops until
+        :param light: light panda series
         :param light_vector: vector containing light intensity values in lux
         :param time_vector: corresponding time vector
         :return: dlmo_equilibrated solution
         """
+        # Extract time from light index
+        if time_vector is None or light_vector is None:
+            if light is not None:
+                time_vector = np.asarray((light.index - light.index.min()).total_seconds() / 3600)
+                light_vector = np.asarray(light.values)
+            else:
+                raise ValueError("Must provide either light series or input and time.")
+        else:
+            time_vector = time_vector
+            light_vector = light_vector
+
         # Initialize with default initial conditions
         initial_condition = self.initial_conditions
         # List to collect dlmos
@@ -83,12 +95,7 @@ class Model:
                 print(f"The model entrained after {i} loops.")
                 # Update model initial conditions to entrained state
                 self.initial_conditions = solution[-1]
-                if change_params:
-                    self.model_states = self.integrate(
-                        light_vector=light_vector,
-                        time_vector=time_vector,
-                        initial_condition=self.initial_conditions,
-                    )
+
                 # Return entrained model solution
                 return solution[-1]
         # Non-entrainment message(free-running rhythm)
@@ -112,8 +119,9 @@ class Model:
 class Forger(Model):
     def __init__(
         self,
-        inputs,
-        time,
+        light=None,
+        inputs=None,
+        time=None,
         taux=24.2,
         mu=0.23,
         g=33.75,
@@ -124,10 +132,16 @@ class Forger(Model):
         k=0.55,
         cbt_to_dlmo=7.0,
     ):
-        super().__init__(
-            inputs,
-            time,
-            initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306]),
+        if inputs is None or time is None:
+            super().__init__(
+                light=light,
+                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306])
+            )
+        else:
+            super().__init__(
+                inputs=inputs,
+                time=inputs,
+                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306]),
         )
         # self.initial_conditions = np.array([-0.0843259, -1.09607546, 0.45584306])
         # self.inputs = inputs
@@ -193,8 +207,9 @@ class Forger(Model):
 class Jewett(Model):
     def __init__(
         self,
-        inputs,
-        time,
+        light=None,
+        inputs=None,
+        time=None,
         taux=24.2,
         mu=0.13,
         g=19.875,
@@ -207,10 +222,16 @@ class Jewett(Model):
         phi_ref=0.8,
         cbt_to_dlmo=7.0,
     ):
-        super().__init__(
-            inputs,
-            time,
-            initial_conditions=np.array([-0.10097101, -1.21985662, 0.50529415]),
+        if inputs is None or time is None:
+            super().__init__(
+                light=light,
+                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306])
+            )
+        else:
+            super().__init__(
+                inputs=inputs,
+                time=inputs,
+                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306]),
         )
         # self.initial_conditions= np.array([-0.10097101, -1.21985662, 0.50529415])
         # self.inputs = inputs
@@ -278,8 +299,9 @@ class Jewett(Model):
 class HannaySP(Model):
     def __init__(
         self,
-        inputs,
-        time,
+        light=None,
+        inputs=None,
+        time=None,
         tau=23.84,
         k=0.06358,
         gamma=0.024,
@@ -297,11 +319,16 @@ class HannaySP(Model):
         cbt_to_dlmo=7.0,
         initial_condition=np.array([0.82041911, 1.71383697, 0.52318122]),
     ):
-        super().__init__(
-            inputs,
-            time,
-            # initial_conditions=np.array([0.82041911, 1.71383697, 0.52318122]),
-            initial_conditions=initial_condition,
+        if inputs is None or time is None:
+            super().__init__(
+                light=light,
+                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306])
+            )
+        else:
+            super().__init__(
+                inputs=inputs,
+                time=inputs,
+                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306]),
         )
         # self.initial_conditions = np.array([0.82041911, 1.71383697, 0.52318122])
         # self.inputs = inputs
@@ -394,8 +421,9 @@ class HannaySP(Model):
 class HannayTP(Model):
     def __init__(
         self,
-        inputs,
-        time,
+        light=None,
+        inputs=None,
+        time=None,
         tauv=24.25,
         taud=24.0,
         kvv=0.05,
@@ -415,12 +443,16 @@ class HannayTP(Model):
         i0=9325.0,
         cbt_to_dlmo=7.0,
     ):
-        super().__init__(
-            inputs,
-            time,
-            initial_conditions=np.array(
-                [0.82423745, 0.82304996, 1.75233424, 1.863457, 0.52318122]
-            ),
+        if inputs is None or time is None:
+            super().__init__(
+                light=light,
+                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306])
+            )
+        else:
+            super().__init__(
+                inputs=inputs,
+                time=inputs,
+                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306]),
         )
         # self.initial_conditions = np.array([0.82423745, 0.82304996, 1.75233424, 1.863457, 0.52318122])
         # self.inputs = inputs
