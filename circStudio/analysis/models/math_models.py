@@ -3,15 +3,24 @@ from scipy.signal import find_peaks
 from scipy.integrate import odeint
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
-import time
 
 
 class Model:
-    def __init__(self, inputs, time, initial_conditions):
-        self.inputs = inputs
-        self.time = time
+    def __init__(self, initial_conditions, light=None, time=None, inputs=None):
         self.initial_conditions = initial_conditions
         self.model_states = None
+
+        # Extract time from light index
+        if time is None or inputs is None:
+            if light is not None:
+                self.time = np.asarray((light.index - light.index.min()).dt.total_seconds() / 3600)
+                self.inputs = np.asarray(light.values)
+            else:
+                raise ValueError("Must provide either light series or input and time.")
+        else:
+            self.time = time
+            self.inputs = inputs
+
 
     def initialize_model_states(self):
         self.model_states = self.integrate()
