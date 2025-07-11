@@ -352,7 +352,8 @@ def _data_processor(data,
     """
     # Binarize data using a given threshold
     if binarize:
-        return _binarize(data=data, threshold=threshold)
+        #return _binarize(data=data, threshold=threshold)
+        data = _binarize(data=data, threshold=threshold)
     else:
         data = data
 

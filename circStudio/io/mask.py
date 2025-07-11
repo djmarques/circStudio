@@ -219,6 +219,8 @@ class Mask:
                       impute_nan=False,
                       exclude_if_mask=False,
                       imputation_method='mean'):
+        # Reset filters before applying new ones
+        self.reset_filters()
         if apply_mask:
             if self._mask is None:
                 print('No mask was found. Create a new mask.')
@@ -243,7 +245,7 @@ class Mask:
                                            imputation_method=imputation_method)
 
 
-    def reset_filters(self, new_freq=None):
+    def reset_filters(self):
         self._mask_inactivity = False
         if self.activity is not None:
             self.activity = self._original_activity
