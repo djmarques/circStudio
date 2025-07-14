@@ -136,7 +136,7 @@ class Forger(Model):
         else:
             super().__init__(
                 inputs=inputs,
-                time=inputs,
+                time=time,
                 initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306]),
         )
         # self.initial_conditions = np.array([-0.0843259, -1.09607546, 0.45584306])
@@ -226,7 +226,7 @@ class Jewett(Model):
         else:
             super().__init__(
                 inputs=inputs,
-                time=inputs,
+                time=time,
                 initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306]),
         )
         # self.initial_conditions= np.array([-0.10097101, -1.21985662, 0.50529415])
@@ -323,7 +323,7 @@ class HannaySP(Model):
         else:
             super().__init__(
                 inputs=inputs,
-                time=inputs,
+                time=time,
                 initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306]),
         )
         # self.initial_conditions = np.array([0.82041911, 1.71383697, 0.52318122])
@@ -447,7 +447,7 @@ class HannayTP(Model):
         else:
             super().__init__(
                 inputs=inputs,
-                time=inputs,
+                time=time,
                 initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306]),
         )
         # self.initial_conditions = np.array([0.82423745, 0.82304996, 1.75233424, 1.863457, 0.52318122])
