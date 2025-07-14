@@ -32,7 +32,7 @@ class ATR(Raw):
                  activity_mode='PIM',
                  light_mode='LIGHT',
                  start_time=None,
-                 skip_rows=None,
+                 skip_rows=0,
                  period=None):
 
 
@@ -65,7 +65,7 @@ class ATR(Raw):
 
         # Create a DataFrame containing actigraphy data
         data = pd.read_csv(input_fname,
-            skiprows=len(header)+2,
+            skiprows=len(header)+2+skip_rows,
             sep=';',
             parse_dates=True,
             dayfirst=True,
@@ -96,11 +96,12 @@ class ATR(Raw):
             light=data[light_mode]
         )
 
-def read_atr(input_fname, activity_mode='PIM', light_mode='LIGHT', start_time=None, period=None):
+def read_atr(input_fname, activity_mode='PIM', light_mode='LIGHT', start_time=None, period=None, skip_rows=0):
     r"""Reader function for .txt file recorded by ActTrust (Condor Instruments)
 
     Parameters
     ----------
+    skip_rows
     light_mode: str, optional.
         Light sampling mode. By default, it uses the LIGHT channel (the other channels are not in lux).
     input_fname: str
@@ -128,4 +129,5 @@ def read_atr(input_fname, activity_mode='PIM', light_mode='LIGHT', start_time=No
                activity_mode=activity_mode,
                light_mode=light_mode,
                start_time=start_time,
-               period=period)
+               period=period,
+               skip_rows=skip_rows)

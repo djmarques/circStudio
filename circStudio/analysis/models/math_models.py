@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from scipy.signal import find_peaks
 from scipy.integrate import odeint
 from scipy.optimize import curve_fit
@@ -6,17 +7,17 @@ import matplotlib.pyplot as plt
 
 
 class Model:
-    def __init__(self, initial_conditions, light=None, time=None, inputs=None):
+    def __init__(self, initial_conditions, data=None, time=None, inputs=None):
         self.initial_conditions = initial_conditions
         self.model_states = None
 
-        # Extract time from light index
+        # Extract time from data index
         if time is None or inputs is None:
-            if light is not None:
-                self.time = np.asarray((light.index - light.index.min()).total_seconds() / 3600)
-                self.inputs = np.asarray(light.values)
+            if data is not None:
+                self.time = np.asarray((data.index - data.index.min()).total_seconds() / 3600)
+                self.inputs = np.asarray(data.values)
             else:
-                raise ValueError("Must provide either light series or input and time.")
+                raise ValueError("Must provide either light time series (data) or input and time.")
         else:
             self.time = time
             self.inputs = inputs
@@ -44,10 +45,11 @@ class Model:
             return self.derivative(t, state, light_input)
 
         # Use odeint to integrate the system
-        solution = odeint(system_with_light, initial_condition, time_vector)
+        #solution = odeint(system_with_light, initial_condition, time_vector)
+        solution = odeint(func=system_with_light, y0=initial_condition, t=time_vector)
         return solution
 
-    def get_initial_conditions(self, loop_number, light=None, light_vector=None, time_vector=None):
+    def get_initial_conditions(self, loop_number, data=None, light_vector=None, time_vector=None):
         """
         Equilibration is not the same as entrainment; it just confirms if the DLMO is at the same time.
         However, this tells us nothing about the uniformity of the state variables (we might still be in a region
@@ -56,16 +58,16 @@ class Model:
         In a way, this option just equilibrates the dlmo... our method allows us to check whether we are in a region
         of complete entrainment (the error is regular).
         :param loop_number: number of loops until
-        :param light: light panda series
+        :param data: light panda series
         :param light_vector: vector containing light intensity values in lux
         :param time_vector: corresponding time vector
         :return: dlmo_equilibrated solution
         """
         # Extract time from light index
         if time_vector is None or light_vector is None:
-            if light is not None:
-                time_vector = np.asarray((light.index - light.index.min()).total_seconds() / 3600)
-                light_vector = np.asarray(light.values)
+            if data is not None:
+                time_vector = np.asarray((data.index - data.index.min()).total_seconds() / 3600)
+                light_vector = np.asarray(data.values)
             else:
                 raise ValueError("Must provide either light series or input and time.")
         else:
@@ -104,12 +106,6 @@ class Model:
         )
         # Return unentrained model solution
         self.initial_conditions = solution[-1]
-        if change_params:
-            self.model_states = self.integrate(
-                light_vector=light_vector,
-                time_vector=time_vector,
-                initial_condition=self.initial_conditions,
-            )
         return solution[-1]
 
     def dlmos(self):
@@ -119,7 +115,7 @@ class Model:
 class Forger(Model):
     def __init__(
         self,
-        light=None,
+        data=None,
         inputs=None,
         time=None,
         taux=24.2,
@@ -134,7 +130,7 @@ class Forger(Model):
     ):
         if inputs is None or time is None:
             super().__init__(
-                light=light,
+                data=data,
                 initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306])
             )
         else:
@@ -207,7 +203,7 @@ class Forger(Model):
 class Jewett(Model):
     def __init__(
         self,
-        light=None,
+        data=None,
         inputs=None,
         time=None,
         taux=24.2,
@@ -224,7 +220,7 @@ class Jewett(Model):
     ):
         if inputs is None or time is None:
             super().__init__(
-                light=light,
+                data=data,
                 initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306])
             )
         else:
@@ -299,7 +295,7 @@ class Jewett(Model):
 class HannaySP(Model):
     def __init__(
         self,
-        light=None,
+        data=None,
         inputs=None,
         time=None,
         tau=23.84,
@@ -321,7 +317,7 @@ class HannaySP(Model):
     ):
         if inputs is None or time is None:
             super().__init__(
-                light=light,
+                data=data,
                 initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306])
             )
         else:
@@ -421,7 +417,7 @@ class HannaySP(Model):
 class HannayTP(Model):
     def __init__(
         self,
-        light=None,
+        data=None,
         inputs=None,
         time=None,
         tauv=24.25,
@@ -445,7 +441,7 @@ class HannayTP(Model):
     ):
         if inputs is None or time is None:
             super().__init__(
-                light=light,
+                data=data,
                 initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306])
             )
         else:
@@ -563,8 +559,8 @@ class HannayTP(Model):
 class ESRI:
     def __init__(
         self,
-        inputs,
         time,
+        inputs,
         window_size_days=4.0,
         esri_time_step_hours=1.0,
         initial_amplitude=0.1,
@@ -584,6 +580,7 @@ class ESRI:
         self.esri_time_step = esri_time_step_hours
         self.initial_amplitude = initial_amplitude
         self.midnight_phase = midnight_phase
+
         self.time_vector = time
         self.light_vector = inputs
 
@@ -600,6 +597,7 @@ class ESRI:
         """
         # Determine the model's time step from the provided time vector
         model_time_step = np.diff(self.time_vector)[0]
+
         # Create an array of time points corresponding to the movement of the sliding window
         esri_time = np.arange(
             self.time_vector[0],
@@ -621,7 +619,7 @@ class ESRI:
 
             # Generate array with model time points to later compute the corresponding light intensity values by linear interpolation
             model_time_points = np.arange(
-                t, t + self.window_size * 24.0, current_phase_init
+                t, t + self.window_size * 24.0, model_time_step
             )
 
             # Using linear interpolation, calculate light intensity value at the specified model time points, based on the time and light vector.
@@ -630,7 +628,7 @@ class ESRI:
             )
 
             # Calculate the trajetory using the linterp_light_vector and the model_time_points
-            trajectory = HannaySP(
+            model = HannaySP(
                 inputs=linterp_light_vector,
                 time=model_time_points,
                 initial_condition=model_initial_condition,
@@ -639,7 +637,7 @@ class ESRI:
             )
 
             # model amplitude at the end of the simulation
-            esri_values[i] = trajectory.model_states[-1, 0]
+            esri_values[i] = model.model_states[-1, 0]
 
         # Any negative values are replaced with NaN
         esri_values[esri_values < 0] = np.nan
@@ -866,6 +864,7 @@ def main():
     #dt = 1
     #dt=1/10 # for 10 bins/h
     time = np.arange(0, len(light) * dt, dt)
+
 
     # SECTION FOR COMPARING CIRCADIAN MODELS (FORGER AND HANNAY)
     comparison = ModelComparer(inputs=light, time=time, equilibrate=True)
