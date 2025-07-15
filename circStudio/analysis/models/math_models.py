@@ -45,8 +45,7 @@ class Model:
             return self.derivative(t, state, light_input)
 
         # Use odeint to integrate the system
-        #solution = odeint(system_with_light, initial_condition, time_vector)
-        solution = odeint(func=system_with_light, y0=initial_condition, t=time_vector)
+        solution = odeint(system_with_light, initial_condition, time_vector)
         return solution
 
     def get_initial_conditions(self, loop_number, data=None, light_vector=None, time_vector=None):
@@ -221,13 +220,13 @@ class Jewett(Model):
         if inputs is None or time is None:
             super().__init__(
                 data=data,
-                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306])
+                initial_conditions=np.array([-0.10097101, -1.21985662, 0.50529415])
             )
         else:
             super().__init__(
                 inputs=inputs,
                 time=time,
-                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306]),
+                initial_conditions=np.array([-0.10097101, -1.21985662, 0.50529415]),
         )
         # self.initial_conditions= np.array([-0.10097101, -1.21985662, 0.50529415])
         # self.inputs = inputs
@@ -318,13 +317,13 @@ class HannaySP(Model):
         if inputs is None or time is None:
             super().__init__(
                 data=data,
-                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306])
+                initial_conditions=np.array([0.82041911, 1.71383697, 0.52318122])
             )
         else:
             super().__init__(
                 inputs=inputs,
                 time=time,
-                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306]),
+                initial_conditions=np.array([0.82041911, 1.71383697, 0.52318122]),
         )
         # self.initial_conditions = np.array([0.82041911, 1.71383697, 0.52318122])
         # self.inputs = inputs
@@ -442,13 +441,13 @@ class HannayTP(Model):
         if inputs is None or time is None:
             super().__init__(
                 data=data,
-                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306])
+                initial_conditions=np.array([0.82423745, 0.82304996, 1.75233424, 1.863457, 0.52318122])
             )
         else:
             super().__init__(
                 inputs=inputs,
                 time=time,
-                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306]),
+                initial_conditions=np.array([0.82423745, 0.82304996, 1.75233424, 1.863457, 0.52318122]),
         )
         # self.initial_conditions = np.array([0.82423745, 0.82304996, 1.75233424, 1.863457, 0.52318122])
         # self.inputs = inputs
@@ -637,7 +636,7 @@ class ESRI:
             )
 
             # model amplitude at the end of the simulation
-            esri_values[i] = model.model_states[-1, 0]
+            esri_values[i] = model.model_states[-1, 1]
 
         # Any negative values are replaced with NaN
         esri_values[esri_values < 0] = np.nan
