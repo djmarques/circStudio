@@ -7,9 +7,34 @@ import matplotlib.pyplot as plt
 
 
 class Model:
+    """
+    Generic model class for integrating mathematical models of circadian rhythms.
+
+    This class numerically integrates a system of ordinary differential equations (ODEs),
+    describing circadian rhythms, where system evolution may depend on external inputs
+    (such as light) and initial conditions. Time points and input data can be provided
+    directly or extracted from a pandas.Series with a DatetimeIndex, where the series
+    values represent the inputs (e.g., light intensity) and the index specifies time.
+
+    Attributes
+    ----------
+        initial_conditions (numpy.ndarray):
+            Array of initial conditions for the model states.
+        model_states (numpy.ndarray or None):
+            Array containing the model state trajectories after integration.
+        data (pandas.Series, optional):
+            Input data series with a DatetimeIndex. The index represents time points
+            and the values represent input data (e.g., light intensity). The time
+            and input arrays are extracted from this series.
+        time (numpy.ndarray, optional):
+            Array of time points (in hours), must be monotonically increasing.
+        inputs (numpy.ndarray, optional):
+            Array of input values (e.g., light intensity) corresponding to each time point.
+    """
     def __init__(self, initial_conditions, data=None, time=None, inputs=None):
         self.initial_conditions = initial_conditions
         self.model_states = None
+        self.data = data
 
         # Extract time from data index
         if time is None or inputs is None:
@@ -24,9 +49,41 @@ class Model:
 
 
     def initialize_model_states(self):
+        """
+        Initializes the model states by numerically integrating the system equations.
+
+        This method runs the model integration using the current initial conditions,
+        input values, and time vector, and stores the result in `self.model_states`.
+        """
         self.model_states = self.integrate()
 
+
     def integrate(self, light_vector=None, time_vector=None, initial_condition=None):
+        """
+        Numerically integrates a system of ordinary differential equations (ODEs).
+
+        This method uses SciPy `odeint` function to simulate the model dynamics over time,
+        given a set of initial conditions and external inputs (e.g., light intensity).
+        By default, it uses the class attributes `self.inputs`, `self.time`, and `self.initial_condition`,
+        but alternative arrays can be provided.
+
+        The input and time vectors must be of the same length, and the system's equations must be defined
+        by the `derivative`method (which should be implemented within subclass of the Model class).
+
+        Parameters
+        ----------
+        light_vector (numpy.ndarray, optional):
+            Array of input values (typically, light intensity)
+        time_vector (numpy.ndarray, optional):
+            Array of time points (typically, time in hours)
+        initial_condition (numpy.ndarray, optional):
+            Array of initial conditions
+
+        Returns
+        -------
+        numpy.ndarray:
+            Simulated state trajectories over the specified time vector.
+        """
         light_vector = light_vector if light_vector is not None else self.inputs
         time_vector = time_vector if time_vector is not None else self.time
         initial_condition = (
@@ -48,19 +105,33 @@ class Model:
         solution = odeint(system_with_light, initial_condition, time_vector)
         return solution
 
+
     def get_initial_conditions(self, loop_number, data=None, light_vector=None, time_vector=None):
         """
-        Equilibration is not the same as entrainment; it just confirms if the DLMO is at the same time.
-        However, this tells us nothing about the uniformity of the state variables (we might still be in a region
-        in which the model hasn't reached periodicity. So, the model is not "equilibrated" (not in equilibrium)
-        and not entrained... we might need to reimplement this functionality.
-        In a way, this option just equilibrates the dlmo... our method allows us to check whether we are in a region
-        of complete entrainment (the error is regular).
-        :param loop_number: number of loops until
-        :param data: light panda series
-        :param light_vector: vector containing light intensity values in lux
-        :param time_vector: corresponding time vector
-        :return: dlmo_equilibrated solution
+        Attempts to equilibrate the model's initial conditions by repeated simulation given a light and time vector.
+
+        This method iteratively integrates the model for a user-specified number of cycles to assess whether equilibrium
+         is achieved, as indicated by the stabilization of the predicted DLMO (Dim Light Melatonin Onset).
+
+        Parameters
+        ----------
+        loop_number (int):
+            Number of consecutive simulation cycles performed to assess whether the state trajectory of the circadian
+            system's state variables converges to equilibrium under the given input conditions.
+        data (pandas.Series, optional):
+            Input data series with a DatetimeIndex. The index represents time points
+            and the values represent input data (e.g., light intensity). The time
+            and input arrays are extracted from this series.
+        light_vector (numpy.ndarray, optional):
+            Array of input values (typically, light intensity)
+        time_vector (numpy.ndarray, optional):
+            Array of time points (typically, time in hours)
+
+        Returns
+        ----------
+        numpy.ndarray:
+            The final state of the model after attempting to reach equilibrium (either an equilibrated solution or last
+            simulated state).
         """
         # Extract time from light index
         if time_vector is None or light_vector is None:
@@ -107,11 +178,70 @@ class Model:
         self.initial_conditions = solution[-1]
         return solution[-1]
 
+
     def dlmos(self):
         return self.cbt() - self.cbt_to_dlmo
 
 
 class Forger(Model):
+    """
+    Implements the Forger, Jewett and Kronauer (FJK) mathematical model of circadian rhythms [1],
+    formulated as a van der Pol oscillator with three state variables: x, xc, and n.
+
+    While x and xc variables do not have direct physiological interpretations, they can be used
+    to derived biologically meaningful quantities, such as the core body temperature minimum (CBTmin).
+
+    This implementation closely follows the approach of the `circadian`package by Arcascope [2]. However,
+    it uses the LSODA integrator (via SciPy's `odeint`) for numerical integration.
+
+    Attributes
+    ----------
+    taux : float
+        Intrinsic period of the oscillator (hours).
+    mu : float
+        Nonlinearity parameter of the van der Pol oscillator.
+    g : float
+        Light sensitivity scaling parameter.
+    alpha_0 : float
+        Baseline light sensitivity parameter.
+    beta : float
+        Rate constant for adaptation variable n.
+    p : float
+        Power-law exponent for light input.
+    i0 : float
+        Saturation intensity for light sensitivity (lux).
+    k : float
+        Scaling factor for light-dependent changes in oscillator period.
+    cbt_to_dlmo : float
+        Time offset (in hours) from CBTmin to DLMO.
+    initial_conditions : numpy.ndarray
+        State vector at the start of simulation (default: [-0.0843259, -1.09607546, 0.45584306]).
+    model_states : numpy.ndarray
+        Integrated state trajectories of the model.
+    time : numpy.ndarray
+        Array of time points for simulation.
+    inputs : numpy.ndarray
+        Array of input values (e.g., light intensity) over time.
+
+    Methods
+    -------
+    derivative(t, state, light)
+        Computes the derivatives of the state variables at a given time and light input.
+    amplitude()
+        Calculates the amplitude of the oscillator from integrated states.
+    phase()
+        Calculates the phase angle of the oscillator from integrated states.
+    cbt()
+        Identifies the timing of core body temperature minima from integrated states.
+
+    References
+    ----------
+    [1] Forger DB, Jewett ME, Kronauer RE. A Simpler Model of the Human Circadian Pacemaker.
+    Journal of Biological Rhythms. 1999;14(6):533-538. doi:10.1177/074873099129000867
+
+    [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
+    and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
+    """
     def __init__(
         self,
         data=None,
@@ -126,6 +256,7 @@ class Forger(Model):
         i0=9500.0,
         k=0.55,
         cbt_to_dlmo=7.0,
+        initial_condition=None,
     ):
         if inputs is None or time is None:
             super().__init__(
@@ -138,6 +269,9 @@ class Forger(Model):
                 time=time,
                 initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306]),
         )
+        # Check for a scenario in which a initial condition is provided
+        if initial_condition is not None:
+            self.initial_conditions = initial_condition
         # self.initial_conditions = np.array([-0.0843259, -1.09607546, 0.45584306])
         # self.inputs = inputs
         # self.time = time
@@ -200,6 +334,69 @@ class Forger(Model):
 
 
 class Jewett(Model):
+    """
+    Implements an improved version of the Forger, Jewett and Kronauer (FJ) model of circadian rhythms,
+    incorporating higher-order terms. This model represents the circadian pacemaker as a Van der Pol
+    oscillator with three state variables: x, xc, and n.
+
+    While x and xc variables do not have direct physiological interpretations, they can be used
+    to derived biologically meaningful quantities, such as the core body temperature minimum (CBTmin).
+
+    This implementation closely follows the approach of the `circadian`package by Arcascope [2]. However,
+    it uses the LSODA integrator (via SciPy's `odeint`) for numerical integration.
+
+    Attributes
+    ----------
+    taux : float
+        Intrinsic period of the oscillator (hours).
+    mu : float
+        Nonlinearity parameter of the van der Pol oscillator.
+    g : float
+        Light sensitivity scaling parameter.
+    alpha_0 : float
+        Baseline light sensitivity parameter.
+    beta : float
+        Rate constant for adaptation variable n.
+    p : float
+        Power-law exponent for light input.
+    i0 : float
+        Saturation intensity for light sensitivity (lux).
+    k : float
+        Scaling factor for light-dependent changes in oscillator period.
+    q : float
+        Coefficient for light-dependent feedback in xc dynamics.
+    phi_ref : float
+        Reference phase parameter for phase computations.
+    cbt_to_dlmo : float
+        Time offset (in hours) from CBTmin to DLMO.
+    initial_conditions : numpy.ndarray
+        State vector at the start of simulation (default: [-0.10097101, -1.21985662, 0.50529415]).
+    model_states : numpy.ndarray
+        Integrated state trajectories of the model.
+    time : numpy.ndarray
+        Array of time points for simulation.
+    inputs : numpy.ndarray
+        Array of input values (e.g., light intensity) over time.
+
+    Methods
+    -------
+    derivative(t, state, light)
+        Computes the derivatives of the state variables at a given time and light input.
+    amplitude()
+        Calculates the amplitude of the oscillator from integrated states.
+    phase()
+        Calculates the phase angle of the oscillator from integrated states.
+    cbt()
+        Identifies the timing of core body temperature minima from integrated states.
+
+    References
+    ----------
+    [1] Forger DB, Jewett ME, Kronauer RE. A Simpler Model of the Human Circadian Pacemaker.
+    Journal of Biological Rhythms. 1999;14(6):533-538. doi:10.1177/074873099129000867
+
+    [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
+    and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
+    """
     def __init__(
         self,
         data=None,
@@ -216,6 +413,7 @@ class Jewett(Model):
         alpha_0=0.16,
         phi_ref=0.8,
         cbt_to_dlmo=7.0,
+        initial_condition=None,
     ):
         if inputs is None or time is None:
             super().__init__(
@@ -228,6 +426,10 @@ class Jewett(Model):
                 time=time,
                 initial_conditions=np.array([-0.10097101, -1.21985662, 0.50529415]),
         )
+        # Check for a scenario in which a initial condition is provided
+        if initial_condition is not None:
+            self.initial_conditions = initial_condition
+
         # self.initial_conditions= np.array([-0.10097101, -1.21985662, 0.50529415])
         # self.inputs = inputs
         # self.time = time
@@ -312,7 +514,7 @@ class HannaySP(Model):
         p=1.5,
         i0=9325.0,
         cbt_to_dlmo=7.0,
-        initial_condition=np.array([0.82041911, 1.71383697, 0.52318122]),
+        initial_condition=None
     ):
         if inputs is None or time is None:
             super().__init__(
@@ -325,6 +527,9 @@ class HannaySP(Model):
                 time=time,
                 initial_conditions=np.array([0.82041911, 1.71383697, 0.52318122]),
         )
+        # Check for a scenario in which a initial condition is provided
+        if initial_condition is not None:
+            self.initial_conditions = initial_condition
         # self.initial_conditions = np.array([0.82041911, 1.71383697, 0.52318122])
         # self.inputs = inputs
         # self.time = time
@@ -437,6 +642,7 @@ class HannayTP(Model):
         p=1.5,
         i0=9325.0,
         cbt_to_dlmo=7.0,
+        initial_condition=None,
     ):
         if inputs is None or time is None:
             super().__init__(
@@ -449,6 +655,10 @@ class HannayTP(Model):
                 time=time,
                 initial_conditions=np.array([0.82423745, 0.82304996, 1.75233424, 1.863457, 0.52318122]),
         )
+        # Check for a scenario in which a initial condition is provided
+        if initial_condition is not None:
+            self.initial_conditions = initial_condition
+
         # self.initial_conditions = np.array([0.82423745, 0.82304996, 1.75233424, 1.863457, 0.52318122])
         # self.inputs = inputs
         # self.time = time
@@ -636,7 +846,7 @@ class ESRI:
             )
 
             # model amplitude at the end of the simulation
-            esri_values[i] = model.model_states[-1, 1]
+            esri_values[i] = model.model_states[-1, 0]
 
         # Any negative values are replaced with NaN
         esri_values[esri_values < 0] = np.nan
