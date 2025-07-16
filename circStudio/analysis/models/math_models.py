@@ -1094,43 +1094,103 @@ class HannayTP(Model):
 
 
 class ESRI:
+    """
+    Compute the Entrainment Signal Regularity Index (ESRI) for a given light schedule.
+
+    The ESRI quantifies the strength and regularity of a light schedule by measuring how clustered
+    the phases of a simulated circadian oscillator become after a fixed-duration exposure. A high
+    ESRI indicates strong, regular entrainment (phases converge to a similar value), whereas a low
+    ESRI indicates weak or irregular entrainment.
+
+    The computation follows this procedure:
+        1. Slide a window of length `window_size_days` across the input time series in steps of
+        `esri_time_step_hours`.
+        2. For each window start time, initialize a HannaySP model with a small amplitude and phase.
+        3. Simulate the oscillator under the window's light input.
+        4. Record the final amplitude as the ESRI value for that window.
+
+    Parameters
+    ----------
+    time : array_like
+        Time points (in hours) corresponding to the provided light intensities.
+    inputs : array_like
+        Light intensity values (e.g., lux) at each time point.
+    window_size_days : float, optional
+        Size of the sliding window in days over which ESRI is computed (default: 4.0).
+    esri_time_step_hours : float, optional
+        Step size in hours for sliding the window (default: 1.0).
+    initial_amplitude : float, optional
+        Initial amplitude for the HannaySP model; should be low to represent maximal phase dispersion
+        (default: 0.1).
+    midnight_phase : float, optional
+        Phase (in radians) corresponding to circadian midnight (default: 1.65238233).
+
+    Attributes
+    ----------
+    window_size : float
+        Window length in days.
+    esri_time_step : float
+        Step size in hours for sliding the window.
+    initial_amplitude : float
+        Initial oscillator amplitude for each simulation.
+    midnight_phase : float
+        Phase offset for circadian midnight (radians).
+    time_vector : ndarray
+        Time points (hours) used for ESRI calculation.
+    light_vector : ndarray
+        Light intensity values corresponding to `time_vector`.
+    raw_values : pandas.DataFrame
+        DataFrame indexed by window start time (hours) with column `esri` for computed values.
+    mean : float
+        Mean ESRI value across all windows.
+    std : float
+        Standard deviation of ESRI values across all windows.
+    """
     def __init__(
         self,
-        time,
-        inputs,
+        data=None,
+        time=None,
+        inputs=None,
         window_size_days=4.0,
         esri_time_step_hours=1.0,
         initial_amplitude=0.1,
         midnight_phase=1.65238233,
     ):
-        """
-        Parameters:
-        -----------
-        :param inputs: The input light intensity levels over time
-        :param time: The time points corresponding to the light levels
-        :param window_size_days: The duration (in days) of the sliding window for ESRI calculation
-        :param esri_time_step_hours: The step (in hours) for the movement of the sliding window for ESRI calculation
-        :param initial_amplitude: initial amplitude for HannaySP model (it should be a low value)
-        :param midnight_phase: Phase of the circadian model at midnight (in radians)
-        """
+        # Set parameter values for ESRI calculation
         self.window_size = window_size_days
         self.esri_time_step = esri_time_step_hours
         self.initial_amplitude = initial_amplitude
         self.midnight_phase = midnight_phase
 
-        self.time_vector = time
-        self.light_vector = inputs
+
+        # Extract time and light vector
+        if time is None or inputs is None:
+            if data is not None:
+                self.time = np.asarray((data.index - data.index.min()).total_seconds() / 3600)
+                self.inputs = np.asarray(data.values)
+            else:
+                raise ValueError("Must provide either light time series (data) or input and time.")
+        else:
+            self.time_vector = time
+            self.light_vector = inputs
+
+        # Calculate ESRI array, mean and standard deviation
+        self.raw_values = self.calculate()
+        self.mean = self.raw_values['esri'].mean()
+        self.std = self.raw_values['esri'].std()
+
 
     def calculate(self):
         """
-        Calculates the ESRI values over the specified range of time.
+        Calculates the ESRI time points and corresponding regularity values.
 
         Returns:
         --------
-        esri_time : numpy.ndarray
-            Array of time points at which ESRI is calculated.
-        esri_values : numpy.ndarray
-            ESRI values corresponding to esri_time.
+        pandas.DataFrame
+            Dataframe indexed by window start time (hours) with column:
+
+            esri : float
+                Final oscillator amplitude (ESRI value) for each window start time.
         """
         # Determine the model's time step from the provided time vector
         model_time_step = np.diff(self.time_vector)[0]
@@ -1178,10 +1238,30 @@ class ESRI:
 
         # Any negative values are replaced with NaN
         esri_values[esri_values < 0] = np.nan
-        return esri_time, esri_values
+
+        # Pack the time point and the corresponding esri value into a dataframe
+        esri_df = pd.DataFrame({
+            "time": esri_time,
+            "esri": esri_values
+        })
+
+        # Set 'time' column as the index of the dataframe
+        esri_df = esri_df.set_index("time")
+        return esri_df
 
 
 class ModelComparer:
+    """
+    Framework for mapping FJK model states to HannaySP states (experimental).
+
+    This class is currently under active development and the API may change
+    without backward compatibility guarantees.
+
+    The ModelComparer is intended to take the state variables from the
+    Forger–Jewett–Kronauer (FJK) model and use them to predict the state
+    variables of the HannaySP model. By doing so, it seeks to assign a more
+    direct physiological interpretation to the FJK outputs.
+    """
     def __init__(
         self,
         inputs,
