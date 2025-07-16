@@ -8,13 +8,9 @@ import matplotlib.pyplot as plt
 
 class Model:
     """
-    Generic model class for integrating mathematical models of circadian rhythms.
-
-    This class numerically integrates a system of ordinary differential equations (ODEs),
-    describing circadian rhythms, where system evolution may depend on external inputs
-    (such as light) and initial conditions. Time points and input data can be provided
-    directly or extracted from a pandas.Series with a DatetimeIndex, where the series
-    values represent the inputs (e.g., light intensity) and the index specifies time.
+    Numerically integrates a system of ordinary differential equations (ODEs), whose evolution may
+    depend on external inputs (e.g., light) and initial conditions. Time points and input data are
+    either provided directly or extracted from a pandas.Series with a DatetimeIndex.
 
     Attributes
     ----------
@@ -23,11 +19,11 @@ class Model:
         model_states (numpy.ndarray or None):
             Array containing the model state trajectories after integration.
         data (pandas.Series, optional):
-            Input data series with a DatetimeIndex. The index represents time points
-            and the values represent input data (e.g., light intensity). The time
-            and input arrays are extracted from this series.
+            Input data series with a DatetimeIndex, where the index specifies the time points and
+            the values represent the input variable (e.g., light intensity). Time and value arrays
+            are extracted from this series.
         time (numpy.ndarray, optional):
-            Array of time points (in hours), must be monotonically increasing.
+            Array of time points (in hours); must be monotonically increasing.
         inputs (numpy.ndarray, optional):
             Array of input values (e.g., light intensity) corresponding to each time point.
     """
@@ -185,14 +181,16 @@ class Model:
 
 class Forger(Model):
     """
-    Implements the Forger, Jewett and Kronauer (FJK) mathematical model of circadian rhythms [1],
-    formulated as a van der Pol oscillator with three state variables: x, xc, and n.
+    Implements the mathematical model of human circadian rhythms developed by Forger, Jewett and Kronauer [1].
+    The formalism includes a representation of the biochemical conversion of the light signal into a drive on
+    the circadian pacemaker, which is modeled as a van der Pol oscillator. This cubic model is characterized
+    by three state variables: x, xc and n. While n can be interpreted as the proportion of activated photoreceptors,
+    at a given time, x and xc cannot directly be mapped to specific physiological mechanisms. Instead, x and xc are
+    used to predict biologically meaningful quantities, such as the core body temperature minimum (CBTmin).
 
-    While x and xc variables do not have direct physiological interpretations, they can be used
-    to derived biologically meaningful quantities, such as the core body temperature minimum (CBTmin).
-
-    This implementation closely follows the approach of the `circadian`package by Arcascope [2]. However,
-    it uses the LSODA integrator (via SciPy's `odeint`) for numerical integration.
+    Our implementation closely follows the approach of the `circadian`package by Arcascope [2]. However, we use the
+    more powerful LSODA integrator (via SciPy's `odeint`) for numerical integration, enabling the integration of the
+    system using more complex light trajectories.
 
     Attributes
     ----------
@@ -335,15 +333,19 @@ class Forger(Model):
 
 class Jewett(Model):
     """
-    Implements an improved version of the Forger, Jewett and Kronauer (FJ) model of circadian rhythms,
-    incorporating higher-order terms. This model represents the circadian pacemaker as a Van der Pol
-    oscillator with three state variables: x, xc, and n.
+    Implements a refined version of the Forger, Jewett and Kronauer (FJK) model of human circadian rhythms,
+    containing a nonlinearity of degree seven [1]. Compared to the FJK model implemented in the Forger subclass,
+    the revised model recovers strength more slowly when the rhythm is very weak (low amplitude), but recovers
+    faster once it is close to a stable rhythm (high amplitude).
 
-    While x and xc variables do not have direct physiological interpretations, they can be used
-    to derived biologically meaningful quantities, such as the core body temperature minimum (CBTmin).
+    This model is characterized by three state variables: x, xc and n. While n can be interpreted as the proportion
+    of activated photoreceptors, at a given time, x and xc cannot directly be mapped to specific physiological
+    mechanisms. Instead, x and xc are used to predict biologically meaningful quantities, such as the core body
+    temperature minimum (CBTmin).
 
-    This implementation closely follows the approach of the `circadian`package by Arcascope [2]. However,
-    it uses the LSODA integrator (via SciPy's `odeint`) for numerical integration.
+    Our implementation closely follows the approach of the `circadian`package by Arcascope [2]. However, we use the
+    more powerful LSODA integrator (via SciPy's `odeint`) for numerical integration, enabling the integration of the
+    system using more complex light trajectories.
 
     Attributes
     ----------
@@ -391,8 +393,8 @@ class Jewett(Model):
 
     References
     ----------
-    [1] Forger DB, Jewett ME, Kronauer RE. A Simpler Model of the Human Circadian Pacemaker.
-    Journal of Biological Rhythms. 1999;14(6):533-538. doi:10.1177/074873099129000867
+    [1] Jewett ME, Forger DB, Kronauer RE. Revised Limit Cycle Oscillator Model of Human Circadian
+    Pacemaker. Journal of Biological Rhythms. 1999;14(6):493-500. https://doi.org/10.1177/074873049901400608
 
     [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
     and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
