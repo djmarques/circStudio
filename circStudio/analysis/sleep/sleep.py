@@ -15,6 +15,10 @@ def AonT(data, whs=12):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     whs: int, optional
         Window half size.
         Default is 12.
@@ -36,6 +40,10 @@ def AoffT(data, whs=12):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     whs: int, optional
         Window half size.
         Default is 12.
@@ -59,6 +67,10 @@ def Cole_Kripke(data, settings=None, threshold=1.0, rescoring=True):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     settings: str, optional
         Data reduction settings for which the optimal parameters have been
         derived. Available settings are:
@@ -186,7 +198,7 @@ def Cole_Kripke(data, settings=None, threshold=1.0, rescoring=True):
             # Resample to 10 sec and then sum
             data = data.resample('10s').sum()
             # Resample to 60 sec and take the max of the 10 sec periods
-            data_max = resample('60s').max()
+            data_max = data.resample('60s').max()
 
             # Define the scale and weights for this settings
             scale = 0.00001
@@ -237,6 +249,10 @@ def Sadeh(data, offset=7.601, weights=None, threshold=0.0):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     offset: float, optional
         Offset parameter.
         Default is 7.601.
@@ -296,6 +312,10 @@ def Scripps(data, scale=0.204, window=None, threshold=1.0):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     scale: float, optional
         Scale parameter P
         Default is 0.204.
@@ -365,6 +385,10 @@ def Oakley(data, threshold=40):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     threshold: float or str, optional
         Threshold value for scoring sleep/wake. Can be set to "automatic"
         (cf. Notes).
@@ -391,7 +415,7 @@ def Oakley(data, threshold=40):
     """
 
     # Sampling frequency
-    freq = pd.Timedelta(self.data.index.freq)
+    freq = pd.Timedelta(data.index.freq)
 
     if freq == pd.Timedelta('15s'):
         window = np.array([
@@ -476,6 +500,8 @@ def CSM(ZCMn, settings="auto",score_rest=2,score_sleep=1,binarize=False):
 
     Parameters
     ----------
+    ZCMn : pandas.Series, optional
+        Input data series with a DatetimeIndex that contains data from the ZCMn mode in ATR devices.
     settings: str, optional
         Parameter settings for the CSM algorithm. Refers to the data
         acquisition frequency. Available values are:
@@ -567,6 +593,10 @@ def SoD(data, whs=4, start='12:00:00', period='5h', algo='Roenneberg', *args, **
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     whs: int, optional
         Window half size. Only valid if start='AonT' or 'AoffT'.
         Default is 4
@@ -627,6 +657,10 @@ def fSoD(data, whs=12, start='12:00:00', period='5h', algo='Roenneberg', *args, 
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     whs: int, optional
         Window half size.
         Default is 4
@@ -671,10 +705,16 @@ def Crespo(
     r"""Crespo algorithm for activity/rest identification
 
     Algorithm for automatic identification of activity-rest periods based
-    on actigraphy, developped by Crespo et al. [1]_.
+    on actigraphy, developed by Crespo et al. [1]_.
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
+    frequency: int
+        Sampling frequency of the actigraphy trace.
     zeta: int, optional
         Maximum number of consecutive zeroes considered valid.
         Default is 15.
@@ -867,6 +907,7 @@ def Crespo(
 
 def Crespo_AoT(
     data,
+    frequency,
     zeta=15,
     zeta_r=30,
     zeta_a=2,
@@ -882,10 +923,16 @@ def Crespo_AoT(
 
     Identification of the activity onset and offset times using the
     algorithm for automatic identification of activity-rest periods based
-    on actigraphy, developped by Crespo et al. [1]_.
+    on actigraphy, developed by Crespo et al. [1]_.
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
+    frequency: int
+        Sampling frequency of the actigraphy trace.
     zeta: int
         Maximum number of consecutive zeroes considered valid.
         Default is 15.
@@ -931,17 +978,19 @@ def Crespo_AoT(
            329–340. http://doi.org/10.1007/s11517-012-0875-y
 
     """
-
-    crespo = Crespo(zeta=zeta,
-                    zeta_r=zeta_r,
-                    zeta_a=zeta_a,
-                    t=t,
-                    alpha=alpha,
-                    beta=beta,
-                    estimate_zeta=estimate_zeta,
-                    seq_length_max=seq_length_max,
-                    verbose=verbose
-                    )
+    crespo = Crespo(
+        data=data,
+        frequency=frequency,
+        zeta=zeta,
+        zeta_r=zeta_r,
+        zeta_a=zeta_a,
+        t=t,
+        alpha=alpha,
+        beta=beta,
+        estimate_zeta=estimate_zeta,
+        seq_length_max=seq_length_max,
+        verbose=verbose
+    )
 
     diff = crespo.diff(1)
 
@@ -962,10 +1011,14 @@ def Roenneberg(
     """Automatic sleep detection.
 
     Identification of consolidated sleep episodes using the
-    algorithm developped by Roenneberg et al. [1]_.
+    algorithm developed by Roenneberg et al. [1].
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     trend_period: str, optional
         Time period of the rolling window used to extract the data trend.
         Default is '24h'.
@@ -987,12 +1040,6 @@ def Roenneberg(
         Time range to consider, past the potential correlation peak when
         searching for the maximum correlation peak.
         Default is '30Min'.
-    rsfreq: str, optional
-        Resampling frequency used to evaluate the sleep periods. The final
-        time series with rest/activity scores is returned with a frequency
-        equal to one of the input data. If set to None, no resampling is
-        performed.
-        Default is None.
 
     Returns
     -------
@@ -1019,10 +1066,6 @@ def Roenneberg(
            Munich Actimetry Sleep Detection Algorithm for estimating
            sleep–wake patterns from activity recordings. Journal of Sleep
            Research, April, 1–12. https://doi.org/10.1111/jsr.13371
-
-    Examples
-    --------
-
     """
     rbg = roenneberg(
         data,
@@ -1054,6 +1097,10 @@ def Roenneberg_AoT(
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     trend_period: str, optional
         Time period of the rolling window used to extract the data trend.
         Default is '24h'.
@@ -1131,6 +1178,10 @@ def SleepProfile(data, freq='15min', algo='Roenneberg', *args, **kwargs):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     freq: str, optional
         Resampling frequency.
         Default is '15min'
@@ -1170,6 +1221,10 @@ def SleepRegularityIndex(data, freq='15min', bin_threshold=None, algo='Roenneber
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     freq: str, optional
         Resampling frequency.
         Default is '15min'
@@ -1228,16 +1283,17 @@ def SleepRegularityIndex(data, freq='15min', bin_threshold=None, algo='Roenneber
     return sri(sleep_scoring, bin_threshold)
 
 
-def SleepMidPoint(data, freq='15min', bin_threshold=None, to_td=True, algo='Roenneberg', *args, **kwargs):
+def SleepMidPoint(data, bin_threshold=None, to_td=True, algo='Roenneberg', *args, **kwargs):
     r""" Sleep midpoint
 
     Center of the mean sleep periods
 
     Parameters
     ----------
-    freq: str, optional
-        Resampling frequency.
-        Default is '15min'
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     bin_threshold: bool, optional
         If bin_threshold is not set to None, scoring data above this
         threshold are set to 1 and to 0 otherwise.
@@ -1251,7 +1307,7 @@ def SleepMidPoint(data, freq='15min', bin_threshold=None, to_td=True, algo='Roen
     \*args
         Variable length argument list passed to the scoring algorithm.
     \*\*kwargs
-        Arbitrary keyword arguements passed to the scoring algorithm.
+        Arbitrary keyword arguments passed to the scoring algorithm.
 
     Returns
     -------
@@ -1287,6 +1343,10 @@ def sleep_bouts(data, duration_min=None, duration_max=None, algo='Roenneberg', *
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     duration_min: str,optional
         Minimal time duration for a sleep period.
         Default is None (no filtering).
@@ -1327,6 +1387,10 @@ def active_bouts(data, duration_min=None, duration_max=None, algo='Roenneberg', 
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     duration_min: str,optional
         Minimal time duration for an active period.
         Default is None (no filtering).
@@ -1379,6 +1443,10 @@ def sleep_durations(data, duration_min=None, duration_max=None, algo='Roenneberg
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     duration_min: str,optional
         Minimal time duration for a sleep period.
         Default is None (no filtering).
@@ -1418,6 +1486,10 @@ def active_durations(data, duration_min=None, duration_max=None, algo='Roenneber
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     duration_min: str,optional
         Minimal time duration for an active period.
         Default is None (no filtering).

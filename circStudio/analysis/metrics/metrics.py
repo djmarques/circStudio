@@ -14,10 +14,10 @@ def daily_profile(data, cyclic=False, time_origin=None, whs="1h"):
 
     Parameters
     ----------
-    freq: str, optional
-        Data resampling frequency.
-        Cf. #timeseries-offset-aliases in
-        <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>.
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     cyclic: bool, optional
         If set to True, two daily profiles are concatenated to ensure
         continuity between the last point of the day and the first one.
@@ -96,6 +96,10 @@ def daily_profile_auc(data, start_time=None, stop_time=None, time_origin=None):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     start_time: str, optional
         If not set to None, compute AUC from start time.
         Supported time string: 'HH:MM:SS'
@@ -166,6 +170,10 @@ def adat(data, rescale=True, exclude_ends=False):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     rescale: bool, optional
         If set to True, the activity counts are rescaled to account for
         masked periods (if any).
@@ -193,6 +201,10 @@ def adatp(data, period="7D", rescale=True, exclude_ends=False, verbose=False):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     period: str, optional
         Time length of the period to be considered. Must be understandable
         by pandas.Timedelta
@@ -231,6 +243,13 @@ def l5(data):
 
     Mean activity/temperature/light, etc., during the 5 least active hours of the day.
 
+    Parameters
+    ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
+
     Returns
     -------
     l5: float
@@ -262,6 +281,13 @@ def m10(data):
     r"""M10
 
     Mean activity/light/temperature, etc. during the 10 most active hours of the day.
+
+    Parameters
+    ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
 
     Returns
     -------
@@ -295,6 +321,13 @@ def relative_amplitude(data):
     Relative amplitude between the mean activity during the 10 most active
     hours of the day and the mean activity during the 5 least active hours
     of the day.
+
+    Parameters
+    ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
 
     Returns
     -------
@@ -331,6 +364,10 @@ def l5p(data, period="7D", verbose=False):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     period: str, optional
         Time period for the calculation of IS
         Default is '7D'.
@@ -376,6 +413,10 @@ def m10p(data, period="7D", verbose=False):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     period: str, optional
         Time period for the calculation of IS
         Default is '7D'.
@@ -424,6 +465,10 @@ def relative_amplitude_by_period(data, period="7D", verbose=False):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     period: str, optional
         Time period for the calculation of IS
         Default is '7D'.
@@ -476,10 +521,10 @@ def interdaily_stability(data):
 
     Parameters
     ----------
-    freq: str, optional
-        Data resampling `frequency string
-        <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_.
-        Default is '1h'.
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
 
     Returns
     -------
@@ -544,12 +589,13 @@ def interdaily_stability_per_period(data, period="7D", verbose=False):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     period: str, optional
         Time period for the calculation of IS
         Default is '7D'.
-    freq: str, optional
-        Data resampling `frequency strings
-        <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_.
     verbose: bool, optional
         If set to True, display the number of periods found in the activity
         recording, as well as the time not accounted for.
@@ -581,10 +627,10 @@ def intradaily_variability(data):
 
     Parameters
     ----------
-    freq: str, optional
-        Data resampling `frequency string
-        <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_.
-        Default is '1h'.
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
 
     Returns
     -------
@@ -640,13 +686,13 @@ def intradaily_variability_per_period(data, period="7D", verbose=False):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     period: str, optional
         Time period for the calculation of IS
         Default is '7D'.
-    freq: str, optional
-        Data resampling `frequency string
-        <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_.
-        Default is '1h'.
     verbose: bool, optional
         If set to True, display the number of periods found in the activity
         recording, as well as the time not accounted for.
@@ -677,13 +723,17 @@ def summary_statistics_per_time_bin(light, bins="24h", agg_func=None):
 
     Parameters
     ----------
-    bins: str or list of tuples, optional
+    light : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (in this case, light). Time and value arrays
+        are extracted from this series.
+    bins : str or list of tuples, optional
         If set to a string, bins is used to define a regular binning where
         every bin is of length "bins". Ex: "2h".
         Otherwise, the list of 2-tuples is used to define an arbitrary
         binning. Ex: \[('2000-01-01 00:00:00','2000-01-01 11:59:00')\].
         Default is '24h'.
-    agg_func: list, optional
+    agg_func : list, optional
         List of aggregation functions to be used on every bin.
         Default is \['mean', 'median', 'sum', 'std', 'min', 'max'\].
 
@@ -695,12 +745,12 @@ def summary_statistics_per_time_bin(light, bins="24h", agg_func=None):
     if agg_func is None:
         agg_func = ["mean", "median", "sum", "std", "min", "max"]
     if isinstance(bins, str):
-        summary_stats = self.light.resample(bins).agg(agg_func)
+        summary_stats = light.resample(bins).agg(agg_func)
     elif isinstance(bins, list):
         df_col = []
         for idx, (start, end) in enumerate(bins):
             df_bins = (
-                self.light.loc[start:end, :]
+                light.loc[start:end, :]
                 .apply(agg_func)
                 .pivot_table(columns=agg_func)
             )
@@ -723,6 +773,10 @@ def light_exposure_level(
 
     Parameters
     ----------
+    light : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (in this case, light). Time and value arrays
+        are extracted from this series.
     threshold: float, optional
         If not set to None, discard data below threshold before computing
         exposure levels.
@@ -764,6 +818,10 @@ def time_above_threshold(
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     threshold: float, optional
         If not set to None, discard data below threshold before computing
         exposure levels.
@@ -823,6 +881,10 @@ def time_above_threshold_by_period(
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     threshold: float, optional
         If not set to None, discard data below threshold before computing
         exposure levels.
@@ -886,6 +948,10 @@ def values_above_threshold(data, threshold=None):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     threshold: float, optional
         If not set to None, discard data below threshold before computing
         exposure levels.
@@ -912,7 +978,7 @@ def get_time_barycentre(data):
     return bc
 
 
-def mean_light_timing(light, threshold, freq=None):
+def mean_light_timing(light, threshold):
     r"""Mean light timing.
 
     Mean light timing above threshold, MLiT^C.
@@ -920,6 +986,10 @@ def mean_light_timing(light, threshold, freq=None):
 
     Parameters
     ----------
+    light : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (in this case, light). Time and value arrays
+        are extracted from this series.
     threshold: float
         Threshold value.
 
@@ -970,6 +1040,10 @@ def mean_light_timing_by_period(light, threshold, freq=None):
 
     Parameters
     ----------
+    light : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (in this case, light). Time and value arrays
+        are extracted from this series.
     threshold: float
         Threshold value.
 
@@ -1020,6 +1094,10 @@ def get_extremum(data, extremum, freq=None):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     extremum: str
         Name of the extremum.
         Available: 'min' or 'max'.
@@ -1046,6 +1124,10 @@ def lmx(data, length="5h", lowest=True, freq=None):
 
     Parameters
     ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
     length: str, optional
         Period length.
         Default is '5h'.
