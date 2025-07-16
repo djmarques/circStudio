@@ -716,6 +716,23 @@ class HannaySP(Model):
         self.initialize_model_states()
 
     def derivative(self, t, state, light):
+        """
+        Computes the derivatives of the state variables at a given time and light input.
+
+        Parameters
+        ----------
+        t : float
+            Current simulation time (in hours).
+        state : numpy.ndarray
+            Current values of the state variables at time t.
+        light : float
+            Light intensity input (in lux) at time t.
+
+        Returns
+        -------
+        numpy.ndarray
+            Derivatives at time t.
+        """
         R = state[0]
         Psi = state[1]
         n = state[2]
@@ -759,10 +776,26 @@ class HannaySP(Model):
         return dydt
 
     def amplitude(self):
+        """
+        Collective rhythm amplitude (R) of the oscillator population.
+
+        Returns
+        -------
+        numpy.ndarray
+            Amplitude (R) at each time point.
+        """
         # Integrate model and extract collective rhythm amplitude (r)
         return self.model_states[:, 0]
 
     def phase(self):
+        """
+        Collective ventral phase (Psi) of the oscillator population, wrapped to [-pi,pi].
+
+        Returns
+        -------
+        numpy.ndarray
+            Phase angle (radians) at each time point.
+        """
         # Integrate model and extract collective phase (phi)
         phi = self.model_states[:, 1]
         x = np.cos(phi)
@@ -770,6 +803,15 @@ class HannaySP(Model):
         return np.angle(x + complex(0, 1) * y)
 
     def cbt(self):
+        """
+        Time points corresponding to the predicted core bod temperature minima (CBTmin), derived from the
+        collective phase trajectory.
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of time points (in hours) where minima of cos(Psi) occur, corresponding to the CBTmin.
+        """
         # Calculate time step (dt) between consecutive time points
         dt = np.diff(self.time)[0]
         # Invert cos(x) to turn the minima into maxima (peaks)
