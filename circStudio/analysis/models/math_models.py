@@ -14,17 +14,17 @@ class Model:
 
     Attributes
     ----------
-        initial_conditions (numpy.ndarray):
+        initial_conditions : numpy.ndarray
             Array of initial conditions for the model states.
-        model_states (numpy.ndarray or None):
+        model_states : numpy.ndarray or None
             Array containing the model state trajectories after integration.
-        data (pandas.Series, optional):
+        data : pandas.Series, optional
             Input data series with a DatetimeIndex, where the index specifies the time points and
             the values represent the input variable (e.g., light intensity). Time and value arrays
             are extracted from this series.
-        time (numpy.ndarray, optional):
+        time : numpy.ndarray, optional
             Array of time points (in hours); must be monotonically increasing.
-        inputs (numpy.ndarray, optional):
+        inputs : numpy.ndarray, optional
             Array of input values (e.g., light intensity) corresponding to each time point.
     """
     def __init__(self, initial_conditions, data=None, time=None, inputs=None):
@@ -58,10 +58,9 @@ class Model:
         """
         Numerically integrates a system of ordinary differential equations (ODEs).
 
-        This method uses SciPy `odeint` function to simulate the model dynamics over time,
-        given a set of initial conditions and external inputs (e.g., light intensity).
-        By default, it uses the class attributes `self.inputs`, `self.time`, and `self.initial_condition`,
-        but alternative arrays can be provided.
+        This method uses SciPy `odeint` function to simulate the model dynamics over time, given a set of
+        initial conditions and external inputs (e.g., light intensity). By default, it uses the class attributes
+        `self.inputs`, `self.time`, and `self.initial_condition`, but alternative arrays can be provided.
 
         The input and time vectors must be of the same length, and the system's equations must be defined
         by the `derivative`method (which should be implemented within subclass of the Model class).
@@ -69,11 +68,11 @@ class Model:
         Parameters
         ----------
         light_vector (numpy.ndarray, optional):
-            Array of input values (typically, light intensity)
+            Array of input values (typically, light intensity).
         time_vector (numpy.ndarray, optional):
-            Array of time points (typically, time in hours)
+            Array of time points (typically, time in hours).
         initial_condition (numpy.ndarray, optional):
-            Array of initial conditions
+            Array of initial conditions.
 
         Returns
         -------
@@ -115,13 +114,12 @@ class Model:
             Number of consecutive simulation cycles performed to assess whether the state trajectory of the circadian
             system's state variables converges to equilibrium under the given input conditions.
         data (pandas.Series, optional):
-            Input data series with a DatetimeIndex. The index represents time points
-            and the values represent input data (e.g., light intensity). The time
-            and input arrays are extracted from this series.
+            Input data series with a DatetimeIndex. The index represents time points and the values represent input
+            data (e.g., light intensity). The time and input arrays are extracted from this series.
         light_vector (numpy.ndarray, optional):
-            Array of input values (typically, light intensity)
+            Array of input values (typically, light intensity).
         time_vector (numpy.ndarray, optional):
-            Array of time points (typically, time in hours)
+            Array of time points (typically, time in hours).
 
         Returns
         ----------
@@ -176,6 +174,15 @@ class Model:
 
 
     def dlmos(self):
+        """
+        Calculates the predicted Dim Light Melatonin Onset (DLMO) time points using a fixed,
+        pre-specified offset (default: seven hours).
+
+        Returns
+        -------
+        numpy.ndarray:
+            Array of time points (in hours) at which DLMO is expected to occur.
+        """
         return self.cbt() - self.cbt_to_dlmo
 
 
@@ -286,6 +293,23 @@ class Forger(Model):
         self.initialize_model_states()
 
     def derivative(self, t, state, light):
+        """
+        Computes the derivatives of the state variables at a given time and light input.
+
+        Parameters
+        ----------
+        t : float
+            Current simulation time (in hours).
+        state : numpy.ndarray
+            Current values of the state variables at time t.
+        light : float
+            Light intensity input (in lux) at time t.
+
+        Returns
+        -------
+        numpy.ndarray
+            Derivatives at time t.
+        """
         x = state[0]
         xc = state[1]
         n = state[2]
@@ -303,12 +327,28 @@ class Forger(Model):
         return dydt
 
     def amplitude(self):
+        """
+        Amplitude of the oscillator computed from the integrated state trajectory.
+
+        Returns
+        -------
+        numpy.ndarray
+            Amplitude at each time point: sqrt(x^2 + xc^2).
+        """
         # Integrate model and extract amplitude
         x = self.model_states[:, 0]
         xc = self.model_states[:, 1]
         return np.sqrt(x**2 + xc**2)
 
     def phase(self):
+        """
+        Returns the phase angle of the oscillator computed from the integrated state trajectory.
+
+        Returns
+        -------
+        numpy.ndarray
+            Phase angle (radians) at each time point: arctangent(xc/x).
+        """
         # Integrate model and extract phase
         x = self.model_states[:, 0]
         # Multiplying xc makes the phase move clockwise
@@ -319,6 +359,15 @@ class Forger(Model):
         # return np.atan2(xc,x)
 
     def cbt(self):
+        """
+        Time points corresponding to the predicted core bod temperature minima (CBTmin), derived from the
+        state variable x.
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of time points (in hours) where minima of x occur, corresponding to the CBTmin.
+        """
         # Calculate time step (dt) between consecutive time points
         dt = np.diff(self.time)[0]
         # Invert cos(x) to turn the minima into maxima (peaks)
@@ -450,6 +499,23 @@ class Jewett(Model):
         self.initialize_model_states()
 
     def derivative(self, t, state, light):
+        """
+        Computes the derivatives of the state variables at a given time and light input.
+
+        Parameters
+        ----------
+        t : float
+            Current simulation time (in hours).
+        state : numpy.ndarray
+            Current values of the state variables at time t.
+        light : float
+            Light intensity input (in lux) at time t.
+
+        Returns
+        -------
+        numpy.ndarray
+            Derivatives at time t.
+        """
         x = state[0]
         xc = state[1]
         n = state[2]
@@ -467,12 +533,28 @@ class Jewett(Model):
         return dydt
 
     def amplitude(self):
+        """
+        Amplitude of the oscillator computed from the integrated state trajectory.
+
+        Returns
+        -------
+        numpy.ndarray
+            Amplitude at each time point: sqrt(x^2 + xc^2).
+        """
         # Integrate model and extract amplitude
         x = self.model_states[:, 0]
         xc = self.model_states[:, 1]
         return np.sqrt(x**2 + xc**2)
 
     def phase(self):
+        """
+        Returns the phase angle of the oscillator computed from the integrated state trajectory.
+
+        Returns
+        -------
+        numpy.ndarray
+            Phase angle (radians) at each time point: arctangent(xc/x).
+        """
         # Integrate model and extract phase
         x = self.model_states[:, 0]
         # Multiplying xc makes the phase move clockwise
@@ -483,6 +565,15 @@ class Jewett(Model):
         # return np.atan2(xc,x)
 
     def cbt(self):
+        """
+        Time points corresponding to the predicted core bod temperature minima (CBTmin), derived from the
+        state variable x.
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of time points (in hours) where minima of x occur, corresponding to the CBTmin.
+        """
         # Calculate time step (dt) between consecutive time points
         dt = np.diff(self.time)[0]
         # Invert cos(x) to turn the minima into maxima (peaks)
@@ -693,13 +784,13 @@ class HannaySP(Model):
 
 class HannayTP(Model):
     """
-    Implements the Hannay Two-Population (TP) model of human circadian rhythms [1]. Since the neuroanatomy of the
-    suprachiasmatic nucleus (SCN) of the hypothalamus generally distinguishes between two populations, the ventral
-    and dorsal, one with and the other without direct light input, Hannay et al. implemented a modified version of
-    the Hannay Single Population module, attempting to better represent the neurophysiology of the central circadian
-    pacemaker. Similar to the HannaySP, all three state variables are directly biologically interpretable. The model
-    is also derived from the mathematical description of the rhythm within individual cells, from which a coherent
-    behavior emerges.
+    Implements the Hannay Two-Population (TP) model of human circadian rhythms [1]. The neuroanatomy of the
+    suprachiasmatic nucleus (SCN) in the hypothalamus distinguishes two primary populations: the ventral cluster,
+    which receives most light input, and the dorsal cluster. To better reflect this neurophysiological organization,
+    Hannay et al. extended the Single Population (SP) model to explicitly represent both the ventral and dorsal
+    groups, resulting in the TP model. Similar to the HannaySP, all five state variables are directly biologically
+    interpretable. The model is also derived from the mathematical description of the rhythm within individual cells,
+    from which a coherent behavior emerges.
 
     Our implementation closely follows the approach of the `circadian`package by Arcascope [2]. However, we use the
     more powerful LSODA integrator (via SciPy's `odeint`) for numerical integration, enabling the integration of the
@@ -836,6 +927,23 @@ class HannayTP(Model):
         self.initialize_model_states()
 
     def derivative(self, t, state, light):
+        """
+        Computes the derivatives of the state variables at a given time and light input.
+
+        Parameters
+        ----------
+        t : float
+            Current simulation time (in hours).
+        state : numpy.ndarray
+            Current values of the state variables at time t.
+        light : float
+            Light intensity input (in lux) at time t.
+
+        Returns
+        -------
+        numpy.ndarray
+            Derivatives at time t.
+        """
         Rv = state[0]
         Rd = state[1]
         Psiv = state[2]
@@ -894,10 +1002,27 @@ class HannayTP(Model):
         return dydt
 
     def amplitude(self):
+        """
+        Collective ventral rhythm amplitude (Rv) of the oscillator population.
+
+        Returns
+        -------
+        numpy.ndarray
+            Amplitude Rv at each time point.
+
+        """
         # Integrate model and extract collective rhythm amplitude (r)
         return self.model_states[:, 0]
 
     def phase(self):
+        """
+        Collective ventral phase (Psiv) of the oscillator population, wrapped to [-pi,pi].
+
+        Returns
+        -------
+        numpy.ndarray
+            Phase angle (radians) at each time point.
+        """
         # Integrate model and extract collective phase (phi)
         phi = self.model_states[:, 2]
         x = np.cos(phi)
@@ -905,6 +1030,15 @@ class HannayTP(Model):
         return np.angle(x + complex(0, 1) * y)
 
     def cbt(self):
+        """
+        Time points corresponding to the predicted core bod temperature minima (CBTmin), derived from the
+        ventral phase trajectory.
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of time points (in hours) where minima of cos(Psiv) occur, corresponding to the CBTmin.
+        """
         # Calculate time step (dt) between consecutive time points
         dt = np.diff(self.time)[0]
         # Invert cos(x) to turn the minima into maxima (peaks)
