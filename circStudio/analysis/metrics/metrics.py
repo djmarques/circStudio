@@ -1032,7 +1032,7 @@ def mean_light_timing(light, threshold):
     return MLiT
 
 
-def mean_light_timing_by_period(light, threshold, freq=None):
+def mean_light_timing_by_period(light, threshold):
     r"""Mean light timing per day.
 
     Mean light timing above threshold, MLiT^C, per calendar day.
@@ -1087,7 +1087,7 @@ def mean_light_timing_by_period(light, threshold, freq=None):
     return MLiTp
 
 
-def get_extremum(data, extremum, freq=None):
+def get_extremum(data, extremum):
     r"""Light extremum.
 
     Return the index and the value of the requested extremum (min or max).
@@ -1116,7 +1116,7 @@ def get_extremum(data, extremum, freq=None):
         raise ValueError('Extremum must be "min" or "max"')
 
 
-def lmx(data, length="5h", lowest=True, freq=None):
+def lmx(data, length="5h", lowest=True):
     r"""Least or Most light period of length X
 
     Onset and mean hourly light exposure levels during the X least or most
