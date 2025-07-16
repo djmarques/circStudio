@@ -496,6 +496,77 @@ class Jewett(Model):
 
 
 class HannaySP(Model):
+    """
+    Implements the Hannay Single-Population (SP) model of human circadian rhythms [1]. It describes a population of
+    weakly-coupled oscillators using a formalism with three state variables: R (collective amplitude), Psi (collective
+    phase), and n (proportion of light receptors used). In contrast to the FJK formalism, all three state variables are
+    directly biologically interpretable. The model is derived from the mathematical description of the rhythm within
+    individual cells in the suprachiasmatic nucleus (SCN) of the hypothalamus, from which a coherent behavior emerges.
+
+    Our implementation closely follows the approach of the `circadian`package by Arcascope [2]. However, we use the
+    more powerful LSODA integrator (via SciPy's `odeint`) for numerical integration, enabling the integration of the
+    system using more complex light trajectories.
+
+    Attributes
+    ----------
+    tau : float
+        Intrinsic period of the oscillator (hours).
+    k : float
+        Coupling strength parameter.
+    gamma : float
+        Amplitude relaxation parameter.
+    beta : float
+        Phase response parameter.
+    a1 : float
+        Amplitude of first-harmonic light effect.
+    a2 : float
+        Amplitude of second-harmonic light effect.
+    betal1 : float
+        Phase offset for first-harmonic light effect (radians).
+    betal2 : float
+        Phase offset for second-harmonic light effect (radians).
+    sigma : float
+        Baseline light-induced phase shift parameter.
+    g : float
+        Light sensitivity scaling parameter.
+    alpha_0 : float
+        Baseline light sensitivity parameter.
+    delta : float
+        Rate constant for adaptation variable n.
+    p : float
+        Power-law exponent for light input.
+    i0 : float
+        Saturation intensity for light sensitivity (lux).
+    cbt_to_dlmo : float
+        Time offset (in hours) from CBTmin to DLMO.
+    initial_conditions : numpy.ndarray
+        State vector at the start of simulation (default: [0.82041911, 1.71383697, 0.52318122]).
+    model_states : numpy.ndarray
+        Integrated state trajectories of the model.
+    time : numpy.ndarray
+        Array of time points for simulation.
+    inputs : numpy.ndarray
+        Array of input values (e.g., light intensity) over time.
+
+    Methods
+    -------
+    derivative(t, state, light)
+        Computes the derivatives of the state variables at a given time and light input.
+    amplitude()
+        Returns the collective rhythm amplitude (R) over time.
+    phase()
+        Returns the collective phase (Psi) as a wrapped angle over time.
+    cbt()
+        Identifies the timing of core body temperature minima from the phase trajectory.
+
+    References
+    ----------
+    [1] Hannay KM, Booth V, Forger DB. Macroscopic Models for Human Circadian Rhythms.
+    Journal of Biological Rhythms. 2019;34(6):658-671. https://doi.org/10.1177/0748730419878298
+
+    [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
+    and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
+    """
     def __init__(
         self,
         data=None,
@@ -621,6 +692,85 @@ class HannaySP(Model):
 
 
 class HannayTP(Model):
+    """
+    Implements the Hannay Two-Population (TP) model of human circadian rhythms [1]. Since the neuroanatomy of the
+    suprachiasmatic nucleus (SCN) of the hypothalamus generally distinguishes between two populations, the ventral
+    and dorsal, one with and the other without direct light input, Hannay et al. implemented a modified version of
+    the Hannay Single Population module, attempting to better represent the neurophysiology of the central circadian
+    pacemaker. Similar to the HannaySP, all three state variables are directly biologically interpretable. The model
+    is also derived from the mathematical description of the rhythm within individual cells, from which a coherent
+    behavior emerges.
+
+    Our implementation closely follows the approach of the `circadian`package by Arcascope [2]. However, we use the
+    more powerful LSODA integrator (via SciPy's `odeint`) for numerical integration, enabling the integration of the
+    system using more complex light trajectories.
+
+    Attributes
+    ----------
+    tauv : float
+        Intrinsic period of the ventral oscillator (hours).
+    taud : float
+        Intrinsic period of the dorsal oscillator (hours).
+    kvv : float
+        Intrinsic coupling strength within the ventral oscillator population.
+    kdd : float
+        Intrinsic coupling strength within the dorsal oscillator population.
+    kvd : float
+        Coupling strength from ventral to dorsal population.
+    kdv : float
+        Coupling strength from dorsal to ventral population.
+    gamma : float
+        Amplitude relaxation parameter.
+    a1 : float
+        Amplitude of first-harmonic light effect.
+    a2 : float
+        Amplitude of second-harmonic light effect.
+    betal : float
+        Phase offset for first-harmonic light effect (radians).
+    betal2 : float
+        Phase offset for second-harmonic light effect (radians).
+    sigma : float
+        Baseline light-induced phase shift parameter.
+    g : float
+        Light sensitivity scaling parameter.
+    alpha_0 : float
+        Baseline light sensitivity parameter.
+    delta : float
+        Rate constant for adaptation variable n.
+    p : float
+        Power-law exponent for light input.
+    i0 : float
+        Saturation intensity for light sensitivity (lux).
+    cbt_to_dlmo : float
+        Time offset (in hours) from CBTmin to DLMO.
+    initial_conditions : numpy.ndarray
+        State vector at the start of simulation (default: [0.82423745, 0.82304996, 1.75233424, 1.863457, 0.52318122]).
+    model_states : numpy.ndarray
+        Integrated state trajectories of the model.
+    time : numpy.ndarray
+        Array of time points for simulation.
+    inputs : numpy.ndarray
+        Array of input values (e.g., light intensity) over time.
+
+    Methods
+    -------
+    derivative(t, state, light)
+        Computes the derivatives of the state variables at a given time and light input.
+    amplitude()
+        Returns the collective ventral rhythm amplitude (Rv) over time.
+    phase()
+        Returns the collective ventral phase (Psiv) as a wrapped angle over time.
+    cbt()
+        Identifies the timing of core body temperature minima based on the ventral phase trajectory.
+
+    References
+    ----------
+    [1] Hannay KM, Booth V, Forger DB. Macroscopic Models for Human Circadian Rhythms.
+    Journal of Biological Rhythms. 2019;34(6):658-671. https://doi.org/10.1177/0748730419878298
+
+    [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
+    and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
+    """
     def __init__(
         self,
         data=None,
