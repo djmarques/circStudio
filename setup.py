@@ -115,8 +115,9 @@ setup(
 
     # Data files included in your packages that need to be installed.
     package_data={  # Optional
-        'circStudio': ['tests/data/*']
+        'circStudio': ['data/*']
     },
+    include_package_data=True,
 
     license='GNU GPL-3.0',
 
