@@ -159,7 +159,7 @@ def read_dqt(
 
     Returns
     -------
-    raw : Instance of RawDQT
+    raw : Instance of DQT
         An object containing raw DQT data
     """
 

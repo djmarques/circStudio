@@ -241,7 +241,7 @@ def read_agd(input_fname, start_time=None, period=None):
 
     Returns
     -------
-    raw : Instance of RawAWD
+    raw : Instance of AWD
         An object containing raw AWD data
     """
 

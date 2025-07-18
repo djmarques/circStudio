@@ -265,7 +265,7 @@ def read_awd(
 
     Returns
     -------
-    raw : Instance of RawAWD
+    raw : Instance of AWD
         An object containing raw AWD data
     """
 

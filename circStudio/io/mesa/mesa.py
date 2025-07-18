@@ -198,7 +198,7 @@ def read_mesa(
 
     Returns
     -------
-    raw : Instance of RawMESA
+    raw : Instance of MESA
         An object containing raw MESA data
     """
     if intervals is None:

@@ -122,7 +122,7 @@ def read_atr(input_fname, activity_mode='PIM', light_mode='LIGHT', start_time=No
 
     Returns
     -------
-    raw : Instance of RawATR
+    raw : Instance of ATR
         An object containing raw ATR data
     """
     return ATR(input_fname=input_fname,
