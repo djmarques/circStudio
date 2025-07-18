@@ -104,7 +104,14 @@ setup(
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
-        'lmfit', 'pandas>=1.4.0', 'plotly', 'numpy', 'pyexcel', 'scipy', 'statsmodels>=0.10'],
+        'lmfit',
+        'pandas>=1.4.0',
+        'plotly',
+        'numpy',
+        'pyexcel',
+        'scipy',
+        'statsmodels>=0.10'
+    ],
 
     # Data files included in your packages that need to be installed.
     package_data={  # Optional
