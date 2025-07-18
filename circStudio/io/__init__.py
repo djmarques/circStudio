@@ -4,5 +4,7 @@ from .awd import read_awd
 from .agd import read_agd
 from .dqt import read_dqt
 from .mesa import read_mesa
+from .rpx import read_rpx
 
-__all__ = ["Raw", "read_atr", "read_awd", "read_agd", "read_dqt", "read_mesa"]
+
+__all__ = ["Raw", "read_atr", "read_awd", "read_agd", "read_dqt", "read_mesa", "read_rpx"]
