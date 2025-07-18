@@ -3,7 +3,6 @@ import numpy as np
 import os
 import sqlite3
 import warnings
-
 from ..base import Raw
 
 

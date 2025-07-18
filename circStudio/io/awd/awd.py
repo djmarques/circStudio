@@ -164,7 +164,7 @@ class AWD(Raw):
             period=period,
             frequency=pd.Timedelta(freq),
             activity=data.loc[:, 'Activity'],
-            light=data.loc[:, 'Light'].to_frame(name='whitelight') if 'Light' in data.columns else None
+            light=data.loc[:, 'Light'].to_frame(name='light') if 'Light' in data.columns else None
         )
 
     @property
