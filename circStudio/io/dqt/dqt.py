@@ -57,10 +57,10 @@ class DQT(Raw):
             delimiter=',',
             skiprows=(header_size-1),
             header=None,
-            names=['activity', 'light'],
+            names=['datetime','activity', 'light'],
             index_col=0,
             parse_dates=[0],
-            infer_datetime_format=True,
+            date_format="%Y-%m-%d %H:%M:%S",
             dtype=float,
             na_values='x'
         ).asfreq(freq)
