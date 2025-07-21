@@ -52,6 +52,7 @@ class Raw(Mask):
             Type of data to plot. Must be one of:
                 - 'activity': plot the activity signal
                 - 'light': plot the light signal
+                - 'mask': plot the mask signal
                 - None: plot custom signal (ts must not be None)
         log : bool
             Whether to apply a log transformation to the data (log10(x+1)) before plotting.
@@ -63,6 +64,8 @@ class Raw(Mask):
         """
         if ts is not None:
             mode = None
+        else:
+            mode = mode.lower()
 
         match mode:
             case "activity":
@@ -109,11 +112,21 @@ class Raw(Mask):
                 else:
                     # Draw interactive lineplot corresponding to the light data
                     return go.Figure(
-                        data=go.Scatter(
-                            x=self.light.index.astype(str), y=self.light
-                        ),
+                        data=go.Scatter(x=self.light.index.astype(str), y=self.light),
                         layout=layout,
                     )
+            case "mask":
+                layout = go.Layout(
+                    title="Data mask",
+                    xaxis=dict(title="Date time"),
+                    yaxis=dict(title="Mask"),
+                    showlegend=False,
+                )
+                return go.Figure(
+                    data=go.Scatter(x=self.mask.index.astype(str), y=self.mask),
+                    layout=layout,
+                )
+
             case _:
                 if ts is not None and ts in self.df.columns:
                     layout = go.Layout(
@@ -126,7 +139,8 @@ class Raw(Mask):
                         # Draw log version of the time series
                         return go.Figure(
                             data=go.Scatter(
-                                x=self.df[ts].index.astype(str), y=np.log10(self.df[ts] + 1)
+                                x=self.df[ts].index.astype(str),
+                                y=np.log10(self.df[ts] + 1),
                             ),
                             layout=layout,
                         )
@@ -139,9 +153,7 @@ class Raw(Mask):
                             layout=layout,
                         )
                 else:
-                    print('No column was found with the specified name.')
-
-
+                    print("No column was found with the specified name.")
 
     def length(self):
         r"""Number of activity data acquisition points"""
