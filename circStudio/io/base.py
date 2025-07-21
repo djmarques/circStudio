@@ -38,23 +38,28 @@ class Raw(Mask):
 
     def plot(self, mode="activity", ts=None, log=False):
         """
-        Plotting method for actigraphy data.
+        Plot a time series from actigraphy data.
+
+        This method generates an interactive Plotly graph of either activity, light, or
+        a custom time series extracted from the dataframe stored in the Raw object. By default,
+        it plots raw activity data.
 
         Parameters
         ----------
         ts : str, optional
-            In case the user wants to plot a time series (ts) other than light or activity,
-            name of the vector to be used
-        mode : str
-            Either 'activity', 'light' or 'ts'. In case the user wants to plot a time series
-            other than light or activity.
+            Name of the custom time series column to plot.
+        mode : str, optional
+            Type of data to plot. Must be one of:
+                - 'activity': plot the activity signal
+                - 'light': plot the light signal
+                - None: plot custom signal (ts must not be None)
         log : bool
-            Whether or not to log data (log_{10]+1).
+            Whether to apply a log transformation to the data (log10(x+1)) before plotting.
 
         Returns
         -------
         go.Figure
-            Plot of activity or light data.
+            A Plotly Figure object corresponding to a time series.
         """
         if ts is not None:
             mode = None
@@ -118,6 +123,7 @@ class Raw(Mask):
                         showlegend=False,
                     )
                     if log:
+                        # Draw log version of the time series
                         return go.Figure(
                             data=go.Scatter(
                                 x=self.df[ts].index.astype(str), y=np.log10(self.df[ts] + 1)
@@ -125,6 +131,7 @@ class Raw(Mask):
                             layout=layout,
                         )
                     else:
+                        # Draw time series corresponding to the specified vector (ts)
                         return go.Figure(
                             data=go.Scatter(
                                 x=self.df[ts].index.astype(str), y=self.df[ts]
