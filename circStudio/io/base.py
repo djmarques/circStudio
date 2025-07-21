@@ -36,12 +36,34 @@ class Raw(Mask):
             mask=None,
         )
 
-    def plot(self, mode="activity", log=False):
+    def plot(self, mode="activity", ts=None, log=False):
+        """
+        Plotting method for actigraphy data.
+
+        Parameters
+        ----------
+        ts : str, optional
+            In case the user wants to plot a time series (ts) other than light or activity,
+            name of the vector to be used
+        mode : str
+            Either 'activity', 'light' or 'ts'. In case the user wants to plot a time series
+            other than light or activity.
+        log : bool
+            Whether or not to log data (log_{10]+1).
+
+        Returns
+        -------
+        go.Figure
+            Plot of activity or light data.
+        """
+        if ts is not None:
+            mode = None
+
         match mode:
             case "activity":
                 # Define layout for activity plot
                 layout = go.Layout(
-                    title="Activity time series",
+                    title=f"Activity time series",
                     xaxis=dict(title="DateTime"),
                     yaxis=dict(title="Activity"),
                     showlegend=False,
@@ -67,8 +89,8 @@ class Raw(Mask):
                 # Define layout for light plot
                 layout = go.Layout(
                     title="Light time series",
-                    xaxis=dict(title="DateTime"),
-                    yaxis=dict(title="Activity"),
+                    xaxis=dict(title="Datetime"),
+                    yaxis=dict(title="Light"),
                     showlegend=False,
                 )
                 if log:
@@ -88,7 +110,31 @@ class Raw(Mask):
                         layout=layout,
                     )
             case _:
-                print('Currently, the plot method only supports "activity" and "light"')
+                if ts is not None and ts in self.df.columns:
+                    layout = go.Layout(
+                        title=f"{ts.lower().capitalize()} time series",
+                        xaxis=dict(title="Datetime"),
+                        yaxis=dict(title=f"{ts.lower().capitalize()}"),
+                        showlegend=False,
+                    )
+                    if log:
+                        return go.Figure(
+                            data=go.Scatter(
+                                x=self.df[ts].index.astype(str), y=np.log10(self.df[ts] + 1)
+                            ),
+                            layout=layout,
+                        )
+                    else:
+                        return go.Figure(
+                            data=go.Scatter(
+                                x=self.df[ts].index.astype(str), y=self.df[ts]
+                            ),
+                            layout=layout,
+                        )
+                else:
+                    print('No column was found with the specified name.')
+
+
 
     def length(self):
         r"""Number of activity data acquisition points"""
