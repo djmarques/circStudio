@@ -1,11 +1,24 @@
 from circStudio.analysis.sleep import SleepDiary
 from .mask import Mask
 from ..analysis.tools import _data_processor
+import numpy as np
+import plotly.graph_objs as go
+
 
 class Raw(Mask):
     """Base class for raw actigraphy data."""
 
-    def __init__(self, df, period, frequency, activity, light, fpath=None, start_time=None, stop_time=None):
+    def __init__(
+        self,
+        df,
+        period,
+        frequency,
+        activity,
+        light,
+        fpath=None,
+        start_time=None,
+        stop_time=None,
+    ):
         self.df = df
         self.start_time = start_time
         self.stop_time = stop_time
@@ -22,6 +35,60 @@ class Raw(Mask):
             threshold=0,
             mask=None,
         )
+
+    def plot(self, mode="activity", log=False):
+        match mode:
+            case "activity":
+                # Define layout for activity plot
+                layout = go.Layout(
+                    title="Activity time series",
+                    xaxis=dict(title="DateTime"),
+                    yaxis=dict(title="Activity"),
+                    showlegend=False,
+                )
+                if log:
+                    # Draw lineplot corresponding to log activity data
+                    return go.Figure(
+                        data=go.Scatter(
+                            x=self.activity.index.astype(str),
+                            y=np.log10(self.activity + 1),
+                        ),
+                        layout=layout,
+                    )
+                else:
+                    # Draw lineplot corresponding to the activity data
+                    return go.Figure(
+                        data=go.Scatter(
+                            x=self.activity.index.astype(str), y=self.activity
+                        ),
+                        layout=layout,
+                    )
+            case "light":
+                # Define layout for light plot
+                layout = go.Layout(
+                    title="Light time series",
+                    xaxis=dict(title="DateTime"),
+                    yaxis=dict(title="Activity"),
+                    showlegend=False,
+                )
+                if log:
+                    # Draw interactive lineplot corresponding to the log light data
+                    return go.Figure(
+                        data=go.Scatter(
+                            x=self.light.index.astype(str), y=np.log10(self.light + 1)
+                        ),
+                        layout=layout,
+                    )
+                else:
+                    # Draw interactive lineplot corresponding to the light data
+                    return go.Figure(
+                        data=go.Scatter(
+                            x=self.light.index.astype(str), y=self.light
+                        ),
+                        layout=layout,
+                    )
+            case _:
+                print('Currently, the plot method only supports "activity" and "light"')
 
     def length(self):
         r"""Number of activity data acquisition points"""
