@@ -2,11 +2,10 @@ import pandas as pd
 import numpy as np
 import re
 from circStudio.analysis.tools import *
-from statistics import mean
-import statsmodels.api as sm
+import plotly.graph_objects as go
 
 
-def daily_profile(data, cyclic=False, time_origin=None, whs="1h"):
+def daily_profile(data, cyclic=False, time_origin=None, whs="1h", plot=False, log=False):
     r"""Average daily activity/light/temperature distribution
 
     Calculate the daily profile of activity. Data are averaged over all the
@@ -33,15 +32,58 @@ def daily_profile(data, cyclic=False, time_origin=None, whs="1h"):
         onset/offset time. Relevant only if time_origin is set to
         'AonT' or AoffT'.
         Default is '1h'.
+    plot: bool, optional
+        Whether to plot the daily profile. Default is False.
+    log: bool, optional
+        Whether the daily profile should be transformed to a log10 scale.
 
     Returns
     -------
     raw : pandas.Series
         A Series containing the daily activity profile with a 24h index.
     """
-    if time_origin is None:
-        return _average_daily_activity(data, cyclic=cyclic)
+    def _format(to_plot, to_log, profile):
+        """
+        Internal function that decides whether to present daily profile as pd.Series
+        or as an interactive Plotly figure.
 
+        Parameters
+        ----------
+        to_plot : bool
+            Whether the daily profile should be plotted.
+        to_log : bool
+            Whether the daily profile should be transformed to a log10 scale.
+        profile
+            The daily profile returned by this function.
+
+        Returns
+        -------
+        pandas.Series or go.Figure
+
+        """
+        if to_plot:
+            layout = go.Layout(
+                title="Daily profile",
+                xaxis=dict(title="Date time"),
+                yaxis=dict(title="Data"),
+                showlegend=False
+            )
+            if to_log:
+                fig = go.Figure(data=[
+                    go.Scatter(x=profile.index.astype(str), y=np.log10(profile+1))
+                ], layout=layout)
+                return fig
+            else:
+                fig = go.Figure(data=[
+                    go.Scatter(x=profile.index.astype(str), y=profile)
+                ], layout=layout)
+                return fig
+        else:
+            return profile
+
+    if time_origin is None:
+        _daily_profile = _average_daily_activity(data, cyclic=cyclic)
+        return _format(plot, log, _daily_profile)
     else:
         if cyclic is True:
             raise NotImplementedError(
@@ -85,7 +127,8 @@ def daily_profile(data, cyclic=False, time_origin=None, whs="1h"):
 
         shift = int((pd.Timedelta("12h") - time_origin) / data.index.freq)
 
-        return _shift_time_axis(avgdaily, shift)
+        _daily_profile = _shift_time_axis(avgdaily, shift)
+        return _format(plot, log, _daily_profile)
 
 
 def daily_profile_auc(data, start_time=None, stop_time=None, time_origin=None):
@@ -252,7 +295,7 @@ def l5(data):
 
     Returns
     -------
-    l5: float
+    l5_onset, l5 : float
 
     Notes
     -----
@@ -291,7 +334,7 @@ def m10(data):
 
     Returns
     -------
-    m10: float
+    m10_onset, m10 : float
 
     Notes
     -----
