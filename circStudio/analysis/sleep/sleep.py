@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import re
+import warnings
 from .scoring import csm, roenneberg, sleep_midpoint, sri
 from .scoring.utils import rescore
 from scipy.ndimage import binary_closing, binary_opening
@@ -1576,6 +1577,83 @@ def main_sleep_bouts(data, report='major'):
         #mean = minor_sleep['duration'].mean().total_seconds() / 60
         mean = np.mean(minor_sleep['duration'])
 
-
         # Return dataframe with major sleep events and summary stats
         return minor_sleep, mean
+
+def waso(data, algo='Cole-Kripke', **kwargs):
+    """
+    Calculate Wake After Sleep Onset (WASO)
+
+    Parameters
+    ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
+    algo
+        Sleep detection algorithm to use to detect sleep fragments during a consolidated sleep
+        period (as determined by the Roenneberg algorithm). It can be either 'Cole-Kripke',
+        'Sadeh' or 'Scripps'.
+    **kwargs
+        Pass the 'settings' keyword argument to if Cole-Kripke is used. Available settings are:
+        * "mean": mean activity per minute
+        * "10sec_max_overlap": maximum 10-second overlapping epoch per minute
+        * "10sec_max_non_overlap": maximum 10-second non-overlapping epoch per minute
+        * "30sec_max_non_overlap": maximum 30-second non-overlapping epoch per minute
+
+
+    Returns
+    -------
+    pd.Series
+        A series containing WASO values per day
+    np.float64
+        Mean WASO value
+
+
+    """
+    # Calculate main consolidated sleep episodes using the Roenneberg algorithm
+    main_sleep_df = main_sleep_bouts(data)[0]
+
+    # Initialize the sleep_flags variable to store sleep segments
+    sleep_flags = None
+
+    # Select an algorithm to detect sleep segments
+    match algo:
+        case 'Cole-Kripke':
+            # User must provide a 'settings' argument to use Cole-Kripke
+            if 'settings' not in kwargs.keys():
+                # In case no setting is provided, use the 'mean' and warn
+                warnings.warn('No settings provided, using "mean" instead')
+                kwargs['settings'] = 'mean'
+            # Populate sleep_flags with the results from 'Cole-Kripke'
+            sleep_flags = Cole_Kripke(data, settings=kwargs.get('settings', {}))
+        case 'Sadeh':
+            # Populate sleep_flags with the results from 'Sadeh'
+            sleep_flags = Sadeh(data)
+        case 'Scripps':
+            # Populate sleep_flags with the results from 'Scripps'
+            sleep_flags = Scripps(data)
+        case _:
+            # Raise an error in case the algorithm selected is not available
+            raise ValueError('Algorithm {} is not valid.'.format(algo))
+
+    # Create an empty list to store daily waso values
+    waso_values = {}
+
+    # Iterate over the main sleep episodes in the recording
+    for _, row in main_sleep_df.iterrows():
+        # Extract the date from the current row
+        date = row['START'].date()
+
+        # Use the consolidated sleep episode to define the start and stop borders
+        sleep_window = sleep_flags[row['start_time']:row['stop_time']]
+
+        # Count minutes in which individual is awake during the consolidated sleep window
+        # (0: sleep, 1: wake)
+        waso_minutes = ((1 - sleep_window).sum())
+
+        # Append the result to the waso_values list
+        waso_values[date] = waso_minutes
+
+    waso_values = pd.Series(waso_values)
+    return waso_values, np.mean(waso_values)

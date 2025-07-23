@@ -3,6 +3,7 @@ import numpy as np
 
 def main():
     sleep_onset_latency_test()
+    pd.Timedelta(hours=6) / pd.Timedelta(hours=8)
 
 
 def sleep_onset_latency_test():

@@ -309,4 +309,3 @@ class SleepDiary:
         # Typecast and return, sol to a pd.Series, along with the mean
         sol = pd.Series(sol)
         return pd.Series(sol), np.mean(sol)
-
