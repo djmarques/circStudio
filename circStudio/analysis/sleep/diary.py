@@ -242,7 +242,7 @@ class SleepDiary:
         Returns
         -------
         float
-            Sleep efficiency.
+            Sleep efficiency (decimal)
 
         """
         # Calculate average total sleep time (within the main sleep bout)

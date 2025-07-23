@@ -1564,15 +1564,18 @@ def main_sleep_bouts(data, report='major'):
     minor_sleep = sleep_events.drop(main_sleep.index)
 
     if report == 'major':
-        # Calculate mean duration (in minutes) of the main sleep episode
-        mean = main_sleep['duration'].mean().total_seconds() / 60
+        # Calculate mean duration of the main sleep episode
+        #mean = main_sleep['duration'].mean().total_seconds() / 60
+        mean = np.mean(main_sleep['duration'])
 
         # Return dataframe with major sleep events and summary stats
         return main_sleep, mean
 
     elif report == 'minor':
-        # Calculate mean duration (in minutes) of the main sleep episode
-        mean = minor_sleep['duration'].mean().total_seconds() / 60
+        # Calculate mean duration of the main sleep episode
+        #mean = minor_sleep['duration'].mean().total_seconds() / 60
+        mean = np.mean(minor_sleep['duration'])
+
 
         # Return dataframe with major sleep events and summary stats
         return minor_sleep, mean
