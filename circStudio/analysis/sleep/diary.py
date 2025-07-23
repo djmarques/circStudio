@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 import pyexcel as pxl
+import warnings
+from circStudio.analysis.sleep import *
 
 
 class SleepDiary:
@@ -226,3 +228,85 @@ class SleepDiary:
         """
 
         return self.state_infos(state)
+
+
+    def sleep_efficiency(self, data):
+        """
+        Computes sleep efficiency as the average total sleep time, as classified by the Roenneberg algorithm,
+        divided by the average total sleep time, as identified in the sleep diary.
+
+        Parameters
+        ----------
+        data : pd.Series
+
+        Returns
+        -------
+        float
+            Sleep efficiency.
+
+        """
+        # Calculate average total sleep time (within the main sleep bout)
+        avg_total_sleep_time = main_sleep_bouts(data=data)[1]
+
+        # Calculate average total bedtime (from sleep diary)
+        avg_total_bed_time = self.total_bed_time()[0]
+
+        # If avg_total_bed_time is zero, do not return a result
+        if avg_total_bed_time == 0:
+            warnings.warn('Average total sleep time is 0.')
+            return None
+
+        # If avg_total_bed_time < avg_total_sleep_time
+        if avg_total_sleep_time > avg_total_bed_time:
+            warnings.warn('Average total sleep time is greater than average total sleep time.')
+            return None
+
+        return avg_total_sleep_time / avg_total_bed_time
+
+
+    def sleep_onset_latency(self, data):
+        """
+        Computes sleep onset latency using the Roenneberg algorithm to predict sleep onset and
+        the sleep diary to determine total bedtime.
+
+        Parameters
+        ----------
+        data : pandas.Series
+            Input data series with a DatetimeIndex, where the index specifies the time points and
+            the values represent the input variable (e.g., activity, light). Time and value arrays
+            are extracted from this series.
+
+        Returns
+        -------
+        pd.Series
+            Array containing sleep onset latency indexed by day of the recording.
+        pd.Timedelta
+            Mean sleep onset latency.
+
+        """
+        main_sleep_df = main_sleep_bouts(data=data)[0]
+        diary_nights_df = self._diary[self._diary['TYPE'] == 'NIGHT']
+
+        # Create an empty dictionary to store sleep_onset_latency (sol) values
+        sol = {}
+
+        # Iterate over the rows of the sleep diary corresponding to nighttime
+        for _, row in diary_nights_df.iterrows():
+            # Extract the date from the current row
+            date = row['START'].date()
+
+            # Identify matches between the sleep diary and detected periods of sleep
+            matches = main_sleep_df[main_sleep_df['start_time'].dt.date == date]
+
+            # If a match was found, then calculate the latency between bedtime and sleep onsets
+            if not matches.empty:
+                # Extract sleep onset
+                sleep_onset = matches.iloc[0]['start_time']
+
+                # Calculate the latency and store it in the sol dictionary
+                latency = sleep_onset - row['START']
+                sol[date] = latency
+        # Typecast and return, sol to a pd.Series, along with the mean
+        sol = pd.Series(sol)
+        return pd.Series(sol), np.mean(sol)
+

@@ -1212,7 +1212,7 @@ def SleepProfile(data, freq='15min', algo='Roenneberg', *args, **kwargs):
     return sleep_prof.resample(freq).mean()
 
 
-def SleepRegularityIndex(data, freq='15min', bin_threshold=None, algo='Roenneberg', *args, **kwargs):
+def SleepRegularityIndex(data, bin_threshold=None, algo='Roenneberg', *args, **kwargs):
     r""" Sleep regularity index
 
     Likelihood that any two time-points (epoch-by-epoch) 24 hours apart are
@@ -1519,3 +1519,60 @@ def active_durations(data, duration_min=None, duration_max=None, algo='Roenneber
     )
 
     return [s.index[-1]-s.index[0] for s in filtered_bouts]
+
+
+def main_sleep_bouts(data, report='major'):
+    """
+    Calculate main sleep episodes using the Roenneberg algorithm.
+
+    Parameters
+    ----------
+    data : pandas.Series, optional
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
+    report : str, optional
+        Either 'major' or 'minor'. Default is 'major'. If set to 'major', the function will
+        return a dataframe containing all the major sleep bouts in the recording, along
+        with the mean. If set to 'minor', the function will return a dataframe containing
+        all the minor sleep bouts in the recording, along with the mean.
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe containing the main sleep episodes (date, start_time, stop_time and duration).
+
+    """
+    # Compute the activity onset and off using the Roenneberg algorithm
+    activity_onset, activity_offset = Roenneberg_AoT(data)
+
+    # Create empty dataframe to store all the sleep events
+    sleep_events = pd.DataFrame()
+
+    # sleep_onset = activity_offset; sleep_offset = activity_onset
+    sleep_events['date'] = activity_onset.date
+    sleep_events['start_time'] = activity_offset
+    sleep_events['stop_time'] = activity_onset
+
+    # Sleep/rest episode duration
+    sleep_events['duration'] = sleep_events['stop_time'] - sleep_events['start_time']
+
+    # Identify main sleep episode
+    main_sleep = sleep_events.loc[sleep_events.groupby('date')['duration'].idxmax()]
+
+    # Identify minor sleep episodes
+    minor_sleep = sleep_events.drop(main_sleep.index)
+
+    if report == 'major':
+        # Calculate mean duration (in minutes) of the main sleep episode
+        mean = main_sleep['duration'].mean().total_seconds() / 60
+
+        # Return dataframe with major sleep events and summary stats
+        return main_sleep, mean
+
+    elif report == 'minor':
+        # Calculate mean duration (in minutes) of the main sleep episode
+        mean = minor_sleep['duration'].mean().total_seconds() / 60
+
+        # Return dataframe with major sleep events and summary stats
+        return minor_sleep, mean
