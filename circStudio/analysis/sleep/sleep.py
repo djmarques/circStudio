@@ -1614,9 +1614,6 @@ def waso(data, algo='Cole-Kripke', **kwargs):
     # Calculate main consolidated sleep episodes using the Roenneberg algorithm
     main_sleep_df = main_sleep_bouts(data)[0]
 
-    # Initialize the sleep_flags variable to store sleep segments
-    sleep_flags = None
-
     # Select an algorithm to detect sleep segments
     match algo:
         case 'Cole-Kripke':
@@ -1643,7 +1640,7 @@ def waso(data, algo='Cole-Kripke', **kwargs):
     # Iterate over the main sleep episodes in the recording
     for _, row in main_sleep_df.iterrows():
         # Extract the date from the current row
-        date = row['START'].date()
+        date = row['start_time'].date()
 
         # Use the consolidated sleep episode to define the start and stop borders
         sleep_window = sleep_flags[row['start_time']:row['stop_time']]
