@@ -50,6 +50,7 @@ class RPX(Raw):
     def __init__(
         self,
         input_fname,
+        light_mode=None,
         language='ENG_US',
         dayfirst=None,
         start_time=None,
@@ -93,12 +94,9 @@ class RPX(Raw):
         if dayfirst is None:
             dayfirst = day_first[language]
 
-        # extract informations from the header
-        name = self._extract_rpx_name(header, delimiter)
-        uuid = self._extract_rpx_uuid(header, delimiter)
+        # extract information from the header
         start = self._extract_rpx_start_time(header, delimiter, dayfirst)
         frequency = self._extract_rpx_frequency(header, delimiter)
-        axial_mode = 'Unknown'
 
         # read actigraphy data
         with open(input_fname, mode='rb') as file:
@@ -157,7 +155,9 @@ class RPX(Raw):
         index_data = index_data.asfreq(freq=pd.Timedelta(frequency))
 
         # Light
-        index_light = self._extract_rpx_light(index_data)
+        index_light = None
+        if light_mode is not None:
+            index_light = index_data.loc[:, light_mode]
 
         # Off-wrist status
         self._off_wrist = self._extract_rpx_data(index_data, "Off_Wrist")
@@ -195,25 +195,6 @@ class RPX(Raw):
         r"""Language (ENG_UK, FR, GER, etc) used to set up the device"""
         return self._language
 
-    @property
-    def white_light(self):
-        r"""White light levels (in lux.)"""
-        return self._extract_light_channel("White_light")
-
-    @property
-    def red_light(self):
-        r"""Red light levels (in microwatt per cm2.)"""
-        return self._extract_light_channel("Red_light")
-
-    @property
-    def green_light(self):
-        r"""Green light levels (in microwatt per cm2.)"""
-        return self._extract_light_channel("Green_light")
-
-    @property
-    def blue_light(self):
-        r"""Blue light levels (in microwatt per cm2.)"""
-        return self._extract_light_channel("Blue_light")
 
     @property
     def off_wrist(self):
@@ -319,21 +300,6 @@ class RPX(Raw):
 
         return data.loc[:, col_name] if col_name in data.columns else None
 
-    def _extract_rpx_light(self, data):
-
-        # List available light columns
-        light_cols = [
-            v for k, v in columns[self.language].items() if 'light' in k
-        ]
-        available_light_cols = list(
-            set(data.columns).intersection(light_cols)
-        )
-
-        # If list not empty:
-        if available_light_cols:
-            return data.loc[:, available_light_cols]
-        else:
-            return None
 
     def _extract_light_channel(self, channel):
         if self.light is None:
@@ -375,6 +341,7 @@ Please verify your input file.
 def read_rpx(
     input_fname,
     language='ENG_US',
+    light_mode=None,
     dayfirst=None,
     start_time=None,
     period=None,
@@ -393,6 +360,8 @@ def read_rpx(
         Language of the input csv file.
         Available options are: 'ENG_UK', 'ENG_US', 'FR', 'GER'.
         Default is 'ENG_US'.
+    light_mode : str
+        Select the light channel for analysis. Default is None.
     dayfirst: bool, optional
         Whether to interpret the first value of a date as the day.
         If None, rely on the laguage:
@@ -427,6 +396,7 @@ def read_rpx(
     """
     return RPX(
         input_fname=input_fname,
+        light_mode=light_mode,
         language=language,
         dayfirst=dayfirst,
         start_time=start_time,

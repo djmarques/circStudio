@@ -7,6 +7,7 @@ from .scoring.utils import rescore
 from scipy.ndimage import binary_closing, binary_opening
 from circStudio.analysis.tools import *
 from circStudio.analysis.sleep.sleep_tools import *
+import plotly.graph_objs as go
 
 
 def AonT(data, whs=12):
@@ -701,7 +702,8 @@ def Crespo(
     beta='1h',
     estimate_zeta=False,
     seq_length_max=100,
-    verbose=False
+    verbose=False,
+    plot=False
 ):
     r"""Crespo algorithm for activity/rest identification
 
@@ -745,6 +747,7 @@ def Crespo(
     verbose: bool, optional
         If set to True, print the estimated values of zeta.
         Default is False.
+    plot : bool, optional
 
     Returns
     -------
@@ -863,7 +866,7 @@ def Crespo(
     # Done before padding to avoid unaligned time series.
 
     x_nan = data.copy()
-    x_nan[mask < 1] = np.NaN
+    x_nan[mask < 1] = np.nan
 
     # Pad the signal at the beginning and at the end with a sequence of 1h
     # of elements of value m = max(s(t)).
@@ -904,7 +907,23 @@ def Crespo(
     crespo.iloc[0] = 1
     crespo.iloc[-1] = 1
 
-    return crespo
+    if plot:
+        # Specify the layout of the figure to be generated
+        layout = go.Layout(title="Rest/Activity detection", xaxis=dict(title="Date time"),
+                           yaxis=dict(title="Counts/period"),
+                           yaxis2=dict(title='Classification', overlaying='y', side='right'),
+                           showlegend=True)
+
+        # Create the figure to show the data and the detected sleep trace
+        fig = go.Figure(data=[
+            go.Scatter(x=data.index.astype(str), y=data, name='Data'),
+            go.Scatter(x=crespo.index.astype(str), y=crespo, yaxis='y2', name='Crespo'),
+        ], layout=layout)
+
+        # Return a tuple containing the figure and the scoring series
+        return fig
+    else:
+        return crespo
 
 def Crespo_AoT(
     data,
@@ -1007,7 +1026,8 @@ def Roenneberg(
     threshold=0.15,
     min_seed_period='30Min',
     max_test_period='12h',
-    r_consec_below='30Min'
+    r_consec_below='30Min',
+    plot=False
 ):
     """Automatic sleep detection.
 
@@ -1041,6 +1061,8 @@ def Roenneberg(
         Time range to consider, past the potential correlation peak when
         searching for the maximum correlation peak.
         Default is '30Min'.
+    plot : bool, optional
+        If True, plot the resulting time series. Default is False.
 
     Returns
     -------
@@ -1077,8 +1099,23 @@ def Roenneberg(
         max_test_period=max_test_period,
         r_consec_below=r_consec_below
     )
+    if plot:
+        # Specify the layout of the figure to be generated
+        layout = go.Layout(title="Rest/Activity detection", xaxis=dict(title="Date time"),
+                           yaxis=dict(title="Counts/period"), yaxis2=dict(title='Classification', overlaying='y', side='right'),
+                           showlegend=True)
 
-    return rbg
+        # Create the figure to show the data and the detected sleep trace
+        fig = go.Figure(data=[
+            go.Scatter(x=data.index.astype(str),y=data, name='Data'),
+            go.Scatter(x=rbg.index.astype(str),y=rbg, yaxis='y2', name='Roenneberg'),
+        ], layout=layout)
+
+        # Return a tuple containing the figure and the scoring series
+        return fig
+    else:
+        # Return the scoring series
+        return rbg
 
 def Roenneberg_AoT(
     data,
@@ -1579,6 +1616,7 @@ def main_sleep_bouts(data, report='major'):
 
         # Return dataframe with major sleep events and summary stats
         return minor_sleep, mean
+
 
 def waso(data, algo='Cole-Kripke', **kwargs):
     """
