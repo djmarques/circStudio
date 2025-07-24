@@ -1,8 +1,7 @@
 import os
 import pandas as pd
 import pyexcel as pxl
-import warnings
-from circStudio.analysis.sleep import *
+from .sleep import *
 
 
 class SleepDiary:
@@ -74,6 +73,12 @@ class SleepDiary:
             layer='below',
             line=dict(width=0)
         )
+
+    def __str__(self):
+        return self._diary.to_string()
+
+    def __call__(self):
+        return self._diary
 
     @property
     def name(self):
