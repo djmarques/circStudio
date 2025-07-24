@@ -752,8 +752,8 @@ def Crespo(
     Returns
     -------
     crespo : pandas.core.Series
-        Time series containing the estimated periods of rest (0) and
-        activity (1).
+        Time series containing the estimated periods of rest (1) and
+        activity (0).
 
     References
     ----------
@@ -906,6 +906,9 @@ def Crespo(
     # Manual post-processing
     crespo.iloc[0] = 1
     crespo.iloc[-1] = 1
+
+    # Invert labelling (make classification output consistent with other algorithms)
+    crespo = np.where(crespo == 1, 0, 1)
 
     if plot:
         # Specify the layout of the figure to be generated
@@ -1116,6 +1119,7 @@ def Roenneberg(
     else:
         # Return the scoring series
         return rbg
+
 
 def Roenneberg_AoT(
     data,
@@ -1618,7 +1622,7 @@ def main_sleep_bouts(data, report='major'):
         return minor_sleep, mean
 
 
-def waso(data, algo='Cole-Kripke', **kwargs):
+def waso(data, frequency, algo='Cole-Kripke', **kwargs):
     """
     Calculate Wake After Sleep Onset (WASO)
 
@@ -1628,6 +1632,8 @@ def waso(data, algo='Cole-Kripke', **kwargs):
         Input data series with a DatetimeIndex, where the index specifies the time points and
         the values represent the input variable (e.g., activity, light). Time and value arrays
         are extracted from this series.
+    frequency : pd.Timedelta
+        Sampling frequency of the activity trace in data.
     algo
         Sleep detection algorithm to use to detect sleep fragments during a consolidated sleep
         period (as determined by the Roenneberg algorithm). It can be either 'Cole-Kripke',
@@ -1639,15 +1645,12 @@ def waso(data, algo='Cole-Kripke', **kwargs):
         * "10sec_max_non_overlap": maximum 10-second non-overlapping epoch per minute
         * "30sec_max_non_overlap": maximum 30-second non-overlapping epoch per minute
 
-
     Returns
     -------
     pd.Series
         A series containing WASO values per day
     np.float64
         Mean WASO value
-
-
     """
     # Calculate main consolidated sleep episodes using the Roenneberg algorithm
     main_sleep_df = main_sleep_bouts(data)[0]
@@ -1685,7 +1688,11 @@ def waso(data, algo='Cole-Kripke', **kwargs):
 
         # Count minutes in which individual is awake during the consolidated sleep window
         # (0: sleep, 1: wake)
-        waso_minutes = ((1 - sleep_window).sum())
+        # Adjust waso_minutes by the sampling rate (how many minutes per sample)
+        minutes_per_sample = pd.Timedelta('1min')/frequency
+
+        # Calculate adjusted waso_minutes
+        waso_minutes = ((1 - sleep_window).sum()) * minutes_per_sample
 
         # Append the result to the waso_values list
         waso_values[date] = waso_minutes
