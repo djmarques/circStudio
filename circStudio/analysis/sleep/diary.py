@@ -310,7 +310,26 @@ class SleepDiary:
 
                 # Calculate the latency and store it in the sol dictionary
                 latency = sleep_onset - row['START']
-                sol[date] = latency
+
+                # Return as missing value if predicted sleep time occurs before recorded bed time
+                if latency < pd.Timedelta(0):
+                    latency = np.nan
+
+                # Store the latency for the current date
+                if latency is not np.nan:
+                    sol[date] = latency
         # Typecast and return, sol to a pd.Series, along with the mean
         sol = pd.Series(sol)
         return pd.Series(sol), np.mean(sol)
+
+    def plot(self, data):
+        """Plot the sleep diary."""
+        layout = go.Layout(
+            title="Actigraphy data",
+            xaxis=dict(title="Date time"),
+            yaxis=dict(title="Counts/period"),
+            shapes=self.shapes(),
+            showlegend=False
+        )
+        fig = go.Figure(data=go.Scatter(x=data.index, y=data), layout=layout)
+        return fig
