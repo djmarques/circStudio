@@ -908,7 +908,7 @@ def Crespo(
     crespo.iloc[-1] = 1
 
     # Invert labelling (make classification output consistent with other algorithms)
-    crespo = np.where(crespo == 1, 0, 1)
+    crespo = pd.Series(np.where(crespo == 1, 0, 1), index=crespo.index)
 
     if plot:
         # Specify the layout of the figure to be generated
