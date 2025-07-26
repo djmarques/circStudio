@@ -4,6 +4,7 @@ from scipy.signal import find_peaks
 from scipy.integrate import odeint
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
+import plotly.graph_objs as go
 
 
 class Model:
@@ -186,6 +187,63 @@ class Model:
         return self.cbt() - self.cbt_to_dlmo
 
 
+    def plot(self, states=False, dlmo=False, cbtmin=False):
+        # Create a new plotly figure
+        fig = go.Figure()
+
+        if states:
+            # Calculate number of states available
+            states = self.model_states.shape[1]
+
+            if self.model_name == 'Forger' or self.model_name == 'Jewett':
+                labels = ['x','xc', 'Light Drive']
+            elif self.model_name == 'HannaySP':
+                labels = ['Amplitude','Phase', 'Light Drive']
+            else:
+               labels = ['Ventral Amplitude', 'Dorsal Amplitude', 'Ventral Phase', 'Dorsal Phase', 'Light Drive']
+            # Iterate over states and plot them
+            for i in range(states):
+                fig.add_trace(go.Scatter(
+                    x=self.data.index.astype(str),
+                    y=self.model_states[:, i],
+                    name=f'{labels[i]}',
+                ))
+                fig.update_layout(
+                    title='Model States',
+                    xaxis=dict(title='Time'),
+                    yaxis=dict(title='Model States'),
+                )
+            return fig
+
+        if dlmo:
+            # Plot daily predicted DLMO
+            fig.add_trace(go.Scatter(
+                x=pd.Series(self.data.index.date.astype(str)).unique(),
+                y=self.dlmos() % 24,
+                name='Predicted DLMO',
+            ))
+            fig.update_layout(
+                title='Predicted DLMO',
+                xaxis=dict(title='Day'),
+                yaxis=dict(title='DLMO time'),
+            )
+            return fig
+
+        if cbtmin:
+            # Plot daily predicted DLMO
+            fig.add_trace(go.Scatter(
+                x=pd.Series(self.data.index.date.astype(str)).unique(),
+                y=self.cbt() % 24,
+                name='Predicted CBTmin',
+            ))
+            fig.update_layout(
+                title='Predicted CBTmin',
+                xaxis=dict(title='Day'),
+                yaxis=dict(title='CBTmin time'),
+            )
+            return fig
+
+
 class Forger(Model):
     """
     Implements the mathematical model of human circadian rhythms developed by Forger, Jewett and Kronauer [1].
@@ -280,6 +338,7 @@ class Forger(Model):
         # self.initial_conditions = np.array([-0.0843259, -1.09607546, 0.45584306])
         # self.inputs = inputs
         # self.time = time
+        self.model_name = self.__class__.__name__
         self.taux = taux
         self.mu = mu
         self.g = g
@@ -484,6 +543,7 @@ class Jewett(Model):
         # self.initial_conditions= np.array([-0.10097101, -1.21985662, 0.50529415])
         # self.inputs = inputs
         # self.time = time
+        self.model_name = self.__class__.__name__
         self.taux = taux
         self.mu = mu
         self.g = g
@@ -697,6 +757,7 @@ class HannaySP(Model):
         # self.initial_conditions = np.array([0.82041911, 1.71383697, 0.52318122])
         # self.inputs = inputs
         # self.time = time
+        self.model_name = self.__class__.__name__
         self.tau = tau
         self.k = k
         self.gamma = gamma
@@ -947,6 +1008,7 @@ class HannayTP(Model):
         # self.initial_conditions = np.array([0.82423745, 0.82304996, 1.75233424, 1.863457, 0.52318122])
         # self.inputs = inputs
         # self.time = time
+        self.model_name = self.__class__.__name__
         self.tauv = tauv
         self.taud = taud
         self.kvv = kvv
@@ -1166,8 +1228,8 @@ class ESRI:
         # Extract time and light vector
         if time is None or inputs is None:
             if data is not None:
-                self.time = np.asarray((data.index - data.index.min()).total_seconds() / 3600)
-                self.inputs = np.asarray(data.values)
+                self.time_vector = np.asarray((data.index - data.index.min()).total_seconds() / 3600)
+                self.light_vector = np.asarray(data.values)
             else:
                 raise ValueError("Must provide either light time series (data) or input and time.")
         else:
