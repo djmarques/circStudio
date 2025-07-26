@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from lmfit import fit_report, minimize, Parameters
+import plotly.graph_objects as go
 
 
 def _cosinor(x, params):
@@ -49,11 +50,11 @@ class Cosinor:
         self.__fit_initial_params = fit_params
 
     @staticmethod
-    def _convert_timestamp_to_index(ts):
+    def _convert_timestamp_to_index(data):
         r'''Convert timestamps'''
         # Define the x range by converting timestamps to indices, in order to
         # deal with time series with irregular index.
-        x = ((ts.index - ts.index[0])/ts.index.freq).values
+        x = ((data.index - data.index[0]) / data.index.freq).values
         return x
 
     @property
@@ -72,7 +73,7 @@ class Cosinor:
 
     def fit(
         self,
-        ts,
+        data,
         params=None,
         method='leastsq',
         nan_policy='raise',
@@ -83,7 +84,7 @@ class Cosinor:
 
         Parameters
         ----------
-        ts : pandas.Series
+        data : pandas.Series
             Input time series.
         params: instance of Parameters [1]_, optional.
             Initial fit parameters. If None, use the default parameters.
@@ -129,14 +130,14 @@ class Cosinor:
 
         # Define the x range by converting timestamps to indices, in order to
         # deal with time series with irregular index.
-        x = self._convert_timestamp_to_index(ts)
+        x = self._convert_timestamp_to_index(data)
 
         # Minimize residuals
         fit_results = minimize(
             self.__fit_obj_func,
             self.fit_initial_params if params is None else params,
             method=method,
-            args=(x,  ts.values, self.fit_func),
+            args=(x, data.values, self.fit_func),
             nan_policy=nan_policy,
             reduce_fcn=reduce_fcn
         )
@@ -146,12 +147,12 @@ class Cosinor:
 
         return fit_results
 
-    def best_fit(self, ts, params):
+    def best_fit(self, data, params):
         """Best fit function of the data.
 
         Parameters
         ----------
-        ts : pandas.Series
+        data : pandas.Series
             Originally fitted time series.
         params: instance of Parameters [1]_
             Best fit parameters.
@@ -172,7 +173,24 @@ class Cosinor:
 
         # Define the x range by converting timestamps to indices, in order to
         # deal with time series with irregular index.
-        x = self._convert_timestamp_to_index(ts)
+        x = self._convert_timestamp_to_index(data)
         y = self.fit_func(x, params)
 
-        return pd.Series(index=ts.index, data=y)
+        return pd.Series(index=data.index, data=y)
+
+    def plot(self, data, best_params):
+        layout = go.Layout(title="Cosinor",
+                           xaxis=dict(title="Date time"),
+                           yaxis=dict(title="Counts/period"),
+                           showlegend=False)
+
+        fig = go.Figure(
+            data=[
+                go.Scatter(x=data.index.astype(str),
+                           y=data, name='Raw data'),
+                go.Scatter(x=self.best_fit(data, best_params).index.astype(str),
+                           y=self.best_fit(data, best_params),
+                           name='Best fit')
+            ], layout=layout,
+        )
+        return fig
