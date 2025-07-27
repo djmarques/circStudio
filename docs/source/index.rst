@@ -6,14 +6,15 @@
 circStudio documentation
 ========================
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
-
+Welcome to `circStudio`, a Python package for mathematical modelling of circadian rhythms using actigraphy data,
+built on top of the open-source package `pyActigraphy`.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   opening_files
+   tutorial_1
+   tutorial_2
+   tutorial_3
+   tutorial_4
    api
