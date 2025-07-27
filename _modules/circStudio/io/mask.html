@@ -1,0 +1,750 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>circStudio.io.mask &#8212; circStudio</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../_static/documentation_options.js?v=2a0ef813"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/circStudio/io/mask';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">circStudio</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial_1.html">Opening and processing actigraphy data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial_2.html">Preprocessing actigraphy data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial_3.html">Calculating common activity and light metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial_4.html">Mathematical modeling of circadian rhythms</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API Reference</a></li>
+
+
+
+
+
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for circStudio.io.mask</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pandas.tseries.frequencies</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_offset</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">..analysis.tools</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+
+<div class="viewcode-block" id="BaseLog">
+<a class="viewcode-back" href="../../../api.html#circStudio.io.mask.BaseLog">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BaseLog</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for log files containing time stamps.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fname: str</span>
+<span class="sd">        Absolute filepath of the input log file.</span>
+<span class="sd">    log: pandas.DataFrame</span>
+<span class="sd">        Dataframe containing the data found in the log file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_fname</span><span class="p">,</span> <span class="n">log</span><span class="p">):</span>
+
+        <span class="c1"># get absolute file path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">input_fname</span><span class="p">)</span>
+
+        <span class="c1"># Add `duration` column</span>
+        <span class="n">log</span><span class="p">[</span><span class="s2">&quot;Duration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">log</span><span class="p">[</span><span class="s2">&quot;Stop_time&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">log</span><span class="p">[</span><span class="s2">&quot;Start_time&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Inplace drop of NA</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># add dataframe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__log</span> <span class="o">=</span> <span class="n">log</span>
+
+<div class="viewcode-block" id="BaseLog.from_file">
+<a class="viewcode-back" href="../../../api.html#circStudio.io.mask.BaseLog.from_file">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_file</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">input_fname</span><span class="p">,</span> <span class="n">index_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read start/stop-times from log files.</span>
+
+<span class="sd">        Generic function to read start and stop times from log files. Supports</span>
+<span class="sd">        different file format (.ods, .xls(x), .csv).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_fname: str</span>
+<span class="sd">            Path to the log file.</span>
+<span class="sd">        index_name: str</span>
+<span class="sd">            Name of the index.</span>
+<span class="sd">        *args</span>
+<span class="sd">            Variable length argument list passed to the subsequent reader</span>
+<span class="sd">            function.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Arbitrary keyword arguments passed to the subsequent reader</span>
+<span class="sd">            function.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        absname: str</span>
+<span class="sd">            Absolute filepath of the input log file.</span>
+<span class="sd">        log: pandas.DataFrame</span>
+<span class="sd">            Dataframe containing the data found in the log file.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># get absolute file path</span>
+        <span class="n">absname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">input_fname</span><span class="p">)</span>
+
+        <span class="c1"># get basename and split it into base and extension</span>
+        <span class="n">basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">absname</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">basename</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.csv&quot;</span><span class="p">:</span>
+            <span class="n">log</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__from_csv</span><span class="p">(</span><span class="n">absname</span><span class="p">,</span> <span class="n">index_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.xlsx&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.xls&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.ods&quot;</span><span class="p">):</span>
+            <span class="n">log</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__from_excel</span><span class="p">(</span><span class="n">absname</span><span class="p">,</span> <span class="n">index_name</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="s2">&quot;File format for the input file </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">basename</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="s2">&quot;is not currently supported.&quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;Supported file format:</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;.csv (text),</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;.ods (OpenOffice spreadsheet),</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;.xls (Excel spreadsheet).&quot;</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">absname</span><span class="p">,</span> <span class="n">log</span></div>
+
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__from_csv</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">input_fname</span><span class="p">,</span> <span class="n">index_name</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">dayfirst</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read start/stop-times from .csv files.</span>
+
+<span class="sd">        Specific function to read start and stop times from csv files.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_fname: str</span>
+<span class="sd">            Path to the log file.</span>
+<span class="sd">        index_name: str</span>
+<span class="sd">            Name of the index.</span>
+<span class="sd">        sep: str, optional</span>
+<span class="sd">            Delimiter to use.</span>
+<span class="sd">            Default is &#39;,&#39;.</span>
+<span class="sd">        dayfirst: bool, optional</span>
+<span class="sd">            If set to True, use DD/MM/YYYY format dates.</span>
+<span class="sd">            Default is False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        log : a pandas.DataFrame</span>
+<span class="sd">            A dataframe with the start and stop times (columns)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Read data from the csv file into a dataframe</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+            <span class="n">input_fname</span><span class="p">,</span>
+            <span class="n">sep</span><span class="o">=</span><span class="n">sep</span><span class="p">,</span>
+            <span class="n">dayfirst</span><span class="o">=</span><span class="n">dayfirst</span><span class="p">,</span>
+            <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">index_col</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">usecols</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+            <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="n">index_name</span><span class="p">,</span> <span class="s2">&quot;Start_time&quot;</span><span class="p">,</span> <span class="s2">&quot;Stop_time&quot;</span><span class="p">],</span>
+            <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">log</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__from_excel</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">input_fname</span><span class="p">,</span> <span class="n">index_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read start/stop-times from excel-like files.</span>
+
+<span class="sd">        Specific function to read start and stop times from .ods/.xls(x) files.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_fname: str</span>
+<span class="sd">            Path to the log file.</span>
+<span class="sd">        index_name: str</span>
+<span class="sd">            Name of the index.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        log : a pandas.DataFrame</span>
+<span class="sd">            A dataframe with the start and stop times (columns)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Read data from the log file into a np array</span>
+        <span class="n">sst_narray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">pxl</span><span class="o">.</span><span class="n">get_array</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">input_fname</span><span class="p">))</span>
+
+        <span class="c1"># Create a DF with columns: index_name, start_time, stop time</span>
+        <span class="n">log</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="n">sst_narray</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">sst_narray</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Start_time&quot;</span><span class="p">,</span> <span class="s2">&quot;Stop_time&quot;</span><span class="p">],</span>
+            <span class="c1"># dtype=&#39;datetime64[ns]&#39;</span>
+        <span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">index_name</span>
+
+        <span class="k">return</span> <span class="n">log</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fname</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The absolute filepath of the input log file.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__fname</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The dataframe containing the data found in the log file.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__log</span>
+
+<div class="viewcode-block" id="BaseLog.summary">
+<a class="viewcode-back" href="../../../api.html#circStudio.io.mask.BaseLog.summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">colname</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a dataframe of summary statistics.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__log</span><span class="p">[</span><span class="n">colname</span><span class="p">]</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Mask">
+<a class="viewcode-back" href="../../../api.html#circStudio.io.mask.Mask">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Mask</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclude_if_mask</span><span class="p">,</span> <span class="n">mask_inactivity</span><span class="p">,</span> <span class="n">binarize</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">inactivity_length</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exclude_if_mask</span> <span class="o">=</span> <span class="n">exclude_if_mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inactivity_length</span> <span class="o">=</span> <span class="n">inactivity_length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mask_inactivity</span> <span class="o">=</span> <span class="n">mask_inactivity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_activity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">activity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_light</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">light</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">binarize</span> <span class="o">=</span> <span class="n">binarize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span> <span class="k">if</span> <span class="n">binarize</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">impute_nan</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imputation_method</span> <span class="o">=</span> <span class="s1">&#39;mean&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span> <span class="o">=</span> <span class="n">mask</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_filter_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                     <span class="n">data</span><span class="p">,</span>
+                     <span class="n">new_freq</span><span class="p">,</span>
+                     <span class="n">binarize</span><span class="p">,</span>
+                     <span class="n">impute_nan</span><span class="p">,</span>
+                     <span class="n">threshold</span><span class="p">,</span>
+                     <span class="n">exclude_if_mask</span><span class="p">,</span>
+                     <span class="n">imputation_method</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">binarize</span> <span class="o">=</span> <span class="n">binarize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">impute_nan</span> <span class="o">=</span> <span class="n">impute_nan</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imputation_method</span> <span class="o">=</span> <span class="n">imputation_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exclude_if_mask</span> <span class="o">=</span> <span class="n">exclude_if_mask</span>
+
+        <span class="k">return</span> <span class="n">_data_processor</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+            <span class="n">binarize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">binarize</span><span class="p">,</span>
+            <span class="n">threshold</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">,</span>
+            <span class="n">current_freq</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">,</span>
+            <span class="n">new_freq</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">frequency</span> <span class="k">if</span> <span class="n">new_freq</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">new_freq</span><span class="p">,</span>
+            <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="p">,</span>
+            <span class="n">mask_inactivity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_mask_inactivity</span><span class="p">,</span>
+            <span class="n">impute_nan</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">impute_nan</span><span class="p">,</span>
+            <span class="n">imputation_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">imputation_method</span><span class="p">,</span>
+            <span class="n">exclude_if_mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">exclude_if_mask</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Mask.apply_filters">
+<a class="viewcode-back" href="../../../api.html#circStudio.io.mask.Mask.apply_filters">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">new_freq</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">binarize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                      <span class="n">threshold</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                      <span class="n">apply_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                      <span class="n">impute_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                      <span class="n">exclude_if_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                      <span class="n">imputation_method</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">):</span>
+        <span class="c1"># Reset filters before applying new ones</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_filters</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">apply_mask</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No mask was found. Create a new mask.&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_mask_inactivity</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">activity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activity</span><span class="p">,</span>
+                                              <span class="n">new_freq</span><span class="o">=</span><span class="n">new_freq</span><span class="p">,</span>
+                                              <span class="n">binarize</span><span class="o">=</span><span class="n">binarize</span><span class="p">,</span>
+                                              <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+                                              <span class="n">impute_nan</span><span class="o">=</span><span class="n">impute_nan</span><span class="p">,</span>
+                                              <span class="n">exclude_if_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                              <span class="n">imputation_method</span><span class="o">=</span><span class="n">imputation_method</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">light</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">light</span><span class="p">,</span>
+                                           <span class="n">new_freq</span><span class="o">=</span><span class="n">new_freq</span><span class="p">,</span>
+                                           <span class="n">binarize</span><span class="o">=</span><span class="n">binarize</span><span class="p">,</span>
+                                           <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+                                           <span class="n">impute_nan</span><span class="o">=</span><span class="n">impute_nan</span><span class="p">,</span>
+                                           <span class="n">exclude_if_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                           <span class="n">imputation_method</span><span class="o">=</span><span class="n">imputation_method</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Mask.reset_filters">
+<a class="viewcode-back" href="../../../api.html#circStudio.io.mask.Mask.reset_filters">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_filters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mask_inactivity</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">activity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original_activity</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">light</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">light</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original_light</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Mask used to filter out inactive data.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Create a mask if it does not exist</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inactivity_length</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Create an inactivity mask with the specified length (and above)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">create_inactivity_mask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inactivity_length</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">period</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Inactivity length set to None. Could not create a mask.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">period</span><span class="p">]</span>
+
+    <span class="nd">@mask</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">inactivity_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Length of the inactivity mask.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inactivity_length</span>
+
+    <span class="nd">@inactivity_length</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">inactivity_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inactivity_length</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="c1"># Discard current mask (will be recreated upon access if needed)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Set switch to False if None</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mask_inactivity</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="Mask.create_inactivity_mask">
+<a class="viewcode-back" href="../../../api.html#circStudio.io.mask.Mask.create_inactivity_mask">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_inactivity_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">duration</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a mask for inactivity (count equal to zero) periods.</span>
+
+<span class="sd">        This mask has the same length as its underlying data and can be used</span>
+<span class="sd">        to offuscate inactive periods where the actimeter has most likely been</span>
+<span class="sd">        removed.</span>
+<span class="sd">        Warning: use a sufficiently long duration in order not to mask sleep</span>
+<span class="sd">        periods.</span>
+<span class="sd">        A minimal duration corresponding to two hours seems reasonable.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        duration: int or str</span>
+<span class="sd">            Minimal number of consecutive zeroes for an inactive period.</span>
+<span class="sd">            Time offset strings (ex: &#39;90min&#39;) can also be used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">nepochs</span> <span class="o">=</span> <span class="n">duration</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">nepochs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nepochs</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;Inactivity length must be a int and time offset string (ex: &quot;</span>
+                <span class="s2">&quot;&#39;90min&#39;). Could not create a mask.&quot;</span><span class="p">,</span>
+                <span class="ne">UserWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Store requested mask duration (and discard current mask)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inactivity_length</span> <span class="o">=</span> <span class="n">nepochs</span>
+
+        <span class="c1"># Create actual mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">_create_inactivity_mask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activity</span><span class="p">,</span> <span class="n">nepochs</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Mask.add_mask_period">
+<a class="viewcode-back" href="../../../api.html#circStudio.io.mask.Mask.add_mask_period">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_mask_period</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a period to the inactivity mask</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        start: str</span>
+<span class="sd">            Start time (YYYY-MM-DD HH:MM:SS) of the inactivity period.</span>
+<span class="sd">        stop: str</span>
+<span class="sd">            Stop time (YYYY-MM-DD HH:MM:SS) of the inactivity period.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Check if a mask has already been created</span>
+        <span class="c1"># NB : if the inactivity_length is not None, accessing the mask will</span>
+        <span class="c1"># trigger its creation.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inactivity_length</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inactivity_length</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="c1"># self.mask = pd.Series(</span>
+            <span class="c1">#     np.ones(self.length()),</span>
+            <span class="c1">#     index=self.data.index</span>
+            <span class="c1"># )</span>
+
+        <span class="c1"># Check if start and stop are within the index range</span>
+        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">start</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="s2">&quot;Attempting to set the start time of a mask period before &quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;the actual start time of the data.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;Mask start time: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="s2">&quot;Data start time: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">stop</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="s2">&quot;Attempting to set the stop time of a mask period after &quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;the actual stop time of the data.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;Mask stop time: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stop</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="s2">&quot;Data stop time: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Set mask values between start and stop to zeros</span>
+        <span class="c1"># self.mask.loc[start:stop] = 0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">mask</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;=</span> <span class="n">stop</span><span class="p">),</span> <span class="mi">0</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Mask.add_mask_periods">
+<a class="viewcode-back" href="../../../api.html#circStudio.io.mask.Mask.add_mask_periods">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_mask_periods</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_fname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add periods to the inactivity mask</span>
+
+<span class="sd">        Function to read start and stop times from a Mask log file. Supports</span>
+<span class="sd">        different file format (.ods, .xls(x), .csv).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_fname: str</span>
+<span class="sd">            Path to the log file.</span>
+<span class="sd">        *args</span>
+<span class="sd">            Variable length argument list passed to the subsequent reader</span>
+<span class="sd">            function.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Arbitrary keyword arguments passed to the subsequent reader</span>
+<span class="sd">            function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Convert the log file into a DataFrame</span>
+        <span class="n">absname</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="n">BaseLog</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">input_fname</span><span class="p">,</span> <span class="s2">&quot;Mask&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Iterate over the rows of the DataFrame</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">log</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_mask_period</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;Start_time&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;Stop_time&quot;</span><span class="p">])</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Daniel Marques
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

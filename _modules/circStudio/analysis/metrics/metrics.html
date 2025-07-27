@@ -1,0 +1,1607 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>circStudio.analysis.metrics.metrics &#8212; circStudio</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../../_static/documentation_options.js?v=2a0ef813"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/circStudio/analysis/metrics/metrics';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">circStudio</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial_1.html">Opening and processing actigraphy data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial_2.html">Preprocessing actigraphy data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial_3.html">Calculating common activity and light metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tutorial_4.html">Mathematical modeling of circadian rhythms</a></li>
+
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">API Reference</a></li>
+
+
+
+
+
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for circStudio.analysis.metrics.metrics</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">circStudio.analysis.tools</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
+
+
+<div class="viewcode-block" id="daily_profile">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.daily_profile">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">daily_profile</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cyclic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">time_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">whs</span><span class="o">=</span><span class="s2">&quot;1h&quot;</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Average daily activity/light/temperature distribution</span>
+
+<span class="sd">    Calculate the daily profile of activity. Data are averaged over all the</span>
+<span class="sd">    days.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    cyclic: bool, optional</span>
+<span class="sd">        If set to True, two daily profiles are concatenated to ensure</span>
+<span class="sd">        continuity between the last point of the day and the first one.</span>
+<span class="sd">        Default is False.</span>
+<span class="sd">    time_origin: str or pd.Timedelta, optional</span>
+<span class="sd">        If not None, origin of the time axis for the daily profile.</span>
+<span class="sd">        Original time bins are translated as time delta with respect to</span>
+<span class="sd">        this new origin.</span>
+<span class="sd">        Default is None</span>
+<span class="sd">        Supported time string: &#39;AonT&#39;, &#39;AoffT&#39;, any &#39;HH:MM:SS&#39;</span>
+<span class="sd">    whs: str, optional</span>
+<span class="sd">        Window half size parameter for the detection of the activity</span>
+<span class="sd">        onset/offset time. Relevant only if time_origin is set to</span>
+<span class="sd">        &#39;AonT&#39; or AoffT&#39;.</span>
+<span class="sd">        Default is &#39;1h&#39;.</span>
+<span class="sd">    plot: bool, optional</span>
+<span class="sd">        Whether to plot the daily profile. Default is False.</span>
+<span class="sd">    log: bool, optional</span>
+<span class="sd">        Whether the daily profile should be transformed to a log10 scale.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    raw : pandas.Series</span>
+<span class="sd">        A Series containing the daily activity profile with a 24h index.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_format</span><span class="p">(</span><span class="n">to_plot</span><span class="p">,</span> <span class="n">to_log</span><span class="p">,</span> <span class="n">profile</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Internal function that decides whether to present daily profile as pd.Series</span>
+<span class="sd">        or as an interactive Plotly figure.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        to_plot : bool</span>
+<span class="sd">            Whether the daily profile should be plotted.</span>
+<span class="sd">        to_log : bool</span>
+<span class="sd">            Whether the daily profile should be transformed to a log10 scale.</span>
+<span class="sd">        profile</span>
+<span class="sd">            The daily profile returned by this function.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.Series or go.Figure</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">to_plot</span><span class="p">:</span>
+            <span class="n">layout</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Daily profile&quot;</span><span class="p">,</span>
+                <span class="n">xaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Date time&quot;</span><span class="p">),</span>
+                <span class="n">yaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Data&quot;</span><span class="p">),</span>
+                <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">to_log</span><span class="p">:</span>
+                <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[</span>
+                    <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">profile</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">profile</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+                <span class="p">],</span> <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">fig</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[</span>
+                    <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">profile</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="n">profile</span><span class="p">)</span>
+                <span class="p">],</span> <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">fig</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">profile</span>
+
+    <span class="k">if</span> <span class="n">time_origin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_daily_profile</span> <span class="o">=</span> <span class="n">_average_daily_activity</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cyclic</span><span class="o">=</span><span class="n">cyclic</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_format</span><span class="p">(</span><span class="n">plot</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">_daily_profile</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cyclic</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;Setting a time origin while cyclic option is True is not &quot;</span>
+                <span class="s2">&quot;implemented.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">avgdaily</span> <span class="o">=</span> <span class="n">_average_daily_activity</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cyclic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_origin</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="c1"># Regex pattern for HH:MM:SS time string</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^([0-1]\d|2[0-3])(?::([0-5]\d))(?::([0-5]\d))$&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">time_origin</span> <span class="o">==</span> <span class="s2">&quot;AonT&quot;</span><span class="p">:</span>
+                <span class="c1"># Convert width half size from Timedelta to a nr of points</span>
+                <span class="n">whs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">whs</span><span class="p">)</span> <span class="o">/</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">freq</span><span class="p">)</span>
+                <span class="n">time_origin</span> <span class="o">=</span> <span class="n">_activity_onset_time</span><span class="p">(</span><span class="n">avgdaily</span><span class="p">,</span> <span class="n">whs</span><span class="o">=</span><span class="n">whs</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">time_origin</span> <span class="o">==</span> <span class="s2">&quot;AoffT&quot;</span><span class="p">:</span>
+                <span class="c1"># Convert width half size from Timedelta to a nr of points</span>
+                <span class="n">whs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">whs</span><span class="p">)</span> <span class="o">/</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">freq</span><span class="p">)</span>
+                <span class="n">time_origin</span> <span class="o">=</span> <span class="n">_activity_offset_time</span><span class="p">(</span><span class="n">avgdaily</span><span class="p">,</span> <span class="n">whs</span><span class="o">=</span><span class="n">whs</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">time_origin</span><span class="p">):</span>
+                <span class="n">time_origin</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">time_origin</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Time origin format (</span><span class="si">{}</span><span class="s2">) not supported.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_origin</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="s2">&quot;Supported format: </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;HH:MM:SS&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_origin</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Time origin is neither a time string with a supported&quot;</span>
+                <span class="s2">&quot;format, nor a pd.Timedelta.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Round time origin to the required frequency</span>
+        <span class="n">time_origin</span> <span class="o">=</span> <span class="n">time_origin</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">freq</span><span class="p">)</span>
+
+        <span class="n">shift</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="s2">&quot;12h&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="n">time_origin</span><span class="p">)</span> <span class="o">/</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">freq</span><span class="p">)</span>
+
+        <span class="n">_daily_profile</span> <span class="o">=</span> <span class="n">_shift_time_axis</span><span class="p">(</span><span class="n">avgdaily</span><span class="p">,</span> <span class="n">shift</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_format</span><span class="p">(</span><span class="n">plot</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">_daily_profile</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="daily_profile_auc">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.daily_profile_auc">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">daily_profile_auc</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stop_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">time_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;AUC of the average daily light profile</span>
+
+<span class="sd">    Calculate the area under the curve of the daily profile of light</span>
+<span class="sd">    exposure. Data are averaged over all the days.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    start_time: str, optional</span>
+<span class="sd">        If not set to None, compute AUC from start time.</span>
+<span class="sd">        Supported time string: &#39;HH:MM:SS&#39;</span>
+<span class="sd">        Default is None.</span>
+<span class="sd">    stop_time: str, optional</span>
+<span class="sd">        If not set to None, compute AUC until stop time.</span>
+<span class="sd">        Supported time string: &#39;HH:MM:SS&#39;</span>
+<span class="sd">        Default is None.</span>
+<span class="sd">    time_origin: str or pd.Timedelta, optional</span>
+<span class="sd">        If not None, origin of the time axis for the daily profile.</span>
+<span class="sd">        Original time bins are translated as time delta with respect to</span>
+<span class="sd">        this new origin.</span>
+<span class="sd">        Default is None</span>
+<span class="sd">        Supported time string: &#39;HH:MM:SS&#39;</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    auc : float</span>
+<span class="sd">        Area under the curve.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Compute average daily profile</span>
+    <span class="n">avgdaily</span> <span class="o">=</span> <span class="n">_average_daily_activity</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cyclic</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">time_origin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_origin</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="c1"># Regex pattern for HH:MM:SS time string</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^([0-1]\d|2[0-3])(?::([0-5]\d))(?::([0-5]\d))$&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">time_origin</span><span class="p">):</span>
+                <span class="n">time_origin</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">time_origin</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Time origin format (</span><span class="si">{}</span><span class="s2">) not supported.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_origin</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="s2">&quot;Supported format: HH:MM:SS.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_origin</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Time origin is neither a time string with a supported &quot;</span>
+                <span class="s2">&quot;format, nor a pd.Timedelta.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Round time origin to the required frequency</span>
+        <span class="n">time_origin</span> <span class="o">=</span> <span class="n">time_origin</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">freq</span><span class="p">)</span>
+
+        <span class="n">shift</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="s2">&quot;12h&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="n">time_origin</span><span class="p">)</span> <span class="o">/</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">freq</span><span class="p">)</span>
+
+        <span class="n">avgdaily</span> <span class="o">=</span> <span class="n">_shift_time_axis</span><span class="p">(</span><span class="n">avgdaily</span><span class="p">,</span> <span class="n">shift</span><span class="p">)</span>
+
+    <span class="c1"># Restrict profile to start/stop times</span>
+    <span class="k">if</span> <span class="n">start_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">start_time</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stop_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">stop_time</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">stop_time</span><span class="p">)</span>
+
+    <span class="c1"># In order to avoid indexing with None, check for that too</span>
+    <span class="k">if</span> <span class="n">start_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">stop_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">avgdaily</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">start_time</span><span class="p">:</span><span class="n">stop_time</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">avgdaily</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="adat">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.adat">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">adat</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">rescale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude_ends</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Total average daily activity</span>
+
+<span class="sd">    Calculate the total activity counts, averaged over all the days.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    rescale: bool, optional</span>
+<span class="sd">        If set to True, the activity counts are rescaled to account for</span>
+<span class="sd">        masked periods (if any).</span>
+<span class="sd">        Default is True.</span>
+<span class="sd">    exclude_ends: bool, optional</span>
+<span class="sd">        If set to True, the first and last daily periods are excluded from</span>
+<span class="sd">        the calculation. Useful when the recording does start or end at</span>
+<span class="sd">        midnigth.</span>
+<span class="sd">        Default is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    adat : int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_average_daily_total_activity</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">rescale</span><span class="o">=</span><span class="n">rescale</span><span class="p">,</span> <span class="n">exclude_ends</span><span class="o">=</span><span class="n">exclude_ends</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="adatp">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.adatp">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">adatp</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="s2">&quot;7D&quot;</span><span class="p">,</span> <span class="n">rescale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude_ends</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Total average daily activity per period</span>
+
+<span class="sd">    Calculate the total activity counts, averaged over each consecutive</span>
+<span class="sd">    period contained in the data. The number of periods</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    period: str, optional</span>
+<span class="sd">        Time length of the period to be considered. Must be understandable</span>
+<span class="sd">        by pandas.Timedelta</span>
+<span class="sd">    rescale: bool, optional</span>
+<span class="sd">        If set to True, the activity counts are rescaled to account for</span>
+<span class="sd">        masked periods (if any).</span>
+<span class="sd">        Default is True.</span>
+<span class="sd">    exclude_ends: bool, optional</span>
+<span class="sd">        If set to True, the first and last daily periods are excluded from</span>
+<span class="sd">        the calculation. Useful when the recording does start or end at</span>
+<span class="sd">        midnigth.</span>
+<span class="sd">        Default is False.</span>
+<span class="sd">    verbose: bool, optional</span>
+<span class="sd">        If set to True, display the number of periods found in the data.</span>
+<span class="sd">        Also display the time not accounted for.</span>
+<span class="sd">        Default is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    adatp : list of int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">intervals</span> <span class="o">=</span> <span class="n">_interval_maker</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_average_daily_total_activity</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="n">time</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">rescale</span><span class="o">=</span><span class="n">rescale</span><span class="p">,</span> <span class="n">exclude_ends</span><span class="o">=</span><span class="n">exclude_ends</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">intervals</span>
+    <span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+
+<div class="viewcode-block" id="l5">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.l5">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">l5</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;L5</span>
+
+<span class="sd">    Mean activity/temperature/light, etc., during the 5 least active hours of the day.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    l5_onset, l5 : float</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    The L5 [1]_ variable is calculated as the mean, per acquisition period,</span>
+<span class="sd">    of the average daily activities during the 5 least active hours.</span>
+
+<span class="sd">    .. warning:: The value of this variable depends on the length of the</span>
+<span class="sd">    acquisition period.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F.</span>
+<span class="sd">            (1997). Long-Term Fitness Training Improves the Circadian</span>
+<span class="sd">            Rest-Activity Rhythm in Healthy Elderly Males.</span>
+<span class="sd">            Journal of Biological Rhythms, 12(2), 146–156.</span>
+<span class="sd">            http://doi.org/10.1177/074873049701200206</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">l5_onset</span><span class="p">,</span> <span class="n">l5</span> <span class="o">=</span> <span class="n">_lmx</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;5h&quot;</span><span class="p">,</span> <span class="n">lowest</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">l5_onset</span><span class="p">,</span> <span class="n">l5</span></div>
+
+
+
+<div class="viewcode-block" id="m10">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.m10">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">m10</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;M10</span>
+
+<span class="sd">    Mean activity/light/temperature, etc. during the 10 most active hours of the day.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    m10_onset, m10 : float</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    The M10 [1]_ variable is calculated as the mean, per acquisition period</span>
+<span class="sd">    , of the average daily activities during the 10 most active hours.</span>
+
+<span class="sd">    .. warning:: The value of this variable depends on the length of the</span>
+<span class="sd">                 acquisition period.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F.</span>
+<span class="sd">           (1997). Long-Term Fitness Training Improves the Circadian</span>
+<span class="sd">           Rest-Activity Rhythm in Healthy Elderly Males.</span>
+<span class="sd">           Journal of Biological Rhythms, 12(2), 146–156.</span>
+<span class="sd">           http://doi.org/10.1177/074873049701200206</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">m10_onset</span><span class="p">,</span> <span class="n">m10</span> <span class="o">=</span> <span class="n">_lmx</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;10h&quot;</span><span class="p">,</span> <span class="n">lowest</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">m10_onset</span><span class="p">,</span> <span class="n">m10</span></div>
+
+
+
+<div class="viewcode-block" id="relative_amplitude">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.relative_amplitude">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">relative_amplitude</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Relative rest/activity amplitude</span>
+
+<span class="sd">    Relative amplitude between the mean activity during the 10 most active</span>
+<span class="sd">    hours of the day and the mean activity during the 5 least active hours</span>
+<span class="sd">    of the day.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ra: float</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    The RA [1]_ variable is calculated as:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        RA = \frac{M10 - L5}{M10 + L5}</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F.</span>
+<span class="sd">            (1997). Long-Term Fitness Training Improves the Circadian</span>
+<span class="sd">            Rest-Activity Rhythm in Healthy Elderly Males.</span>
+<span class="sd">            Journal of Biological Rhythms, 12(2), 146–156.</span>
+<span class="sd">            http://doi.org/10.1177/074873049701200206</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">l5</span> <span class="o">=</span> <span class="n">_lmx</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;5h&quot;</span><span class="p">,</span> <span class="n">lowest</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">m10</span> <span class="o">=</span> <span class="n">_lmx</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;10h&quot;</span><span class="p">,</span> <span class="n">lowest</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">m10</span> <span class="o">-</span> <span class="n">l5</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">m10</span> <span class="o">+</span> <span class="n">l5</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="l5p">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.l5p">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">l5p</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="s2">&quot;7D&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;L5 per period</span>
+
+<span class="sd">    The L5 variable is calculated for each consecutive period found in the</span>
+<span class="sd">    actigraphy recording.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    period: str, optional</span>
+<span class="sd">        Time period for the calculation of IS</span>
+<span class="sd">        Default is &#39;7D&#39;.</span>
+<span class="sd">    verbose: bool, optional</span>
+<span class="sd">        If set to True, display the number of periods found in the activity</span>
+<span class="sd">        recording, as well as the time not accounted for.</span>
+<span class="sd">        Default is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    l5p: list of float</span>
+
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    The L5 [1]_ variable is calculated as the mean, per acquisition period,</span>
+<span class="sd">    of the average daily activities during the 5 least active hours.</span>
+
+<span class="sd">    .. warning:: The value of this variable depends on the length of the</span>
+<span class="sd">                  acquisition period.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F.</span>
+<span class="sd">            (1997). Long-Term Fitness Training Improves the Circadian</span>
+<span class="sd">            Rest-Activity Rhythm in Healthy Elderly Males.</span>
+<span class="sd">            Journal of Biological Rhythms, 12(2), 146–156.</span>
+<span class="sd">            http://doi.org/10.1177/074873049701200206</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">intervals</span> <span class="o">=</span> <span class="n">_interval_maker</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">_lmx</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="n">time</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="s2">&quot;5h&quot;</span><span class="p">,</span> <span class="n">lowest</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">intervals</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">results</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="m10p">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.m10p">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">m10p</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="s2">&quot;7D&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;M10 per period</span>
+
+<span class="sd">    The M10 variable is calculated for each consecutive period found in the</span>
+<span class="sd">    actigraphy recording.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    period: str, optional</span>
+<span class="sd">        Time period for the calculation of IS</span>
+<span class="sd">        Default is &#39;7D&#39;.</span>
+<span class="sd">        If set to True, display the number of periods found in the activity</span>
+<span class="sd">        recording, as well as the time not accounted for.</span>
+<span class="sd">        Default is False.</span>
+<span class="sd">    verbose: bool, optional</span>
+<span class="sd">        If set to True, display the number of periods found in the activity</span>
+<span class="sd">        recording, as well as the time not accounted for.</span>
+<span class="sd">        Default is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    m10p: list of float</span>
+
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    The M10 [1]_ variable is calculated as the mean, per acquisition period</span>
+<span class="sd">    , of the average daily activities during the 10 most active hours.</span>
+
+<span class="sd">    .. warning:: The value of this variable depends on the length of the</span>
+<span class="sd">                     acquisition period.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F.</span>
+<span class="sd">            (1997). Long-Term Fitness Training Improves the Circadian</span>
+<span class="sd">            Rest-Activity Rhythm in Healthy Elderly Males.</span>
+<span class="sd">            Journal of Biological Rhythms, 12(2), 146–156.</span>
+<span class="sd">            http://doi.org/10.1177/074873049701200206</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">intervals</span> <span class="o">=</span> <span class="n">_interval_maker</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">_lmx</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="n">time</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="s2">&quot;10h&quot;</span><span class="p">,</span> <span class="n">lowest</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">intervals</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">results</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="relative_amplitude_by_period">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.relative_amplitude_by_period">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">relative_amplitude_by_period</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="s2">&quot;7D&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;RA per period</span>
+
+<span class="sd">    The RA variable is calculated for each consecutive period found in the</span>
+<span class="sd">    actigraphy recording.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    period: str, optional</span>
+<span class="sd">        Time period for the calculation of IS</span>
+<span class="sd">        Default is &#39;7D&#39;.</span>
+<span class="sd">    verbose: bool, optional</span>
+<span class="sd">        If set to True, display the number of periods found in the activity</span>
+<span class="sd">        recording, as well as the time not accounted for.</span>
+<span class="sd">        Default is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rap: list of float</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    The RA [1]_ variable is calculated as:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        RA = \frac{M10 - L5}{M10 + L5}</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F.</span>
+<span class="sd">           (1997). Long-Term Fitness Training Improves the Circadian</span>
+<span class="sd">           Rest-Activity Rhythm in Healthy Elderly Males.</span>
+<span class="sd">           Journal of Biological Rhythms, 12(2), 146–156.</span>
+<span class="sd">           http://doi.org/10.1177/074873049701200206</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">intervals</span> <span class="o">=</span> <span class="n">_interval_maker</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">intervals</span><span class="p">:</span>
+        <span class="n">data_subset</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="n">time</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">l5</span> <span class="o">=</span> <span class="n">_lmx</span><span class="p">(</span><span class="n">data_subset</span><span class="p">,</span> <span class="s2">&quot;5h&quot;</span><span class="p">,</span> <span class="n">lowest</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">m10</span> <span class="o">=</span> <span class="n">_lmx</span><span class="p">(</span><span class="n">data_subset</span><span class="p">,</span> <span class="s2">&quot;10h&quot;</span><span class="p">,</span> <span class="n">lowest</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">m10</span> <span class="o">-</span> <span class="n">l5</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">m10</span> <span class="o">+</span> <span class="n">l5</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+
+<div class="viewcode-block" id="interdaily_stability">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.interdaily_stability">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">interdaily_stability</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Interdaily stability</span>
+
+<span class="sd">    The Interdaily stability (IS) quantifies the repeatibilty of the</span>
+<span class="sd">    daily rest-activity pattern over each day contained in the activity</span>
+<span class="sd">    recording.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    is: float</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    This variable is defined in ref [1]_:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        IS = \frac{d^{24h}}{d^{1h}}</span>
+
+<span class="sd">    with:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        d^{1h} = \sum_{i}^{n}\frac{\left(x_{i}-\bar{x}\right)^{2}}{n}</span>
+
+<span class="sd">    where :math:`x_{i}` is the number of active (counts higher than a</span>
+<span class="sd">    predefined threshold) minutes during the :math:`i^{th}` period,</span>
+<span class="sd">    :math:`\bar{x}` is the mean of all data and :math:`n` is the number of</span>
+<span class="sd">    periods covered by the actigraphy data and with:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        d^{24h} = \sum_{i}^{p} \frac{</span>
+<span class="sd">                    \left( \bar{x}_{h,i} - \bar{x} \right)^{2}</span>
+<span class="sd">                    }{p}</span>
+
+<span class="sd">    where :math:`\bar{x}^{h,i}` is the average number of active minutes</span>
+<span class="sd">    over the :math:`i^{th}` period and :math:`p` is the number of periods</span>
+<span class="sd">    per day. The average runs over all the days.</span>
+
+<span class="sd">    For the record, tt is the 24h value from the chi-square periodogram</span>
+<span class="sd">    (Sokolove and Bushel1 1978).</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [1] Witting W., Kwa I.H., Eikelenboom P., Mirmiran M., Swaab D.F.</span>
+<span class="sd">            Alterations in the circadian rest–activity rhythm in aging and</span>
+<span class="sd">            Alzheimer׳s disease. Biol Psychiatry. 1990;27:563–572.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d_24h</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">minute</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">second</span><span class="p">])</span>
+        <span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">var</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="n">d_1h</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">var</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">d_24h</span> <span class="o">/</span> <span class="n">d_1h</span></div>
+
+
+
+<div class="viewcode-block" id="interdaily_stability_per_period">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.interdaily_stability_per_period">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">interdaily_stability_per_period</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="s2">&quot;7D&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Interdaily stability per period</span>
+
+<span class="sd">    The IS is calculated for each consecutive period found in the</span>
+<span class="sd">    actigraphy recording.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    period: str, optional</span>
+<span class="sd">        Time period for the calculation of IS</span>
+<span class="sd">        Default is &#39;7D&#39;.</span>
+<span class="sd">    verbose: bool, optional</span>
+<span class="sd">        If set to True, display the number of periods found in the activity</span>
+<span class="sd">        recording, as well as the time not accounted for.</span>
+<span class="sd">        Default is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    isp: list of float</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    Periods are consecutive and all of the required duration. If the last</span>
+<span class="sd">    consecutive period is shorter than required, the IS is not calculated</span>
+<span class="sd">    for that period.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">intervals</span> <span class="o">=</span> <span class="n">_interval_maker</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">interdaily_stability</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="n">time</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span> <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">intervals</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+
+<div class="viewcode-block" id="intradaily_variability">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.intradaily_variability">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">intradaily_variability</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Intradaily variability</span>
+
+<span class="sd">    The Intradaily Variability (IV) quantifies the variability of the</span>
+<span class="sd">    activity recording. This variable thus measures the rest or activity</span>
+<span class="sd">    fragmentation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    iv: float</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    It is defined in ref [1]_:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        IV = \frac{c^{1h}}{d^{1h}}</span>
+
+<span class="sd">    with:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        d^{1h} = \sum_{i}^{n}\frac{\left(x_{i}-\bar{x}\right)^{2}}{n}</span>
+
+<span class="sd">    where :math:`x_{i}` is the number of active (counts higher than a</span>
+<span class="sd">    predefined threshold) minutes during the :math:`i^{th}` period,</span>
+<span class="sd">    :math:`\bar{x}` is the mean of all data and :math:`n` is the number of</span>
+<span class="sd">    periods covered by the actigraphy data,</span>
+
+<span class="sd">    and with:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        c^{1h} = \sum_{i}^{n-1} \frac{</span>
+<span class="sd">                    \left( x_{i+1} - x_{i} \right)^{2}</span>
+<span class="sd">                    }{n-1}</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [1] Witting W., Kwa I.H., Eikelenboom P., Mirmiran M., Swaab D.F.</span>
+<span class="sd">            Alterations in the circadian rest–activity rhythm in aging and</span>
+<span class="sd">            Alzheimer׳s disease. Biol Psychiatry. 1990;27:563–572.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c_1h</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+    <span class="n">d_1h</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">var</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">c_1h</span> <span class="o">/</span> <span class="n">d_1h</span></div>
+
+
+
+<div class="viewcode-block" id="intradaily_variability_per_period">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.intradaily_variability_per_period">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">intradaily_variability_per_period</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="s2">&quot;7D&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Intradaily variability per period</span>
+
+<span class="sd">    The IV is calculated for each consecutive period found in the</span>
+<span class="sd">    actigraphy recording.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    period: str, optional</span>
+<span class="sd">        Time period for the calculation of IS</span>
+<span class="sd">        Default is &#39;7D&#39;.</span>
+<span class="sd">    verbose: bool, optional</span>
+<span class="sd">        If set to True, display the number of periods found in the activity</span>
+<span class="sd">        recording, as well as the time not accounted for.</span>
+<span class="sd">        Default is False.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ivp: list of float</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    Periods are consecutive and all of the required duration. If the last</span>
+<span class="sd">    consecutive period is shorter than required, the IV is not calculated</span>
+<span class="sd">    for that period.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">intervals</span> <span class="o">=</span> <span class="n">_interval_maker</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">intradaily_variability</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">time</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="n">time</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span> <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">intervals</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+
+<div class="viewcode-block" id="summary_statistics_per_time_bin">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.summary_statistics_per_time_bin">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">summary_statistics_per_time_bin</span><span class="p">(</span><span class="n">light</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="s2">&quot;24h&quot;</span><span class="p">,</span> <span class="n">agg_func</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Summary statistics.</span>
+
+<span class="sd">    Calculate summary statistics (ex: mean, median, etc) according to a</span>
+<span class="sd">    user-defined (regular or arbitrary) binning.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    light : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (in this case, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    bins : str or list of tuples, optional</span>
+<span class="sd">        If set to a string, bins is used to define a regular binning where</span>
+<span class="sd">        every bin is of length &quot;bins&quot;. Ex: &quot;2h&quot;.</span>
+<span class="sd">        Otherwise, the list of 2-tuples is used to define an arbitrary</span>
+<span class="sd">        binning. Ex: \[(&#39;2000-01-01 00:00:00&#39;,&#39;2000-01-01 11:59:00&#39;)\].</span>
+<span class="sd">        Default is &#39;24h&#39;.</span>
+<span class="sd">    agg_func : list, optional</span>
+<span class="sd">        List of aggregation functions to be used on every bin.</span>
+<span class="sd">        Default is \[&#39;mean&#39;, &#39;median&#39;, &#39;sum&#39;, &#39;std&#39;, &#39;min&#39;, &#39;max&#39;\].</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ss : pd.DataFrame</span>
+<span class="sd">        A pandas DataFrame with summary statistics per channel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">agg_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">agg_func</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;median&quot;</span><span class="p">,</span> <span class="s2">&quot;sum&quot;</span><span class="p">,</span> <span class="s2">&quot;std&quot;</span><span class="p">,</span> <span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">summary_stats</span> <span class="o">=</span> <span class="n">light</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span><span class="n">bins</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="n">agg_func</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">df_col</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bins</span><span class="p">):</span>
+            <span class="n">df_bins</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">light</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">,</span> <span class="p">:]</span>
+                <span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">agg_func</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">agg_func</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">channels</span> <span class="o">=</span> <span class="n">df_bins</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="n">channels</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="n">agg_func</span><span class="p">]</span>
+            <span class="n">df_col</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">channels</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">summary_stats</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">df_col</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">summary_stats</span></div>
+
+
+
+<div class="viewcode-block" id="light_exposure_level">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.light_exposure_level">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">light_exposure_level</span><span class="p">(</span>
+    <span class="n">light</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stop_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">agg</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Light exposure level</span>
+
+<span class="sd">    Calculate the aggregated (mean, median, etc) light exposure level</span>
+<span class="sd">    per epoch.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    light : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (in this case, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    threshold: float, optional</span>
+<span class="sd">        If not set to None, discard data below threshold before computing</span>
+<span class="sd">        exposure levels.</span>
+<span class="sd">        Default is None.</span>
+<span class="sd">    start_time: str, optional</span>
+<span class="sd">        If not set to None, discard data before start time,</span>
+<span class="sd">        on a daily basis.</span>
+<span class="sd">        Supported time string: &#39;HH:MM:SS&#39;</span>
+<span class="sd">        Default is None.</span>
+<span class="sd">    stop_time: str, optional</span>
+<span class="sd">        If not set to None, discard data after stop time, on a daily basis.</span>
+<span class="sd">        Supported time string: &#39;HH:MM:SS&#39;</span>
+<span class="sd">        Default is None.</span>
+<span class="sd">    agg: str, optional</span>
+<span class="sd">        Aggregating function used to summarize exposure levels.</span>
+<span class="sd">        Available functions: &#39;mean&#39;, &#39;median&#39;, &#39;std&#39;, etc.</span>
+<span class="sd">        Default is &#39;mean&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    levels : pd.Series</span>
+<span class="sd">        A pandas Series with aggreagted light exposure levels per channel</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">light_exposure</span> <span class="o">=</span> <span class="n">_light_exposure</span><span class="p">(</span>
+        <span class="n">light</span><span class="o">=</span><span class="n">light</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="n">start_time</span><span class="p">,</span> <span class="n">stop_time</span><span class="o">=</span><span class="n">stop_time</span>
+    <span class="p">)</span>
+
+    <span class="n">levels</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">light_exposure</span><span class="p">,</span> <span class="n">agg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">levels</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="time_above_threshold">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.time_above_threshold">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">time_above_threshold</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stop_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">oformat</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Time above light threshold.</span>
+
+<span class="sd">    Calculate the total light exposure time above the threshold.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    threshold: float, optional</span>
+<span class="sd">        If not set to None, discard data below threshold before computing</span>
+<span class="sd">        exposure levels.</span>
+<span class="sd">        Default is None.</span>
+<span class="sd">    start_time: str, optional</span>
+<span class="sd">        If not set to None, discard data before start time,</span>
+<span class="sd">        on a daily basis.</span>
+<span class="sd">        Supported time string: &#39;HH:MM:SS&#39;</span>
+<span class="sd">        Default is None.</span>
+<span class="sd">    stop_time: str, optional</span>
+<span class="sd">        If not set to None, discard data after stop time, on a daily basis.</span>
+<span class="sd">        Supported time string: &#39;HH:MM:SS&#39;</span>
+<span class="sd">        Default is None.</span>
+<span class="sd">    oformat: str, optional</span>
+<span class="sd">        Output format. Available formats: &#39;minute&#39; or &#39;timedelta&#39;.</span>
+<span class="sd">        If set to &#39;minute&#39;, the result is in number of minutes.</span>
+<span class="sd">        If set to &#39;timedelta&#39;, the result is a pd.Timedelta.</span>
+<span class="sd">        If set to None, the result is in number of epochs.</span>
+<span class="sd">        Default is None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tat : pd.Series</span>
+<span class="sd">        A pandas Series with aggreagted light exposure levels per channel</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">available_formats</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;minute&quot;</span><span class="p">,</span> <span class="s2">&quot;timedelta&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">oformat</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">available_formats</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Specified output format (</span><span class="si">{}</span><span class="s2">) not supported. &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">oformat</span><span class="p">)</span>
+            <span class="o">+</span> <span class="s2">&quot;Available formats are: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">available_formats</span><span class="p">))</span>
+        <span class="p">)</span>
+
+    <span class="n">light_exposure_counts</span> <span class="o">=</span> <span class="n">_light_exposure</span><span class="p">(</span>
+        <span class="n">light</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="n">start_time</span><span class="p">,</span> <span class="n">stop_time</span><span class="o">=</span><span class="n">stop_time</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">oformat</span> <span class="o">==</span> <span class="s2">&quot;minute&quot;</span><span class="p">:</span>
+        <span class="n">tat</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">light_exposure_counts</span> <span class="o">*</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">freq</span><span class="p">)</span> <span class="o">/</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="s2">&quot;1min&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">oformat</span> <span class="o">==</span> <span class="s2">&quot;timedelta&quot;</span><span class="p">:</span>
+        <span class="n">tat</span> <span class="o">=</span> <span class="n">light_exposure_counts</span> <span class="o">*</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">freq</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tat</span> <span class="o">=</span> <span class="n">light_exposure_counts</span>
+
+    <span class="k">return</span> <span class="n">tat</span></div>
+
+
+
+<div class="viewcode-block" id="time_above_threshold_by_period">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.time_above_threshold_by_period">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">time_above_threshold_by_period</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stop_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">oformat</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Time above light threshold (per day).</span>
+
+<span class="sd">    Calculate the total light exposure time above the threshold,</span>
+<span class="sd">    per calendar day.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    threshold: float, optional</span>
+<span class="sd">        If not set to None, discard data below threshold before computing</span>
+<span class="sd">        exposure levels.</span>
+<span class="sd">        Default is None.</span>
+<span class="sd">    start_time: str, optional</span>
+<span class="sd">        If not set to None, discard data before start time,</span>
+<span class="sd">        on a daily basis.</span>
+<span class="sd">        Supported time string: &#39;HH:MM:SS&#39;</span>
+<span class="sd">        Default is None.</span>
+<span class="sd">    stop_time: str, optional</span>
+<span class="sd">        If not set to None, discard data after stop time, on a daily basis.</span>
+<span class="sd">        Supported time string: &#39;HH:MM:SS&#39;</span>
+<span class="sd">        Default is None.</span>
+<span class="sd">    oformat: str, optional</span>
+<span class="sd">        Output format. Available formats: &#39;minute&#39; or &#39;timedelta&#39;.</span>
+<span class="sd">        If set to &#39;minute&#39;, the result is in number of minutes.</span>
+<span class="sd">        If set to &#39;timedelta&#39;, the result is a pd.Timedelta.</span>
+<span class="sd">        If set to None, the result is in number of epochs.</span>
+<span class="sd">        Default is None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tatp : pd.DataFrame</span>
+<span class="sd">        A pandas DataFrame with aggreagted light exposure levels</span>
+<span class="sd">        per channel and per day.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">available_formats</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;minute&quot;</span><span class="p">,</span> <span class="s2">&quot;timedelta&quot;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">oformat</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">available_formats</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Specified output format (</span><span class="si">{}</span><span class="s2">) not supported. &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">oformat</span><span class="p">)</span>
+            <span class="o">+</span> <span class="s2">&quot;Available formats are: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">available_formats</span><span class="p">))</span>
+        <span class="p">)</span>
+
+    <span class="n">light_exposure_counts_per_day</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_light_exposure</span><span class="p">(</span>
+            <span class="n">light</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="n">start_time</span><span class="p">,</span> <span class="n">stop_time</span><span class="o">=</span><span class="n">stop_time</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">date</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">count</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">oformat</span> <span class="o">==</span> <span class="s2">&quot;minute&quot;</span><span class="p">:</span>
+        <span class="n">tatp</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">light_exposure_counts_per_day</span>
+            <span class="o">*</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">freq</span><span class="p">)</span>
+            <span class="o">/</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="s2">&quot;1min&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">oformat</span> <span class="o">==</span> <span class="s2">&quot;timedelta&quot;</span><span class="p">:</span>
+        <span class="n">tatp</span> <span class="o">=</span> <span class="n">light_exposure_counts_per_day</span> <span class="o">*</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">freq</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tatp</span> <span class="o">=</span> <span class="n">light_exposure_counts_per_day</span>
+
+    <span class="k">return</span> <span class="n">tatp</span></div>
+
+
+
+<div class="viewcode-block" id="values_above_threshold">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.values_above_threshold">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">values_above_threshold</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Values above light threshold.</span>
+
+<span class="sd">    Returns the light exposure values above the threshold.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    threshold: float, optional</span>
+<span class="sd">        If not set to None, discard data below threshold before computing</span>
+<span class="sd">        exposure levels.</span>
+<span class="sd">        Default is None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    vat : pd.Series</span>
+<span class="sd">        A pandas Series with light exposure levels per channel</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_light_exposure</span><span class="p">(</span>
+        <span class="n">light</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span> <span class="n">start_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stop_time</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_time_barycentre">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.get_time_barycentre">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_time_barycentre</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="c1"># Normalize each epoch to midnight.</span>
+    <span class="n">Y_j</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span> <span class="o">-</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+    <span class="c1"># Convert to indices.</span>
+    <span class="n">Y_j</span> <span class="o">/=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">freq</span><span class="p">)</span>
+    <span class="c1"># Compute barycentre</span>
+    <span class="n">bc</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">Y_j</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">data</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">bc</span></div>
+
+
+
+<div class="viewcode-block" id="mean_light_timing">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.mean_light_timing">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mean_light_timing</span><span class="p">(</span><span class="n">light</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Mean light timing.</span>
+
+<span class="sd">    Mean light timing above threshold, MLiT^C.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    light : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (in this case, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    threshold: float</span>
+<span class="sd">        Threshold value.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    MLiT : pd.DataFrame</span>
+<span class="sd">        A pandas DataFrame with MLiT^C per channel.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    The MLiT variable is defined in ref [1]_:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        MLiT^C = \frac{\sum_{j}^{m}\sum_{k}^{n} j\times I^{C}_{jk}}{</span>
+<span class="sd">        \sum_{j}^{m}\sum_{k}^{n} I^{C}_{jk}}</span>
+
+<span class="sd">    where :math:`I^{C}_{jk}` is equal to 1 if the light level is higher</span>
+<span class="sd">    than the threshold C, m is the total number of epochs per day and n is</span>
+<span class="sd">    the number of days covered by the data.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [1] Reid K.J., Santostasi G., Baron K.G., Wilson J., Kang J.,</span>
+<span class="sd">           Zee P.C., Timing and Intensity of Light Correlate with Body</span>
+<span class="sd">           Weight in Adults. PLoS ONE 9(4): e92251.</span>
+<span class="sd">           https://doi.org/10.1371/journal.pone.0092251</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Binarized data and convert to float in order to handle &#39;DivideByZero&#39;</span>
+    <span class="n">I_jk</span> <span class="o">=</span> <span class="n">_binarize</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">light</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float64&quot;</span><span class="p">)</span>
+
+    <span class="n">MLiT</span> <span class="o">=</span> <span class="n">get_time_barycentre</span><span class="p">(</span><span class="n">I_jk</span><span class="p">)</span>
+
+    <span class="c1"># Scaling factor: MLiT is now expressed in minutes since midnight.</span>
+    <span class="n">MLiT</span> <span class="o">/=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="s2">&quot;1min&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="n">I_jk</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">freq</span>
+
+    <span class="k">return</span> <span class="n">MLiT</span></div>
+
+
+
+<div class="viewcode-block" id="mean_light_timing_by_period">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.mean_light_timing_by_period">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mean_light_timing_by_period</span><span class="p">(</span><span class="n">light</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Mean light timing per day.</span>
+
+<span class="sd">    Mean light timing above threshold, MLiT^C, per calendar day.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    light : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (in this case, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    threshold: float</span>
+<span class="sd">        Threshold value.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    MLiTp : pd.DataFrame</span>
+<span class="sd">        A pandas DataFrame with MLiT^C per channel and per day.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    The MLiT variable is defined in ref [1]_:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        MLiT^C = \frac{\sum_{j}^{m}\sum_{k}^{n} j\times I^{C}_{jk}}{</span>
+<span class="sd">        \sum_{j}^{m}\sum_{k}^{n} I^{C}_{jk}}</span>
+
+<span class="sd">    where :math:`I^{C}_{jk}` is equal to 1 if the light level is higher</span>
+<span class="sd">    than the threshold C, m is the total number of epochs per day and n is</span>
+<span class="sd">    the number of days covered by the data.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [1] Reid K.J., Santostasi G., Baron K.G., Wilson J., Kang J.,</span>
+<span class="sd">           Zee P.C., Timing and Intensity of Light Correlate with Body</span>
+<span class="sd">           Weight in Adults. PLoS ONE 9(4): e92251.</span>
+<span class="sd">           https://doi.org/10.1371/journal.pone.0092251</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Binarized data and convert to float in order to handle &#39;DivideByZero&#39;</span>
+    <span class="n">I_jk</span> <span class="o">=</span> <span class="n">_binarize</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">light</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float64&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Group data per day:</span>
+    <span class="n">MLiTp</span> <span class="o">=</span> <span class="n">I_jk</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">I_jk</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">date</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">get_time_barycentre</span><span class="p">)</span>
+
+    <span class="c1"># Scaling factor: MLiT is now expressed in minutes since midnight.</span>
+    <span class="n">MLiTp</span> <span class="o">/=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="s2">&quot;1min&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="n">I_jk</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">freq</span>
+
+    <span class="k">return</span> <span class="n">MLiTp</span></div>
+
+
+
+<div class="viewcode-block" id="get_extremum">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.get_extremum">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_extremum</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">extremum</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Light extremum.</span>
+
+<span class="sd">    Return the index and the value of the requested extremum (min or max).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    extremum: str</span>
+<span class="sd">        Name of the extremum.</span>
+<span class="sd">        Available: &#39;min&#39; or &#39;max&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ext : pd.DataFrame</span>
+<span class="sd">        A pandas DataFrame with extremum info per channel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Return either the maximum or minimum, as well as the respective timestamp</span>
+    <span class="k">if</span> <span class="n">extremum</span> <span class="o">==</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">idxmax</span><span class="p">(),</span> <span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">extremum</span> <span class="o">==</span> <span class="s2">&quot;min&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">idxmin</span><span class="p">(),</span> <span class="n">data</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Extremum must be &quot;min&quot; or &quot;max&quot;&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="lmx">
+<a class="viewcode-back" href="../../../../api.html#circStudio.analysis.metrics.metrics.lmx">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">lmx</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="s2">&quot;5h&quot;</span><span class="p">,</span> <span class="n">lowest</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Least or Most light period of length X</span>
+
+<span class="sd">    Onset and mean hourly light exposure levels during the X least or most</span>
+<span class="sd">    bright hours of the day.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pandas.Series, optional</span>
+<span class="sd">        Input data series with a DatetimeIndex, where the index specifies the time points and</span>
+<span class="sd">        the values represent the input variable (e.g., activity, light). Time and value arrays</span>
+<span class="sd">        are extracted from this series.</span>
+<span class="sd">    length: str, optional</span>
+<span class="sd">        Period length.</span>
+<span class="sd">        Default is &#39;5h&#39;.</span>
+<span class="sd">    lowest: bool, optional</span>
+<span class="sd">        If lowest is set to True, the period of least light exposure is</span>
+<span class="sd">        considered. Otherwise, consider the period of most light exposure.</span>
+<span class="sd">        Default is True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    lmx_t, lmx: (pd.Timedelta, float)</span>
+<span class="sd">        Onset and mean hourly light exposure level.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    The LMX variable is derived from the L5 and M10 defined in [1]_ as the</span>
+<span class="sd">    mean hourly activity levels during the 5/10 least/most active hours.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F.</span>
+<span class="sd">           (1997). Long-Term Fitness Training Improves the Circadian</span>
+<span class="sd">           Rest-Activity Rhythm in Healthy Elderly Males.</span>
+<span class="sd">           Journal of Biological Rhythms, 12(2), 146–156.</span>
+<span class="sd">           http://doi.org/10.1177/074873049701200206</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Calculate time of LMX and the value of LMX</span>
+    <span class="n">lmx_ts</span><span class="p">,</span> <span class="n">lmx</span> <span class="o">=</span> <span class="n">_lmx</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">lowest</span><span class="o">=</span><span class="n">lowest</span><span class="p">)</span>
+
+    <span class="c1"># Return these values back to the user</span>
+    <span class="k">return</span> <span class="n">lmx_ts</span><span class="p">,</span> <span class="n">lmx</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Daniel Marques
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
