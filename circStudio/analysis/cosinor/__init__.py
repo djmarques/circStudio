@@ -1,2 +1,0 @@
-from .cosinor import Cosinor
-
