@@ -110,7 +110,9 @@ setup(
         'numpy',
         'pyexcel',
         'scipy',
-        'statsmodels>=0.10'
+        'statsmodels>=0.10',
+        'seaborn',
+        'matplotlib'
     ],
 
     # Data files included in your packages that need to be installed.
