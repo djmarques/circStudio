@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from scipy.fft import fft, fftfreq
 import re
 from circStudio.analysis.tools import *
 import plotly.graph_objects as go
@@ -1167,7 +1168,7 @@ def lmx(data, length="5h", lowest=True):
 
     Parameters
     ----------
-    data : pandas.Series, optional
+    data : pandas.Series
         Input data series with a DatetimeIndex, where the index specifies the time points and
         the values represent the input variable (e.g., activity, light). Time and value arrays
         are extracted from this series.
@@ -1205,3 +1206,67 @@ def lmx(data, length="5h", lowest=True):
 
     # Return these values back to the user
     return lmx_ts, lmx
+
+def temporal_centroid(data):
+    """
+    Compute the temporal centroid of a time series.
+
+    The centroid is calculated as the weighted average of time points, where weights
+    are proportional to the values in the time series.
+
+    Parameters
+    ----------
+    data : pandas.Series
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
+
+    Returns
+    -------
+    pd.Timestamp
+        The temporal centroid of the time series, expressed as a timestamp.
+
+    """
+    weights = data / data.sum()
+    time = data.index.astype(np.int64)
+    temp_centroid = np.round(np.sum(time * weights))
+    return pd.to_datetime(temp_centroid)
+
+def spectral_centroid(data):
+    """
+    Compute the spectral centroid of a time series.
+
+    Parameters
+    ----------
+    data : pandas.Series
+        Input data series with a DatetimeIndex, where the index specifies the time points and
+        the values represent the input variable (e.g., activity, light). Time and value arrays
+        are extracted from this series.
+
+    Returns
+    -------
+    pd.Timestamp
+        The spectral (frequency) centroid of the time series, expressed as a timestamp.
+
+    """
+    # Infer sampling rate
+    delta = (data.index[1] - data.index[0]).total_seconds()
+
+    # Convert sampling rate to Hz (1/samples_per_second)
+    t = 1 / delta
+
+    # Number of sample points in the recording
+    n = len(data.values)
+
+    # y axis - magnitude corresponding to each frequency - x(fi)
+    amplitude = np.abs(fft(data.values))[:n//2]
+
+    # x axis (frequencies)
+    frequencies = fftfreq(n, delta)[:n//2]
+
+    # Avoid dividing by zero
+    if np.sum(amplitude) == 0:
+        return None
+
+    spec_centroid = np.sum(amplitude * frequencies) / np.sum(amplitude)
+    return spec_centroid
