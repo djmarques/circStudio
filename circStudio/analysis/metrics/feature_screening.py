@@ -1,4 +1,7 @@
 from circStudio import *
+from circStudio.models.light_tools import *
+from circStudio.models.math_models import *
+from circStudio.models.tools import *
 import pandas as pd
 import numpy as np
 import os
@@ -11,7 +14,6 @@ class FeatureScreening:
         self.levels = levels
 
     def panel(self):
-        # Create a list to collect output dictionaries containing variables from each submariner
         output = []
 
         for level in self.levels:
@@ -20,22 +22,16 @@ class FeatureScreening:
             for filename in os.listdir(source):
                 fpath = os.path.join(source, filename)
                 if os.path.isfile(fpath) and filename.endswith('.txt'):
-                    # Read actigraphy file from a given submariner
+                    # ----------------------------------
+                    # 2.1 Load & preprocess recording
+                    # ----------------------------------
                     raw = io.read_atr(fpath)
+                    raw.inactivity_length = None
+                    label = os.path.splitext(os.path.basename(fpath))[0]
 
-                    # Reset any pre-existing inactivity mask
-                    raw.inactivity_length = None  # Reset any pre-existing mask
-
-                    # Populate inactivity mask with periods of spurious inactivity determined by visual inspection
-                    mask_name = os.path.splitext(os.path.basename(fpath))[0]
-                    raw.add_mask_periods(
-                        os.path.join('..', 'data', 'processed', 'missings', level, 'csv', f'{mask_name}.csv'))
-                    raw.apply_filters(mask=True)  # Apply the mask
-
-                    # Retrieve the current submariner’s shift from a shift lookup table
-                    identificator = pd.read_csv(os.path.join('..', 'data', 'raw', 'database', 'sb_shifts.csv'),
-                                                index_col='sb_id')
-                    shift = identificator.loc[mask_name]['shift']
+                    if self.mask_path is not None:
+                        raw.add_mask_periods(os.path.join(self.mask_path, f'{label}.csv'))
+                        raw.apply_filters(mask=True)
 
                     ### Median light exposure level per epoch
                     exp_level = raw.light.light_exposure_level(agg='median').loc['LIGHT']
@@ -111,33 +107,35 @@ class FeatureScreening:
                     amplitude = results.params['Amplitude'].value
                     acrophase = results.params['Acrophase'].value
 
+                    # Math models of circadian rhythms
+
+
                     ### Collect entry and add it to the dataframe
                     sb_row = {
-                        'sb_id': mask_name,
-                        'period': period,
-                        'shift': shift,
+                        'Id': label,
+                        'Level': level,
                         'ADAT': adat(data=raw.activity),
                         'IS': interdaily_stability(data=raw.activity.resample('1h')),
                         'IV': intradaily_variability(data=raw.activity.resample('1h')),
                          'L5': l5(data=raw.activity)[1],
                          'M10': m10(data=raw.activity)[1],
-                         'RA': relative_amplitude(data=raw.activity),
+                         'RA': ra(data=raw.activity),
                          'IS_light': interdaily_stability(data=raw.light),
                          'IV_light': intradaily_variability(data=raw.light),
                          'L5_light': l5(data=raw.activity)[1],
                          'M10_light': m10(data=raw.activity)[1],
                          'L5_onset_light': l5(data=raw.light)[0].total_seconds() / 60,
                          'M10_onset_light': m10(data=raw.light)[0].total_seconds() / 60,
-                         'mlit_10lux': mean_light_timing(light=raw.light, threshold=10),
-                         'mlit_100lux': mean_light_timing(light=raw.light, threshold=100),
-                         'mlit_500lux': mean_light_timing(light=raw.light, threshold=500),
-                         'tat_10lux': time_above_threshold_by_period(threshold=10, oformat='minute').median(),
-                         'tat_100lux': time_above_threshold_by_period(threshold=100, oformat='minute').median(),
-                         'tat_100lux': time_above_threshold_by_period(threshold=500, oformat='minute').median(),
-                         'vat_10lux': values_above_threshold(data=raw.light, threshold=10).median(),
-                         'vat_100lux': values_above_threshold(data=raw.light, threshold=100).median(),
-                         'vat_500lux': values_above_threshold(data=raw.light, threshold=500).median(),
-                         'sri': SleepRegularityIndex(raw.activity.resample('10min'), algo='Roenneberg'),
+                         'Mlit_10lux': mlit(light=raw.light, threshold=10),
+                         'Mlit_100lux': mlit(light=raw.light, threshold=100),
+                         'Mlit_500lux': mlit(light=raw.light, threshold=500),
+                         'Tat_10lux': TATp(threshold=10, oformat='minute').median(),
+                         'Tat_100lux': TATp(threshold=100, oformat='minute').median(),
+                         'Tat_100lux': TATp(threshold=500, oformat='minute').median(),
+                         'Vat_10lux': VAT(data=raw.light, threshold=10).median(),
+                         'Vat_100lux': VAT(data=raw.light, threshold=100).median(),
+                         'Vat_500lux': VAT(data=raw.light, threshold=500).median(),
+                         'Sri': SleepRegularityIndex(raw.activity.resample('10min'), algo='Roenneberg'),
                          }
                     output.apend(sub_row)
 

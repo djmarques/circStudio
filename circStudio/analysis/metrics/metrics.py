@@ -359,7 +359,7 @@ def m10(data):
     return m10_onset, m10
 
 
-def relative_amplitude(data):
+def ra(data):
     r"""Relative rest/activity amplitude
 
     Relative amplitude between the mean activity during the 10 most active
@@ -501,7 +501,7 @@ def m10p(data, period="7D", verbose=False):
     return [res[1] for res in results]
 
 
-def relative_amplitude_by_period(data, period="7D", verbose=False):
+def rap(data, period="7D", verbose=False):
     r"""RA per period
 
     The RA variable is calculated for each consecutive period found in the
@@ -556,7 +556,7 @@ def relative_amplitude_by_period(data, period="7D", verbose=False):
     return results
 
 
-def interdaily_stability(data):
+def IS(data):
     r"""Interdaily stability
 
     The Interdaily stability (IS) quantifies the repeatibilty of the
@@ -625,7 +625,7 @@ def interdaily_stability(data):
     return d_24h / d_1h
 
 
-def interdaily_stability_per_period(data, period="7D", verbose=False):
+def ISp(data, period="7D", verbose=False):
     r"""Interdaily stability per period
 
     The IS is calculated for each consecutive period found in the
@@ -662,7 +662,7 @@ def interdaily_stability_per_period(data, period="7D", verbose=False):
     return results
 
 
-def intradaily_variability(data):
+def IV(data):
     r"""Intradaily variability
 
     The Intradaily Variability (IV) quantifies the variability of the
@@ -722,7 +722,7 @@ def intradaily_variability(data):
     return c_1h / d_1h
 
 
-def intradaily_variability_per_period(data, period="7D", verbose=False):
+def IVp(data, period="7D", verbose=False):
     r"""Intradaily variability per period
 
     The IV is calculated for each consecutive period found in the
@@ -759,7 +759,7 @@ def intradaily_variability_per_period(data, period="7D", verbose=False):
     return results
 
 
-def summary_statistics_per_time_bin(light, bins="24h", agg_func=None):
+def summary_stats(light, bins="24h", agg_func=None):
     r"""Summary statistics.
 
     Calculate summary statistics (ex: mean, median, etc) according to a
@@ -807,7 +807,7 @@ def summary_statistics_per_time_bin(light, bins="24h", agg_func=None):
     return summary_stats
 
 
-def light_exposure_level(
+def light_exposure(
     light, threshold=None, start_time=None, stop_time=None, agg="mean"
 ):
     r"""Light exposure level
@@ -853,7 +853,7 @@ def light_exposure_level(
     return levels()
 
 
-def time_above_threshold(
+def TAT(
     data, threshold=None, start_time=None, stop_time=None, oformat=None
 ):
     r"""Time above light threshold.
@@ -915,7 +915,7 @@ def time_above_threshold(
     return tat
 
 
-def time_above_threshold_by_period(
+def TATp(
     data, threshold=None, start_time=None, stop_time=None, oformat=None
 ):
     r"""Time above light threshold (per day).
@@ -985,7 +985,7 @@ def time_above_threshold_by_period(
     return tatp
 
 
-def values_above_threshold(data, threshold=None):
+def VAT(data, threshold=None):
     r"""Values above light threshold.
 
     Returns the light exposure values above the threshold.
@@ -1022,7 +1022,7 @@ def get_time_barycentre(data):
     return bc
 
 
-def mean_light_timing(light, threshold):
+def mlit(light, threshold):
     r"""Mean light timing.
 
     Mean light timing above threshold, MLiT^C.
@@ -1076,7 +1076,7 @@ def mean_light_timing(light, threshold):
     return MLiT
 
 
-def mean_light_timing_by_period(light, threshold):
+def mlitp(light, threshold):
     r"""Mean light timing per day.
 
     Mean light timing above threshold, MLiT^C, per calendar day.
