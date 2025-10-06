@@ -15,7 +15,10 @@ class FeatureScreening:
         self.levels = levels
 
     def panel(self):
-        output = []
+        """
+        Calculate panel of actigraphy-derived features.
+        """
+        panel = []
 
         for level in self.levels:
             source = os.path.join(self.data_path, level)
@@ -272,4 +275,5 @@ class FeatureScreening:
                         'Hannaysp_rvalue': model_results['hannaysp_rvalue'],
                         'Hannaytp_rvalue': model_results['hannaytp_rvalue'],
                     }
-                    output.append(sb_row)
+                    panel.append(sb_row)
+        return pd.DataFrame(panel)
