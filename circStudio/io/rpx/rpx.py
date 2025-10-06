@@ -113,10 +113,7 @@ class RPX(Raw):
             dayfirst=dayfirst,
             usecols=data_available_cols[2:],
             na_values=fields[self.language]['NAN'],
-            decimal=decimal,
-            dtype={
-                columns[self.language]['Activity']: data_dtype,
-            }
+            decimal=decimal
         )
 
         index_data['Date_Time'] = pd.to_datetime(
@@ -236,16 +233,18 @@ class RPX(Raw):
         # First, skip blank line after section title
         # next(file)
         for data_offset, line in enumerate(data[header_offset+1:]):
-            line_clean = line.replace(b'\r\r\n', b'\r\n')
-            if line_clean == b'\r\n':
+            if not line.strip():
                 break
             else:
-                data_available_cols.append(
-                    line_clean.decode(
-                        'utf-8'
-                    ).split(delimiter)[0].strip('"').rstrip(':')
-                )
+                data_available_cols.append(line.decode('utf-8').split(delimiter)[0].strip('"').rstrip(':'))
+            #decoded = line_clean.decode('utf-8').strip()
+            #first_token = decoded.split(delimiter)[0].strip('"').rstrip(':')
 
+            # stop if line is empty OR starts with a number (data section begins)
+            #if not first_token or first_token.isdigit():
+             #   break
+
+            #data_available_cols.append(first_token)
         return header_offset, data_offset, header, data_available_cols
 
     def _extract_rpx_name(self, header, delimiter):
