@@ -16,6 +16,7 @@ class FeatureScreening:
     def panel(self):
         output = []
 
+
         for level in self.levels:
             source = os.path.join(self.data_path, level)
 
