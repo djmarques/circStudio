@@ -159,16 +159,16 @@ class Model:
             # Exit early if entrainment is detected
             if i > 1 and np.isclose(dlmos[-1][-1], dlmos[-2][-1], atol=1e-3):
                 # Print number of loops required for entrainment
-                print(f"The model entrained after {i} loops.")
+                # print(f"The model entrained after {i} loops.")
                 # Update model initial conditions to entrained state
                 self.initial_conditions = solution[-1]
 
                 # Return entrained model solution
                 return solution[-1]
         # Non-entrainment message(free-running rhythm)
-        print(
-            "The model did not entrain due to insufficient loops or unentrainable light schedule."
-        )
+        #print(
+         #   "The model did not entrain due to insufficient loops or unentrainable light schedule."
+        #)
         # Return unentrained model solution
         self.initial_conditions = solution[-1]
         return solution[-1]
