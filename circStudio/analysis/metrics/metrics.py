@@ -3,6 +3,7 @@ import numpy as np
 from scipy.fft import fft, fftfreq
 import re
 from circStudio.analysis.tools import *
+from circStudio.analysis.sleep import *
 import plotly.graph_objects as go
 
 
@@ -658,7 +659,7 @@ def ISp(data, period="7D", verbose=False):
     """
     intervals = _interval_maker(data.index, period, verbose)
 
-    results = [interdaily_stability(data[time[0] : time[1]]) for time in intervals]
+    results = [IS(data[time[0] : time[1]]) for time in intervals]
     return results
 
 
@@ -755,7 +756,7 @@ def IVp(data, period="7D", verbose=False):
     """
     intervals = _interval_maker(data.index, period, verbose)
 
-    results = [intradaily_variability(data[time[0] : time[1]]) for time in intervals]
+    results = [IV(data[time[0] : time[1]]) for time in intervals]
     return results
 
 
@@ -1270,3 +1271,312 @@ def spectral_centroid(data):
 
     spec_centroid = np.sum(amplitude * frequencies) / np.sum(amplitude)
     return spec_centroid
+
+
+def pRA(data, start=None, period=None):
+    r"""Rest->Activity transition probability distribution
+
+    Conditional probability, pRA(t), that an individual would be
+    resting at time (t+1) given that the individual had been continuously
+    active for the preceding t epochs, defined in [1]_ as:
+
+    .. math::
+        pRA(t) = p(A|R_t) = \frac{N_t - N_{t+1}}{N_t}
+
+    with :math:`N_t`, the total number of sequences of rest (i.e. activity
+    below threshold) of duration :math:`t` or longer.
+
+    Parameters
+    ----------
+    threshold: int
+        If binarize is set to True, data above this threshold are set to 1
+        and to 0 otherwise.
+    start: str, optional
+        If not None, the actigraphy recording is truncated to
+        'start:start+period', each day. Start string format: 'HH:MM:SS'.
+        Default is None
+    period: str, optional
+        Time period for the calculation of pRA.
+        Default is None.
+
+    Returns
+    -------
+    pra: pandas.core.series.Series
+        Transition probabilities (pRA(t)), calculated for all t values.
+    pra_weights: pandas.core.series.Series
+        Weights are defined as the square root of the number of activity
+        sequences contributing to each probability estimate.
+
+    Notes
+    -----
+
+    pRA is corrected for discontinuities due to sparse data, as defined in
+    [1]_.
+
+    References
+    ----------
+
+    .. [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S.,
+           Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
+           Quantification of the Fragmentation of Rest-Activity Patterns in
+           Elderly Individuals Using a State Transition Analysis. Sleep,
+           34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
+    """
+
+    # Restrict data range to period 'Start, Start+Period'
+    if start is not None:
+        end = _td_format(
+            pd.Timedelta(start)+pd.Timedelta(period)
+        )
+
+        data = data.between_time(start, end)
+    else:
+        data = data
+
+    # Rest->Activity transition probability:
+    pRA, pRA_weights = _transition_prob(data, True)
+
+    return pRA, pRA_weights
+
+def pAR(data, start=None, period=None):
+    r"""Activity->Rest transition probability distribution
+
+    Conditional probability, pAR(t), that an individual would be
+    active at time (t+1) given that the individual had been continuously
+    resting for the preceding t epochs, defined in [1]_ as:
+
+    .. math::
+        pAR(t) = p(R|A_t) = \frac{N_t - N_{t+1}}{N_t}
+
+    with :math:`N_t`, the total number of sequences of activity (i.e.
+    activity above threshold) of duration :math:`t` or longer.
+
+    Parameters
+    ----------
+    threshold: int
+        If binarize is set to True, data above this threshold are set to 1
+        and to 0 otherwise.
+    start: str, optional
+        If not None, the actigraphy recording is truncated to
+        'start:start+period', each day. Start string format: 'HH:MM:SS'.
+        Default is None
+    period: str, optional
+        Time period for the calculation of pAR.
+        Default is None.
+
+    Returns
+    -------
+    par: pandas.core.series.Series
+        Transition probabilities (pAR(t)), calculated for all t values.
+    par_weights: pandas.core.series.Series
+        Weights are defined as the square root of the number of activity
+        sequences contributing to each probability estimate.
+
+    Notes
+    -----
+
+    pAR is corrected for discontinuities due to sparse data, as defined in
+    [1]_.
+
+    References
+    ----------
+
+    .. [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S.,
+           Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
+           Quantification of the Fragmentation of Rest-Activity Patterns in
+           Elderly Individuals Using a State Transition Analysis. Sleep,
+           34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
+    """
+
+    # Restrict data range to period 'Start, Start+Period'
+    if start is not None:
+        end = _td_format(
+            pd.Timedelta(start)+pd.Timedelta(period)
+        )
+
+        data = data.between_time(start, end)
+    else:
+        data = data
+    # Activity->Rest transition probability:
+    pAR, pAR_weights = _transition_prob(data, False)
+
+    return pAR, pAR_weights
+
+
+def kRA(
+    data, start=None, period=None, frac=.3, it=0, logit=False,
+    freq=None, offset='15min'
+):
+    r"""Rest->Activity transition probability
+
+    Weighted average value of pRA(t) within the constant regions, defined
+    as the longest stretch within which the LOWESS curve varied by no more
+    than 1 standard deviation of the pRA(t) curve [1]_.
+
+    Parameters
+    ----------
+    threshold: int
+        Above this threshold, data are classified as active (1) and as
+        rest (0) otherwise.
+    start: str, optional
+        If not None, the actigraphy recording is truncated to
+        'start:start+period', each day. Start string format: 'HH:MM:SS'.
+        Special keywords ('AonT' or 'AoffT') are allowed. In this case, the
+        start is set to the activity onset ('AonT') or offset ('AoffT')
+        time derived from the daily profile. Cf sleep.AonT/AoffT functions
+        for more informations.
+        Default is None
+    period: str, optional
+        Time period for the calculation of pRA.
+        Default is None.
+    frac: float, optional
+        Fraction of the data used when estimating each value.
+        Default is 0.3.
+    it: int, optional
+        Number of residual-based reweightings to perform.
+        Default is 0.
+    logit: bool, optional
+        If True, the kRA value is logit-transformed (ln(p/1-p)). Useful
+        when kRA is used in a regression model.
+        Default is False.
+    freq: str, optional
+        Data resampling `frequency string
+        <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_
+        applied to the daily profile if start='AonT' or 'AoffT'.
+        Default is None.
+    offset: str, optional
+        Time offset with respect to the activity onset and offset times
+        used as start times.
+        Default is '15min'.
+
+    Returns
+    -------
+    kra: float
+
+    References
+    ----------
+
+    .. [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S.,
+           Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
+           Quantification of the Fragmentation of Rest-Activity Patterns in
+           Elderly Individuals Using a State Transition Analysis. Sleep,
+           34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
+    """
+
+    if start is not None and re.match(r'AonT|AoffT', start):
+        aont = AonT(data)
+        aofft = AoffT(data)
+
+        offset = pd.Timedelta(offset)
+        if start == 'AonT':
+            start_time = str(aont+offset).split(' ')[-1]
+            period = str(
+                pd.Timedelta('24H') - ((aont+offset) - (aofft-offset))
+            ).split(' ')[-1]
+        elif start == 'AoffT':
+            start_time = str(aofft+offset).split(' ')[-1]
+            period = str(
+                pd.Timedelta('24H') - ((aofft+offset) - (aont-offset))
+            ).split(' ')[-1]
+    else:
+        start_time = start
+
+    # Calculate the pRA probabilities and their weights.
+    pra, pra_weights = pRA(data, start=start_time, period=period)
+    # Fit the pRA distribution with a LOWESS and return mean value for
+    # the constant region (i.e. the region where |pRA-lowess|<1SD)
+    kRA = _transition_prob_sustain_region(
+        pra,
+        pra_weights,
+        frac=frac,
+        it=it
+        )
+    return np.log(kRA/(1-kRA)) if logit else kRA
+
+def kAR(data, start=None, period=None, frac=.3, it=0, logit=False, offset='15min'):
+    r"""Rest->Activity transition probability
+
+    Weighted average value of pAR(t) within the constant regions, defined
+    as the longest stretch within which the LOWESS curve varied by no more
+    than 1 standard deviation of the pAR(t) curve [1]_.
+
+    Parameters
+    ----------
+    threshold: int
+        Above this threshold, data are classified as active (1) and as
+        rest (0) otherwise.
+    start: str, optional
+        If not None, the actigraphy recording is truncated to
+        'start:start+period', each day. Start string format: 'HH:MM:SS'.
+        Special keywords ('AonT' or 'AoffT') are allowed. In this case, the
+        start is set to the activity onset ('AonT') or offset ('AoffT')
+        time derived from the daily profile. Cf sleep.AonT/AoffT functions
+        for more informations.
+        Default is None
+    period: str, optional
+        Time period for the calculation of pRA.
+        Default is None.
+    frac: float
+        Fraction of the data used when estimating each value.
+        Default is 0.3.
+    it: int
+        Number of residual-based reweightings to perform.
+        Default is 0.
+    logit: bool, optional
+        If True, the kRA value is logit-transformed (ln(p/1-p)). Useful
+        when kRA is used in a regression model.
+        Default is False.
+    freq: str, optional
+        Data resampling `frequency string
+        <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_
+        applied to the daily profile if start='AonT' or 'AoffT'.
+        Default is None.
+    offset: str, optional
+        Time offset with respect to the activity onset and offset times
+        used as start times.
+        Default is '15min'.
+
+    Returns
+    -------
+    kar: float
+
+    References
+    ----------
+
+    .. [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S.,
+           Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
+           Quantification of the Fragmentation of Rest-Activity Patterns in
+           Elderly Individuals Using a State Transition Analysis. Sleep,
+           34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
+    """
+
+    if start is not None and re.match(r'AonT|AoffT', start):
+        aont = AonT(data)
+        aofft = AoffT(data)
+        offset = pd.Timedelta(offset)
+        if start == 'AonT':
+            start_time = str(aont+offset).split(' ')[-1]
+            period = str(
+                pd.Timedelta('24H') - ((aont+offset) - (aofft-offset))
+            ).split(' ')[-1]
+        elif start == 'AoffT':
+            start_time = str(aofft+offset).split(' ')[-1]
+            period = str(
+                pd.Timedelta('24H') - ((aofft+offset) - (aont-offset))
+            ).split(' ')[-1]
+    else:
+        start_time = start
+
+    # Calculate the pAR probabilities and their weights.
+    par, par_weights = pAR(data, start=start_time, period=period)
+    # Fit the pAR distribution with a LOWESS and return mean value for
+    # the constant region (i.e. the region where |pAR-lowess|<1SD)
+    kAR = _transition_prob_sustain_region(
+        par,
+        par_weights,
+        frac=frac,
+        it=it
+        )
+    return np.log(kAR/(1-kAR)) if logit else kAR
+
+
