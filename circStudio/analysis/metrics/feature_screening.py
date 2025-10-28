@@ -275,6 +275,8 @@ class FeatureScreening:
                         'Vat_10lux': VAT(data=raw.light, threshold=10).median(),
                         'Vat_100lux': VAT(data=raw.light, threshold=100).median(),
                         'Vat_500lux': VAT(data=raw.light, threshold=500).median(),
+                        'kRA': kRA(data=raw.activity),
+                        'kAR': kAR(data=raw.activity),
                         'Sri': SleepRegularityIndex(raw.activity.resample('10min').mean(), algo='Roenneberg'),
                         'Sleep_midpoint': SleepMidPoint(data=raw.activity.resample('10min').mean(),
                                                         to_td=False,
