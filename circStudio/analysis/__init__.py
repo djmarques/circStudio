@@ -7,3 +7,4 @@ from .sleep.sleep import *
 from .metrics.feature_screening import *
 from .ssa import SSA
 from .fractal import Fractal
+from .flm import FLM

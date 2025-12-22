@@ -44,7 +44,7 @@ def _get_kernel_size(data, method):
     return kernel_size
 
 
-class FLM():
+class FLM:
     """ Class for Functional Linear Modelling"""
 
     def __init__(self, basis, sampling_freq, max_order=None):
