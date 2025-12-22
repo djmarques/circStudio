@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.ndimage import gaussian_filter1d
 import statsmodels.api as sm
+from ..metrics import daily_profile
 
 
 def _A(data):
@@ -78,7 +79,7 @@ class FLM:
 
         self.basis_functions = phi
 
-    def fit(self, raw, binarize=False, verbose=False):
+    def fit(self, data, verbose=False):
         """Fit the actigraphy data using a basis function expansion.
 
         Parameters
@@ -98,10 +99,7 @@ class FLM:
             Returns the functional form of the actigraphy data.
         """
 
-        daily_avg = raw.average_daily_activity(
-            binarize=binarize,
-            freq=self.sampling_freq
-        )
+        daily_avg = daily_profile(data)
         self.__nsamples = daily_avg.index.size
 
         # Fourier
@@ -115,7 +113,7 @@ class FLM:
             if verbose:
                 print(results.summary())
 
-            self.__beta[raw.display_name] = results.params
+            self.__beta['beta'] = results.params
 
         # Spline
         elif self.__basis == 'spline':
@@ -130,11 +128,11 @@ class FLM:
                 print('Finding the {}-degree B-spline representation of'
                       'the input data'.format(k))
 
-            self.__beta[raw.display_name] = list(
+            self.__beta['beta'] = list(
                 splrep(t, daily_avg.values, k=k)
             )
 
-    def evaluate(self, raw, r=10):
+    def evaluate(self, r=10):
         """Evaluate the basis function expansion.
 
         Parameters
@@ -163,18 +161,18 @@ class FLM:
         # Fourier
         if self.__basis == 'fourier':
             X = np.stack(self.basis_functions, axis=1)
-            y_est = np.dot(X, self.beta[raw.display_name])
+            y_est = np.dot(X, self.beta['beta'])
             return y_est
 
         # Spline
         elif self.__basis == 'spline':
             from scipy.interpolate import BSpline
             T = self.nsamples
-            t = np.linspace(0, T, r*T, endpoint=True, dtype=np.float)
-            y_est = BSpline(*self.beta[raw.display_name], extrapolate=False)(t)
+            t = np.linspace(0, T, r*T, endpoint=True)
+            y_est = BSpline(*self.beta['beta'], extrapolate=False)(t)
             return y_est
 
-    def smooth(self, raw, binarize=False, method='scott', verbose=False):
+    def smooth(self, data, method='scott', verbose=False):
         """Smooth the actigraphy data using a gaussian kernel.
 
         Wrapper for the scipy.ndimage.gaussian_filter1d function.
@@ -201,10 +199,7 @@ class FLM:
             Returns the smoothed form of the actigraphy data.
         """
 
-        daily_avg = raw.average_daily_activity(
-            binarize=binarize,
-            freq=self.sampling_freq
-        )
+        daily_avg = daily_profile(data)
 
         # Calculate optimal kernel size
         bw = _get_kernel_size(daily_avg.values, method=method)
