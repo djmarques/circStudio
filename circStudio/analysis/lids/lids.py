@@ -639,7 +639,7 @@ class LIDS:
             return None
         else:
             lids_period = self.lids_fit_results.params['period']*self.freq
-            return lids_period.astype('timedelta64[{}]'.format(freq))
+            return lids_period
 
     def lids_phases(self, lids, step=.1):
         r'''LIDS onset and offset phases in degrees
