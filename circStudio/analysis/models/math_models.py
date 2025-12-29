@@ -1326,8 +1326,9 @@ class ModelComparer:
     """
     def __init__(
         self,
-        inputs,
-        time,
+        data=None,
+        inputs=None,
+        time=None,
         equilibrate=False,
         loop_number=10,
         a1=1.0,
@@ -1345,9 +1346,16 @@ class ModelComparer:
         self.m1 = m1
         self.m2 = m2
 
-        # Light and time vector
-        self.time_vector = time
-        self.light_vector = inputs
+        # Extract time from data index
+        if time is None or inputs is None:
+            if data is not None:
+                self.time_vector = np.asarray((data.index - data.index.min()).total_seconds() / 3600)
+                self.light_vector = np.asarray(data.values)
+            else:
+                raise ValueError("Must provide either light time series (data) or input and time.")
+        else:
+            self.time_vector = time
+            self.light_vector = inputs
 
         # Instantiate forger model
         self.forger = Forger(inputs=self.light_vector, time=self.time_vector)
@@ -1356,8 +1364,7 @@ class ModelComparer:
             ics = self.forger.get_initial_conditions(
                 loop_number=50,
                 light_vector=self.light_vector,
-                time_vector=self.time_vector,
-                change_params=True
+                time_vector=self.time_vector
             )
 
             # Second, integrate the equilibrated model and use last state as initial conditions
@@ -1381,8 +1388,7 @@ class ModelComparer:
             ics = self.hannay.get_initial_conditions(
                 loop_number=50,
                 light_vector=self.light_vector,
-                time_vector=self.time_vector,
-                change_params=True
+                time_vector=self.time_vector
             )
 
             # Second, integrate the equilibrated model and use last state as initial conditions
@@ -1479,6 +1485,11 @@ class ModelComparer:
         # Return a 2 * 3 matrix with parameters
         return np.array([[a1, m1, p1], [a2, m2, p2]])
 
+    def rmse(self):
+        rmse_x = np.sqrt(np.mean((self.x - self.predicted_x) ** 2))
+        rmse_xc = np.sqrt(np.mean((self.xc - self.predicted_xc) ** 2))
+        return rmse_x, rmse_xc
+
     def error(self, change_params=False):
         # Compute error associated with prediction
         error_x = self.x - self.predicted_x
@@ -1492,7 +1503,7 @@ class ModelComparer:
         # Return the calculated vectors
         return error_x, error_xc
 
-    def error_stats(self):
+    def error_stats_archive(self):
         def calculate_stats(prediction_error, measure):
             # Max and min error for the prediction
             max_error = prediction_error.max()
@@ -1550,9 +1561,10 @@ def main():
     comparison.linearize_phase(change_params=True)
     comparison.find_optimal_params(change_params=True)
     comparison.predict_forger(change_params=True)
-    comparison.error(change_params=True)
-    max_error_x, min_error_x, error_band_x, magnitude_x = comparison.error_stats()[0]
-    max_error_xc, min_error_xc, error_band_xc, magnitude_xc = comparison.error_stats()[1]
+    #comparison.error(change_params=True)
+    print(comparison.rmse())
+    #max_error_x, min_error_x, error_band_x, magnitude_x = comparison.error_stats()[0]
+    # max_error_xc, min_error_xc, error_band_xc, magnitude_xc = comparison.error_stats()[1]
 
     # SECTION WITH GENERAL COMMANDS
     # hannay = HannaySP(inputs=light_vector, time=time_vector)
@@ -1585,30 +1597,30 @@ def main():
     # plt.grid(True)
     # plt.show()
 
-    plt.figure()
-    plt.plot(comparison.predicted_x, label="predicted_x", color="black", alpha=0.5)
-    plt.plot(comparison.predicted_x, label="predicted_x", color="blue", alpha=0.9)
+    #plt.figure()
+    #plt.plot(comparison.predicted_x, label="predicted_x", color="black", alpha=0.5)
+    #plt.plot(comparison.predicted_x, label="predicted_x", color="blue", alpha=0.9)
     #peaks,_= find_peaks(comparison.error_x)
     #for peak in peaks:
      #   print(f'{comparison.error_x[peak]:.3f}')
-    plt.plot(comparison.error_x, label="Error", color="pink", alpha=0.9)
-    plt.axhline(y=max_error_x, color="green", linestyle="--", label="Max Error")
-    plt.axhline(y=min_error_x, color="purple", linestyle="--", label="Min error")
-    plt.text(
-        x=len(comparison.x) // 2,
-        y=(max_error_x + min_error_x) / 2,
-        s=f"Error band width {error_band_x:.2f}",
-        color="orange",
-        ha="center",
-        va="center",
-        fontsize=12,
-        backgroundcolor="white",
-    )
-    plt.xlabel("Time")
-    plt.ylabel("State variable")
-    plt.title("State Evolution Over Time")
-    plt.legend()
-    plt.grid(True)
+    #plt.plot(comparison.error_x, label="Error", color="pink", alpha=0.9)
+    #plt.axhline(y=max_error_x, color="green", linestyle="--", label="Max Error")
+    #plt.axhline(y=min_error_x, color="purple", linestyle="--", label="Min error")
+    #plt.text(
+     #   x=len(comparison.x) // 2,
+      #  y=(max_error_x + min_error_x) / 2,
+        #s=f"Error band width {error_band_x:.2f}",
+       # color="orange",
+        #ha="center",
+        #va="center",
+        #fontsize=12,
+        #backgroundcolor="white",
+    #)
+    #plt.xlabel("Time")
+    #plt.ylabel("State variable")
+    #plt.title("State Evolution Over Time")
+    #plt.legend()
+    #plt.grid(True)
     #print(f"Magnitude of the error in predicting x = {magnitude_x}")
 
     #plt.figure()
@@ -1657,7 +1669,7 @@ def main():
     # plt.legend()
     # plt.grid(True)
 
-    plt.show()
+    #plt.show()
 
     # print(f"Execution time is {end-start} seconds.")
 
