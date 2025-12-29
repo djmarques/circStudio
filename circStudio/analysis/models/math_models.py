@@ -1362,7 +1362,7 @@ class ModelComparer:
         if equilibrate:
             # First, calculate initial conditions based on the light and time vector
             ics = self.forger.get_initial_conditions(
-                loop_number=50,
+                loop_number=10,
                 light_vector=self.light_vector,
                 time_vector=self.time_vector
             )
