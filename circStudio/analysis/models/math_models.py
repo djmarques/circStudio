@@ -262,19 +262,28 @@ class Forger(Model):
     taux : float
         Intrinsic period of the oscillator (hours).
     mu : float
-        Nonlinearity parameter of the van der Pol oscillator.
+        stiffness of the van der Pol oscillator.
     g : float
         Light sensitivity scaling parameter.
     alpha_0 : float
-        Baseline light sensitivity parameter.
+        Baseline forward rate constant governing the photon-driven activation
+        (or depletion) of photoreceptors. This parameter scales the rate at which
+        incident light converts available photoreceptors into an active or
+        “used” state.
     beta : float
-        Rate constant for adaptation variable n.
+        Backward rate constant governing photoreceptor recovery or regeneration.
+        This parameter controls the rate at which used photoreceptors return to
+        the available state, representing dark adaptation or biochemical
+        recovery processes.
     p : float
-        Power-law exponent for light input.
+        Power-law exponent for light-dependent photoreceptor activation. This
+        parameter determines how sensitively the forward rate constant α scales
+        with light intensity.
     i0 : float
-        Saturation intensity for light sensitivity (lux).
+        Reference light intensity used to normalize the input light intensity vector I.
     k : float
-        Scaling factor for light-dependent changes in oscillator period.
+        Coupling coefficient scaling the influence of the photic drive B on the
+        circadian pacemaker. It modulates the sensitivity of the oscillator to light.
     cbt_to_dlmo : float
         Time offset (in hours) from CBTmin to DLMO.
     initial_conditions : numpy.ndarray
@@ -460,23 +469,35 @@ class Jewett(Model):
     taux : float
         Intrinsic period of the oscillator (hours).
     mu : float
-        Nonlinearity parameter of the van der Pol oscillator.
+        Stiffness of the van der Pol oscillator.
     g : float
         Light sensitivity scaling parameter.
     alpha_0 : float
-        Baseline light sensitivity parameter.
+        Baseline forward rate constant governing the photon-driven activation
+        (or depletion) of photoreceptors. This parameter scales the rate at which
+        incident light converts available photoreceptors into an active or
+        “used” state.
     beta : float
-        Rate constant for adaptation variable n.
+        Backward rate constant governing photoreceptor recovery or regeneration.
+        This parameter controls the rate at which used photoreceptors return to
+        the available state, representing dark adaptation or biochemical
+        recovery processes.
     p : float
-        Power-law exponent for light input.
+        Power-law exponent for light-dependent photoreceptor activation. This
+        parameter determines how sensitively the forward rate constant α scales
+        with light intensity.
     i0 : float
-        Saturation intensity for light sensitivity (lux).
+        Reference light intensity used to normalize the input light intensity vector I.
     k : float
-        Scaling factor for light-dependent changes in oscillator period.
+        Coupling coefficient scaling the influence of the photic drive B on the
+        circadian pacemaker. It modulates the sensitivity of the oscillator to light.
     q : float
-        Coefficient for light-dependent feedback in xc dynamics.
+        Coefficient governing an additional effect of light whereby, while light
+        is present, it acts to shorten the intrinsic period of the pacemaker in
+        addition to shifting its phase and amplitude.
     phi_ref : float
-        Reference phase parameter for phase computations.
+        Reference phase offset relating the timing of the model state minimum
+        (x_min) to the timing of core body temperature minimum (CBT_min).
     cbt_to_dlmo : float
         Time offset (in hours) from CBTmin to DLMO.
     initial_conditions : numpy.ndarray
