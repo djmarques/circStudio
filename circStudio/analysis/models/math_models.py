@@ -684,31 +684,43 @@ class HannaySP(Model):
     tau : float
         Intrinsic period of the oscillator (hours).
     k : float
-        Coupling strength parameter.
+        Average coupling strength between clock neurons.
     gamma : float
-        Amplitude relaxation parameter.
+        Width (dispersion) of the intrinsic frequency distribution across the
+        population of clock neurons, reflecting variability between neurons.
     beta : float
-        Phase response parameter.
+        Backward rate constant governing photoreceptor recovery or regeneration.
+        This parameter controls the rate at which used photoreceptors return to
+        the available state, representing dark adaptation or biochemical
+        recovery processes.
     a1 : float
-        Amplitude of first-harmonic light effect.
+        Coefficient that scales the first harmonic component of the single-cell phase-response curve
     a2 : float
-        Amplitude of second-harmonic light effect.
+        Coefficient that scales the first harmonic component of the single-cell phase-response curve
     betal1 : float
-        Phase offset for first-harmonic light effect (radians).
+        Phase offset for first harmonic component of the single-cell phase-response curve (radians).
     betal2 : float
-        Phase offset for second-harmonic light effect (radians).
+        Phase offset for second harmonic component of the single-cell phase-response curve (radians).
     sigma : float
-        Baseline light-induced phase shift parameter.
+        Factor scaling the effect of light input on the circadian pacemaker (B(t)).
     g : float
         Light sensitivity scaling parameter.
     alpha_0 : float
-        Baseline light sensitivity parameter.
+        Baseline forward rate constant governing the photon-driven activation
+        (or depletion) of photoreceptors. This parameter scales the rate at which
+        incident light converts available photoreceptors into an active or
+        “used” state.
     delta : float
-        Rate constant for adaptation variable n.
+        Backward rate constant governing photoreceptor recovery or regeneration.
+        This parameter controls the rate at which used photoreceptors return to
+        the available state, representing dark adaptation or biochemical
+        recovery processes.
     p : float
-        Power-law exponent for light input.
+        Power-law exponent for light-dependent photoreceptor activation. This
+        parameter determines how sensitively the forward rate constant α scales
+        with light intensity.
     i0 : float
-        Saturation intensity for light sensitivity (lux).
+        Reference light intensity used to normalize the input light intensity vector I.
     cbt_to_dlmo : float
         Time offset (in hours) from CBTmin to DLMO.
     initial_conditions : numpy.ndarray
@@ -927,35 +939,44 @@ class HannayTP(Model):
     taud : float
         Intrinsic period of the dorsal oscillator (hours).
     kvv : float
-        Intrinsic coupling strength within the ventral oscillator population.
+        Average coupling strength within the ventral oscillator population.
     kdd : float
-        Intrinsic coupling strength within the dorsal oscillator population.
+        Average coupling strength within the dorsal oscillator population.
     kvd : float
-        Coupling strength from ventral to dorsal population.
+        Average strength from ventral to dorsal population.
     kdv : float
-        Coupling strength from dorsal to ventral population.
+        Average strength from dorsal to ventral population.
     gamma : float
-        Amplitude relaxation parameter.
+        Width (dispersion) of the intrinsic frequency distribution across the
+        population of clock neurons, reflecting variability between neurons.
     a1 : float
-        Amplitude of first-harmonic light effect.
+        Coefficient that scales the first harmonic component of the single-cell phase-response curve
     a2 : float
-        Amplitude of second-harmonic light effect.
-    betal : float
-        Phase offset for first-harmonic light effect (radians).
+        Coefficient that scales the first harmonic component of the single-cell phase-response curve
+    betal1 : float
+        Phase offset for first harmonic component of the single-cell phase-response curve (radians).
     betal2 : float
-        Phase offset for second-harmonic light effect (radians).
+        Phase offset for second harmonic component of the single-cell phase-response curve (radians).
     sigma : float
-        Baseline light-induced phase shift parameter.
+        Factor scaling the effect of light input on the circadian pacemaker (B(t)).
     g : float
         Light sensitivity scaling parameter.
     alpha_0 : float
-        Baseline light sensitivity parameter.
+        Baseline forward rate constant governing the photon-driven activation
+        (or depletion) of photoreceptors. This parameter scales the rate at which
+        incident light converts available photoreceptors into an active or
+        “used” state.
     delta : float
-        Rate constant for adaptation variable n.
+        Backward rate constant governing photoreceptor recovery or regeneration.
+        This parameter controls the rate at which used photoreceptors return to
+        the available state, representing dark adaptation or biochemical
+        recovery processes.
     p : float
-        Power-law exponent for light input.
+        Power-law exponent for light-dependent photoreceptor activation. This
+        parameter determines how sensitively the forward rate constant α scales
+        with light intensity.
     i0 : float
-        Saturation intensity for light sensitivity (lux).
+        Reference light intensity used to normalize the input light intensity vector I.
     cbt_to_dlmo : float
         Time offset (in hours) from CBTmin to DLMO.
     initial_conditions : numpy.ndarray
