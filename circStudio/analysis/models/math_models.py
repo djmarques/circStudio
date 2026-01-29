@@ -28,6 +28,7 @@ class Model:
         inputs : numpy.ndarray, optional
             Array of input values (e.g., light intensity) corresponding to each time point.
     """
+
     def __init__(self, initial_conditions, data=None, time=None, inputs=None):
         self.initial_conditions = initial_conditions
         self.model_states = None
@@ -36,14 +37,17 @@ class Model:
         # Extract time from data index
         if time is None or inputs is None:
             if data is not None:
-                self.time = np.asarray((data.index - data.index.min()).total_seconds() / 3600)
+                self.time = np.asarray(
+                    (data.index - data.index.min()).total_seconds() / 3600
+                )
                 self.inputs = np.asarray(data.values)
             else:
-                raise ValueError("Must provide either light time series (data) or input and time.")
+                raise ValueError(
+                    "Must provide either light time series (data) or input and time."
+                )
         else:
             self.time = time
             self.inputs = inputs
-
 
     def initialize_model_states(self):
         """
@@ -53,7 +57,6 @@ class Model:
         input values, and time vector, and stores the result in `self.model_states`.
         """
         self.model_states = self.integrate()
-
 
     def integrate(self, light_vector=None, time_vector=None, initial_condition=None):
         """
@@ -101,8 +104,9 @@ class Model:
         solution = odeint(system_with_light, initial_condition, time_vector)
         return solution
 
-
-    def get_initial_conditions(self, loop_number, data=None, light_vector=None, time_vector=None):
+    def get_initial_conditions(
+        self, loop_number, data=None, light_vector=None, time_vector=None
+    ):
         """
         Attempts to equilibrate the model's initial conditions by repeated simulation given a light and time vector.
 
@@ -131,7 +135,9 @@ class Model:
         # Extract time from light index
         if time_vector is None or light_vector is None:
             if data is not None:
-                time_vector = np.asarray((data.index - data.index.min()).total_seconds() / 3600)
+                time_vector = np.asarray(
+                    (data.index - data.index.min()).total_seconds() / 3600
+                )
                 light_vector = np.asarray(data.values)
             else:
                 raise ValueError("Must provide either light series or input and time.")
@@ -166,13 +172,12 @@ class Model:
                 # Return entrained model solution
                 return solution[-1]
         # Non-entrainment message(free-running rhythm)
-        #print(
-         #   "The model did not entrain due to insufficient loops or unentrainable light schedule."
-        #)
+        # print(
+        #   "The model did not entrain due to insufficient loops or unentrainable light schedule."
+        # )
         # Return unentrained model solution
         self.initial_conditions = solution[-1]
         return solution[-1]
-
 
     def dlmos(self):
         """
@@ -186,7 +191,6 @@ class Model:
         """
         return self.cbt() - self.cbt_to_dlmo
 
-
     def plot(self, states=False, dlmo=False, cbtmin=False):
         # Create a new plotly figure
         fig = go.Figure()
@@ -195,51 +199,63 @@ class Model:
             # Calculate number of states available
             states = self.model_states.shape[1]
 
-            if self.model_name == 'Forger' or self.model_name == 'Jewett':
-                labels = ['x','xc', 'Light Drive']
-            elif self.model_name == 'HannaySP':
-                labels = ['Amplitude','Phase', 'Light Drive']
+            if self.model_name == "Forger" or self.model_name == "Jewett":
+                labels = ["x", "xc", "Light Drive"]
+            elif self.model_name == "HannaySP":
+                labels = ["Amplitude", "Phase", "Light Drive"]
             else:
-               labels = ['Ventral Amplitude', 'Dorsal Amplitude', 'Ventral Phase', 'Dorsal Phase', 'Light Drive']
+                labels = [
+                    "Ventral Amplitude",
+                    "Dorsal Amplitude",
+                    "Ventral Phase",
+                    "Dorsal Phase",
+                    "Light Drive",
+                ]
             # Iterate over states and plot them
             for i in range(states):
-                fig.add_trace(go.Scatter(
-                    x=self.data.index.astype(str),
-                    y=self.model_states[:, i],
-                    name=f'{labels[i]}',
-                ))
+                fig.add_trace(
+                    go.Scatter(
+                        x=self.data.index.astype(str),
+                        y=self.model_states[:, i],
+                        name=f"{labels[i]}",
+                    )
+                )
                 fig.update_layout(
-                    title='Model States',
-                    xaxis=dict(title='Time'),
-                    yaxis=dict(title='Model States'),
+                    title="Model States",
+                    xaxis=dict(title="Time"),
+                    yaxis=dict(title="Model States"),
                 )
             return fig
 
         if dlmo:
             # Plot daily predicted DLMO
-            fig.add_trace(go.Scatter(
-                x=pd.Series(self.data.index.date.astype(str)).unique(),
-                y=self.dlmos() % 24,
-                name='Predicted DLMO',
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=pd.Series(self.data.index.date.astype(str)).unique(),
+                    y=self.dlmos() % 24,
+                    name="Predicted DLMO",
+                )
+            )
             fig.update_layout(
-                title='Predicted DLMO',
-                xaxis=dict(title='Day'),
-                yaxis=dict(title='DLMO time'),
+                title="Predicted DLMO",
+                xaxis=dict(title="Day"),
+                yaxis=dict(title="DLMO time"),
             )
             return fig
 
         if cbtmin:
             # Plot daily predicted DLMO
-            fig.add_trace(go.Scatter(
-                x=pd.Series(self.data.index.date.astype(str)).unique(),
-                y=self.cbt() % 24,
-                name='Predicted CBTmin',
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=pd.Series(self.data.index.date.astype(str)).unique(),
+                    y=self.cbt() % 24,
+                    name="Predicted CBTmin",
+                )
+            )
             fig.update_layout(
-                title='Predicted CBTmin',
-                xaxis=dict(title='Day'),
-                yaxis=dict(title='CBTmin time'),
+                title="Predicted CBTmin",
+                xaxis=dict(title="Day"),
+                yaxis=dict(title="CBTmin time"),
             )
             return fig
 
@@ -314,6 +330,7 @@ class Forger(Model):
     [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
     and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
     """
+
     def __init__(
         self,
         data=None,
@@ -333,14 +350,14 @@ class Forger(Model):
         if inputs is None or time is None:
             super().__init__(
                 data=data,
-                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306])
+                initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306]),
             )
         else:
             super().__init__(
                 inputs=inputs,
                 time=time,
                 initial_conditions=np.array([-0.0843259, -1.09607546, 0.45584306]),
-        )
+            )
         # Check for a scenario in which a initial condition is provided
         if initial_condition is not None:
             self.initial_conditions = initial_condition
@@ -528,6 +545,7 @@ class Jewett(Model):
     [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
     and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
     """
+
     def __init__(
         self,
         data=None,
@@ -549,14 +567,14 @@ class Jewett(Model):
         if inputs is None or time is None:
             super().__init__(
                 data=data,
-                initial_conditions=np.array([-0.10097101, -1.21985662, 0.50529415])
+                initial_conditions=np.array([-0.10097101, -1.21985662, 0.50529415]),
             )
         else:
             super().__init__(
                 inputs=inputs,
                 time=time,
                 initial_conditions=np.array([-0.10097101, -1.21985662, 0.50529415]),
-        )
+            )
         # Check for a scenario in which a initial condition is provided
         if initial_condition is not None:
             self.initial_conditions = initial_condition
@@ -751,6 +769,7 @@ class HannaySP(Model):
     [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
     and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
     """
+
     def __init__(
         self,
         data=None,
@@ -771,19 +790,19 @@ class HannaySP(Model):
         p=1.5,
         i0=9325.0,
         cbt_to_dlmo=7.0,
-        initial_condition=None
+        initial_condition=None,
     ):
         if inputs is None or time is None:
             super().__init__(
                 data=data,
-                initial_conditions=np.array([0.82041911, 1.71383697, 0.52318122])
+                initial_conditions=np.array([0.82041911, 1.71383697, 0.52318122]),
             )
         else:
             super().__init__(
                 inputs=inputs,
                 time=time,
                 initial_conditions=np.array([0.82041911, 1.71383697, 0.52318122]),
-        )
+            )
         # Check for a scenario in which a initial condition is provided
         if initial_condition is not None:
             self.initial_conditions = initial_condition
@@ -1007,6 +1026,7 @@ class HannayTP(Model):
     [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
     and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
     """
+
     def __init__(
         self,
         data=None,
@@ -1035,14 +1055,18 @@ class HannayTP(Model):
         if inputs is None or time is None:
             super().__init__(
                 data=data,
-                initial_conditions=np.array([0.82423745, 0.82304996, 1.75233424, 1.863457, 0.52318122])
+                initial_conditions=np.array(
+                    [0.82423745, 0.82304996, 1.75233424, 1.863457, 0.52318122]
+                ),
             )
         else:
             super().__init__(
                 inputs=inputs,
                 time=time,
-                initial_conditions=np.array([0.82423745, 0.82304996, 1.75233424, 1.863457, 0.52318122]),
-        )
+                initial_conditions=np.array(
+                    [0.82423745, 0.82304996, 1.75233424, 1.863457, 0.52318122]
+                ),
+            )
         # Check for a scenario in which a initial condition is provided
         if initial_condition is not None:
             self.initial_conditions = initial_condition
@@ -1250,6 +1274,7 @@ class ESRI:
     std : float
         Standard deviation of ESRI values across all windows.
     """
+
     def __init__(
         self,
         data=None,
@@ -1266,23 +1291,25 @@ class ESRI:
         self.initial_amplitude = initial_amplitude
         self.midnight_phase = midnight_phase
 
-
         # Extract time and light vector
         if time is None or inputs is None:
             if data is not None:
-                self.time_vector = np.asarray((data.index - data.index.min()).total_seconds() / 3600)
+                self.time_vector = np.asarray(
+                    (data.index - data.index.min()).total_seconds() / 3600
+                )
                 self.light_vector = np.asarray(data.values)
             else:
-                raise ValueError("Must provide either light time series (data) or input and time.")
+                raise ValueError(
+                    "Must provide either light time series (data) or input and time."
+                )
         else:
             self.time_vector = time
             self.light_vector = inputs
 
         # Calculate ESRI array, mean and standard deviation
         self.raw_values = self.calculate()
-        self.mean = self.raw_values['esri'].mean()
-        self.std = self.raw_values['esri'].std()
-
+        self.mean = self.raw_values["esri"].mean()
+        self.std = self.raw_values["esri"].std()
 
     def calculate(self):
         """
@@ -1344,10 +1371,7 @@ class ESRI:
         esri_values[esri_values < 0] = np.nan
 
         # Pack the time point and the corresponding esri value into a dataframe
-        esri_df = pd.DataFrame({
-            "time": esri_time,
-            "esri": esri_values
-        })
+        esri_df = pd.DataFrame({"time": esri_time, "esri": esri_values})
 
         # Set 'time' column as the index of the dataframe
         esri_df = esri_df.set_index("time")
@@ -1356,16 +1380,57 @@ class ESRI:
 
 class ModelComparer:
     """
-    Framework for mapping FJK model states to HannaySP states (experimental).
+    Framework for mapping state variables between circadian rhythm models.
 
-    This class is currently under active development and the API may change
-    without backward compatibility guarantees.
+    The ModelComparer provides a framework for relating the state variables
+    of the Forger model to the state variables of the HannaySP model. It enables
+    a direct comparison between the two models and facilitates a more interpretable,
+    physiologically grounded understanding of the Forger model states by expressing
+    them as functions of the circadian phase predicted by the HannaySP model.
 
-    The ModelComparer is intended to take the state variables from the
-    Forger–Jewett–Kronauer (FJK) model and use them to predict the state
-    variables of the HannaySP model. By doing so, it seeks to assign a more
-    direct physiological interpretation to the FJK outputs.
+        Parameters
+    ----------
+    data : pandas.Series or pandas.DataFrame, optional
+        Time-indexed light exposure data. If provided, the time vector is
+        inferred from the index (in hours since the first sample), and the
+        light input is taken from the values.
+    inputs : array-like, optional
+        Light input time series. Must be provided together with `time` if
+        `data` is not supplied.
+    time : array-like, optional
+        Time vector (in hours). Must be provided together with `inputs` if
+        `data` is not supplied.
+    equilibrate : bool, default False
+        If True, both models are equilibrated prior to simulation by repeatedly
+        looping the input light profile to estimate stable initial conditions.
+    loop_number : int, default 10
+        Number of light-profile repetitions used during equilibration.
+    a1, a2 : float, default 1.0
+        Amplitude parameters for the trigonometric mapping of the Forger state
+        variables.
+    p1, p2 : float, default 1.0
+        Phase scaling parameters for the trigonometric mapping.
+    m1, m2 : float, default 0.0
+        Offset parameters for the trigonometric mapping.
+
+    Attributes
+    ----------
+    time_vector : ndarray
+        Time vector (hours).
+    light_vector : ndarray
+        Light input time series.
+    forger : Forger
+        Instance of the Forger model.
+    hannay : HannaySP
+        Instance of the HannaySP model.
+    x, xc : ndarray
+        State variables of the Forger model.
+    phase_vector : ndarray
+        Collective phase of the HannaySP model.
+    predicted_x, predicted_xc : ndarray or None
+        Predicted Forger state variables obtained from the HannaySP phase.
     """
+
     def __init__(
         self,
         data=None,
@@ -1391,10 +1456,14 @@ class ModelComparer:
         # Extract time from data index
         if time is None or inputs is None:
             if data is not None:
-                self.time_vector = np.asarray((data.index - data.index.min()).total_seconds() / 3600)
+                self.time_vector = np.asarray(
+                    (data.index - data.index.min()).total_seconds() / 3600
+                )
                 self.light_vector = np.asarray(data.values)
             else:
-                raise ValueError("Must provide either light time series (data) or input and time.")
+                raise ValueError(
+                    "Must provide either light time series (data) or input and time."
+                )
         else:
             self.time_vector = time
             self.light_vector = inputs
@@ -1404,23 +1473,23 @@ class ModelComparer:
         if equilibrate:
             # First, calculate initial conditions based on the light and time vector
             ics = self.forger.get_initial_conditions(
-                loop_number=10,
+                loop_number=loop_number,
                 light_vector=self.light_vector,
-                time_vector=self.time_vector
+                time_vector=self.time_vector,
             )
 
             # Second, integrate the equilibrated model and use last state as initial conditions
             new_ics = self.forger.integrate(
                 light_vector=self.light_vector,
                 time_vector=self.time_vector,
-                initial_condition=ics
+                initial_condition=ics,
             )[-1]
 
             # Third, use the calculated initial conditions to define current model states
             self.forger.model_states = self.forger.integrate(
                 light_vector=self.light_vector,
                 time_vector=self.time_vector,
-                initial_condition=ics
+                initial_condition=ics,
             )
 
         # Instantiate hannay model
@@ -1430,21 +1499,21 @@ class ModelComparer:
             ics = self.hannay.get_initial_conditions(
                 loop_number=50,
                 light_vector=self.light_vector,
-                time_vector=self.time_vector
+                time_vector=self.time_vector,
             )
 
             # Second, integrate the equilibrated model and use last state as initial conditions
             new_ics = self.hannay.integrate(
                 light_vector=self.light_vector,
                 time_vector=self.time_vector,
-                initial_condition=ics
+                initial_condition=ics,
             )[-1]
 
             # Third, use the calculated initial conditions to define current model states
             self.hannay.model_states = self.hannay.integrate(
                 light_vector=self.light_vector,
                 time_vector=self.time_vector,
-                initial_condition=new_ics
+                initial_condition=new_ics,
             )
 
         # Store state variables of the forger model
@@ -1458,11 +1527,27 @@ class ModelComparer:
         self.predicted_x = None
         self.predicted_xc = None
 
-        # Error of the prediction of x and xc
-        self.error_x = None
-        self.error_xc = None
+    def predict_forger(self, change_params=True):
+        """
+        Predict Forger state variables using the collective phase predicted
+        by the HannaySP model.
 
-    def predict_forger(self, change_params=False):
+        Expresses the Forger state variables (`x`, `xc`) as explicit functions
+        of the collective phase predicted by the HannaySP model.
+
+        Parameters
+        ----------
+        change_params: bool, default True
+        If True, stores the predicted values for the `x` and `xc` state variables
+        in the attributes `predicted_x` and `predicted_xc`.
+
+        Returns
+        -------
+        predicted_x : ndarray
+            Predicted values of the Forger model state variable `x`
+        predicted_xc : ndarray
+            Predicted values of the Forger model state variable `xc`
+        """
         # Predict state variable x in FJK model (either Forger or Jewett)
         predicted_x = np.array(
             [self.a1 * np.cos(self.p1 * phase) + self.m1 for phase in self.phase_vector]
@@ -1485,6 +1570,22 @@ class ModelComparer:
         return predicted_x, predicted_xc
 
     def linearize_phase(self, change_params=False):
+        """
+        Linearize the phase of the Forger model state variables.
+
+        Fits a first-degree polynomial to the phase trajectory of the HannaySP
+        and optionally replaces the stored phase vector with its linear approximation.
+
+        Parameters
+        ----------
+        change_params: bool, default False
+            If True, replaces `phase_vector` with the linearized phase.
+
+        Returns
+        -------
+        linear_phase : ndarray
+            Linear approximation of the collective phase.
+        """
         # Attempt to fit a straight line (a polynomial of degree 1) to the collective phase
         coefficients = np.polyfit(self.time_vector, self.phase_vector, 1)
         slope, intercept = coefficients
@@ -1492,7 +1593,27 @@ class ModelComparer:
             self.phase_vector = slope * self.time_vector + intercept
         return slope * self.time_vector + intercept
 
-    def find_optimal_params(self, change_params=False):
+    def find_optimal_params(self, change_params=True):
+        """
+        Estimate the optimal mapping parameters between HannaySP and Forger states.
+
+        Uses non-linear least squares regression to estimate amplitude, offset, and
+        phase-scaling parameters for the mapping between the HannaySP phase and the
+        Forger model state variables `x` and `xc`.
+
+        Parameters
+        ----------
+        change_params : bool, default True
+            If True, updates the mapping parameters stored in the object.
+
+        Returns
+        -------
+        params : ndarray, shape (2, 3)
+            Estimated parameters for `x` and `xc` mappings:
+            [[a1, m1, p1],
+            [a2, m2, p2]]
+        """
+
         # Define a mapping function for the state variable x in the FJK model
         def map_x(phase, A1, M1, P1):
             return A1 * np.cos(P1 * phase) + M1
@@ -1528,45 +1649,93 @@ class ModelComparer:
         return np.array([[a1, m1, p1], [a2, m2, p2]])
 
     def rmse(self):
+        """
+        Compute the root-mean-square error (RMSE) of the predicted Forger model states.
+
+        Returns
+        -------
+        rmse_x : float
+            RMSE between observed and predicted `x`.
+        rmse_xc : float
+            RMSE between observed and predicted `xc`.
+
+        Notes
+        -------
+        Requires `predict_forger` to be called beforehand with
+        `change_params=True`.
+        """
         rmse_x = np.sqrt(np.mean((self.x - self.predicted_x) ** 2))
         rmse_xc = np.sqrt(np.mean((self.xc - self.predicted_xc) ** 2))
         return rmse_x, rmse_xc
 
-    def error(self, change_params=False):
-        # Compute error associated with prediction
-        error_x = self.x - self.predicted_x
-        error_xc = self.xc - self.predicted_xc
+    def cumulative_rmse(self):
+        """
+        Compute cumulative RMSE for the predicted Forger model states.
 
-        # Change the error_x and xc attributes
-        if change_params:
-            self.error_x = error_x
-            self.error_xc = error_xc
+        Returns
+        -------
+        crmse_x : ndarray
+            Cumulative RMSE between observed and predicted `x`.
+        crmse_xc : ndarray
+            Cumulative RMSE for state variable `xc`.
 
-        # Return the calculated vectors
-        return error_x, error_xc
+        Notes
+        -------
+        Useful for assessing how prediction error evolves over time.
+        Requires predicted values to be available.
+        """
+        error_x = (self.x - self.predicted_x) ** 2
+        error_xc = (self.xc - self.predicted_xc) ** 2
+        crmse_x = np.sqrt(np.cumsum(error_x) / np.arange(1, len(self.x) + 1))
+        crmse_xc = np.sqrt(np.cumsum(error_xc) / np.arange(1, len(self.xc) + 1))
+        return crmse_x, crmse_xc
 
-    def error_stats_archive(self):
-        def calculate_stats(prediction_error, measure):
-            # Max and min error for the prediction
-            max_error = prediction_error.max()
-            min_error = prediction_error.min()
+    def half_life_crmse(self):
+        """
+        Fit an exponential decay function to the cumulative RMSE curves and compute
+        the half life times of the RMSE for both the `x` and `xc` values.
 
-            # Calculate the error_band_width
-            error_band_width = max_error - min_error
+        This value can be used to assess how much time is required for the prediction
+        to stabilize, with more disruptive schedules.
 
-            # Calculate the range of values for the measure
-            range_x = measure.max() - measure.min()
+        Returns
+        -------
+        half_life_x : float
+            Half-decay time for the `x` state variable.
+        half_life_xc : float
+                Half-decay time for the `xc` state variable.
+        """
+        # Compute the cumulative rmse for x and xc state variables
+        crmse_x, crmse_xc = self.cumulative_rmse()
 
-            # Calculate the magnitude of the error
-            error_magnitude = (error_band_width / range_x) * 100
+        # Define exponential decay function
+        def exponential_decay(t, A, k, C):
+            return A * np.exp(-k * t) + C
 
-            # Return the calculated values
-            return max_error, min_error, error_band_width, error_magnitude
+        # Obtain optimal parameters to fit exponential decay
+        def optimal_params(crmse):
+            return curve_fit(
+                exponential_decay, # function
+                self.time_vector, # xdata
+                crmse, # ydata
+                p0=[
+                    crmse[0] - crmse[-1],  # Initial guess for the amplitude A
+                    0.01,  # k: slow decay guess
+                    crmse[-1],  # C: asymptotic RMSE value
+                ], # Initial guess for the parameters
+                maxfev=10000, # Iterations for curve fitting
+            )[0]
 
-        # Calculate x an xc error descriptive stats
-        x_stats = calculate_stats(self.error_x, self.x)
-        xc_stats = calculate_stats(self.error_xc, self.xc)
-        return x_stats, xc_stats
+        # Unpack optimal params for `x` and `xc`
+        a_x, k_x, c_x = optimal_params(crmse_x)
+        a_xc, k_xc, c_xc = optimal_params(crmse_xc)
+
+        # Calculate the half-life for state variables
+        half_life_x = np.inf if k_x <= 0 else np.log(2) / k_x
+        half_life_xc = np.inf if k_xc <= 0 else np.log(2) / k_xc
+
+        # Return the half-life for `x` and `xc` prediction
+        return half_life_x, half_life_xc
 
 
 def main():
@@ -1593,19 +1762,18 @@ def main():
     light = np.tile(daily_schedule, total_days)
 
     dt = 10 / 60  # 10 minutes in hours
-    #dt = 1
-    #dt=1/10 # for 10 bins/h
+    # dt = 1
+    # dt=1/10 # for 10 bins/h
     time = np.arange(0, len(light) * dt, dt)
-
 
     # SECTION FOR COMPARING CIRCADIAN MODELS (FORGER AND HANNAY)
     comparison = ModelComparer(inputs=light, time=time, equilibrate=True)
     comparison.linearize_phase(change_params=True)
     comparison.find_optimal_params(change_params=True)
     comparison.predict_forger(change_params=True)
-    #comparison.error(change_params=True)
+    # comparison.error(change_params=True)
     print(comparison.rmse())
-    #max_error_x, min_error_x, error_band_x, magnitude_x = comparison.error_stats()[0]
+    # max_error_x, min_error_x, error_band_x, magnitude_x = comparison.error_stats()[0]
     # max_error_xc, min_error_xc, error_band_xc, magnitude_xc = comparison.error_stats()[1]
 
     # SECTION WITH GENERAL COMMANDS
@@ -1639,54 +1807,54 @@ def main():
     # plt.grid(True)
     # plt.show()
 
-    #plt.figure()
-    #plt.plot(comparison.predicted_x, label="predicted_x", color="black", alpha=0.5)
-    #plt.plot(comparison.predicted_x, label="predicted_x", color="blue", alpha=0.9)
-    #peaks,_= find_peaks(comparison.error_x)
-    #for peak in peaks:
-     #   print(f'{comparison.error_x[peak]:.3f}')
-    #plt.plot(comparison.error_x, label="Error", color="pink", alpha=0.9)
-    #plt.axhline(y=max_error_x, color="green", linestyle="--", label="Max Error")
-    #plt.axhline(y=min_error_x, color="purple", linestyle="--", label="Min error")
-    #plt.text(
-     #   x=len(comparison.x) // 2,
-      #  y=(max_error_x + min_error_x) / 2,
-        #s=f"Error band width {error_band_x:.2f}",
-       # color="orange",
-        #ha="center",
-        #va="center",
-        #fontsize=12,
-        #backgroundcolor="white",
-    #)
-    #plt.xlabel("Time")
-    #plt.ylabel("State variable")
-    #plt.title("State Evolution Over Time")
-    #plt.legend()
-    #plt.grid(True)
-    #print(f"Magnitude of the error in predicting x = {magnitude_x}")
+    # plt.figure()
+    # plt.plot(comparison.predicted_x, label="predicted_x", color="black", alpha=0.5)
+    # plt.plot(comparison.predicted_x, label="predicted_x", color="blue", alpha=0.9)
+    # peaks,_= find_peaks(comparison.error_x)
+    # for peak in peaks:
+    #   print(f'{comparison.error_x[peak]:.3f}')
+    # plt.plot(comparison.error_x, label="Error", color="pink", alpha=0.9)
+    # plt.axhline(y=max_error_x, color="green", linestyle="--", label="Max Error")
+    # plt.axhline(y=min_error_x, color="purple", linestyle="--", label="Min error")
+    # plt.text(
+    #   x=len(comparison.x) // 2,
+    #  y=(max_error_x + min_error_x) / 2,
+    # s=f"Error band width {error_band_x:.2f}",
+    # color="orange",
+    # ha="center",
+    # va="center",
+    # fontsize=12,
+    # backgroundcolor="white",
+    # )
+    # plt.xlabel("Time")
+    # plt.ylabel("State variable")
+    # plt.title("State Evolution Over Time")
+    # plt.legend()
+    # plt.grid(True)
+    # print(f"Magnitude of the error in predicting x = {magnitude_x}")
 
-    #plt.figure()
-    #plt.plot(comparison.predicted_xc, label="predicted_xc", color="black", alpha=0.5)
-    #plt.plot(comparison.xc, label="observed_xc", color="blue", alpha=0.9)
-    #plt.plot(comparison.error_xc, label="Error", color="pink", alpha=0.9)
-    #plt.axhline(y=max_error_xc, color="green", linestyle="--", label="Max Error")
-    #plt.axhline(y=min_error_xc, color="purple", linestyle="--", label="Min error")
-    #plt.text(
-     #   x=len(comparison.xc) // 2,
-      #  y=(max_error_xc + min_error_xc) / 2,
-       # s=f"Error band width {error_band_xc:.2f}",
-        #color="orange",
-        #ha="center",
-        #va="center",
-        #fontsize=12,
-        #backgroundcolor="white",
-    #)
-    #plt.xlabel("Time")
-    #plt.ylabel("State variable")
-    #plt.title("State Evolution Over Time")
-    #plt.legend()
-    #plt.grid(True)
-    #print(f"Magnitude of the error in predicting x = {magnitude_xc}")
+    # plt.figure()
+    # plt.plot(comparison.predicted_xc, label="predicted_xc", color="black", alpha=0.5)
+    # plt.plot(comparison.xc, label="observed_xc", color="blue", alpha=0.9)
+    # plt.plot(comparison.error_xc, label="Error", color="pink", alpha=0.9)
+    # plt.axhline(y=max_error_xc, color="green", linestyle="--", label="Max Error")
+    # plt.axhline(y=min_error_xc, color="purple", linestyle="--", label="Min error")
+    # plt.text(
+    #   x=len(comparison.xc) // 2,
+    #  y=(max_error_xc + min_error_xc) / 2,
+    # s=f"Error band width {error_band_xc:.2f}",
+    # color="orange",
+    # ha="center",
+    # va="center",
+    # fontsize=12,
+    # backgroundcolor="white",
+    # )
+    # plt.xlabel("Time")
+    # plt.ylabel("State variable")
+    # plt.title("State Evolution Over Time")
+    # plt.legend()
+    # plt.grid(True)
+    # print(f"Magnitude of the error in predicting x = {magnitude_xc}")
 
     # plt.figure(figsize=(18,8))
     # plt.plot(comparison.error_x, label='Error', color='pink', alpha=0.9)
@@ -1711,7 +1879,7 @@ def main():
     # plt.legend()
     # plt.grid(True)
 
-    #plt.show()
+    # plt.show()
 
     # print(f"Execution time is {end-start} seconds.")
 
