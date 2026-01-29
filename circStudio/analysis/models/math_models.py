@@ -1695,8 +1695,9 @@ class ModelComparer:
         Fit an exponential decay function to the cumulative RMSE curves and compute
         the half life times of the RMSE for both the `x` and `xc` values.
 
-        This value can be used to assess how much time is required for the prediction
-        to stabilize, with more disruptive schedules.
+        The half-life represents the time required for the prediction error to decrease
+        by 50%, and can be used as an index of how readily a given light schedule entrains
+        the circadian pacemaker.
 
         Returns
         -------
