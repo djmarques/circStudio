@@ -29,6 +29,16 @@ def _actiware_automatic_threshold(data, scale_factor=0.88888):
     intervals. For example,there are four 15-second intervals for a 1-minute
     epoch length; hence, the activity value in an epoch must be greater than,
     or equal to, four, to be scored as MOBILE.
+
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     '''
 
     # Sum of activity counts
@@ -50,7 +60,17 @@ def _actiware_automatic_threshold(data, scale_factor=0.88888):
 
 
 def _padded_data(data, value, periods, frequency):
+    """
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
 
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     date_offset = pd.DateOffset(seconds=frequency.total_seconds())
     pad_beginning = pd.Series(
         data=value,
@@ -78,6 +98,17 @@ def _padded_data(data, value, periods, frequency):
 def _ratio_sequences_of_zeroes(
     data, seq_length, n_boostrap, seed=0, with_replacement=True
 ):
+    """
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     # Calculate a moving sum with a window of size 'seq_length'
     rolling_sum = data.rolling(seq_length).sum()
     # Set seed for reproducibility
@@ -93,6 +124,17 @@ def _ratio_sequences_of_zeroes(
 
 
 def _estimate_zeta(data, seq_length_max, n_boostrap=100, level=0.05):
+    """
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     ratios = np.fromiter((
         _ratio_sequences_of_zeroes(data, n, n_boostrap) for n in np.arange(
             1, seq_length_max+1
@@ -105,12 +147,33 @@ def _estimate_zeta(data, seq_length_max, n_boostrap=100, level=0.05):
 
 
 def _window_convolution(x, scale, window, offset=0.0):
+    """
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
 
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     return scale * np.dot(x, window) + offset
 
 
 def filter_ts_duration(ts, duration_min='3H', duration_max='12H'):
-    """Filter time series according to their duration"""
+    """Filter time series according to their duration
+
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
 
     def duration(s):
         return s.index[-1]-s.index[0]
