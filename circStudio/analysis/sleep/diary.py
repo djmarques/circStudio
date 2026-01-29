@@ -5,15 +5,36 @@ from .sleep import *
 
 
 class SleepDiary:
-    """Class for reading sleep diaries."""
-    def __init__(self, input_fname, start_time, periods, frequency, header_size=2, state_index= None, state_colour= None):
+    """Class for reading sleep diaries.
+
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
+
+    def __init__(
+        self,
+        input_fname,
+        start_time,
+        periods,
+        frequency,
+        header_size=2,
+        state_index=None,
+        state_colour=None,
+    ):
 
         # Set the default state index and color if not specified by the user
         if state_index is None:
-            state_index = {'ACTIVE': 2, 'NAP': 1, 'NIGHT': 0, 'NOWEAR': -1}
+            state_index = {"ACTIVE": 2, "NAP": 1, "NIGHT": 0, "NOWEAR": -1}
 
         if state_colour is None:
-            state_colour = {'NAP': '#7bc043', 'NIGHT': '#d3d3d3', 'NOWEAR': '#ee4035'}
+            state_colour = {"NAP": "#7bc043", "NIGHT": "#d3d3d3", "NOWEAR": "#ee4035"}
 
         # Get absolute file path
         input_fname = os.path.abspath(input_fname)
@@ -22,19 +43,11 @@ class SleepDiary:
 
         self._name = sd_array[0][1]
         self._diary = pd.DataFrame(
-            sd_array[header_size+1:],
-            columns=sd_array[header_size]).astype({
-                'TYPE': 'str',
-                'START': 'datetime64[ns]',
-                'END': 'datetime64[ns]'
-            })
+            sd_array[header_size + 1 :], columns=sd_array[header_size]
+        ).astype({"TYPE": "str", "START": "datetime64[ns]", "END": "datetime64[ns]"})
 
         # Inplace drop of useless columns
-        self._diary.drop(
-            columns=['DURATION (min)'],
-            inplace=True,
-            errors='ignore'
-        )
+        self._diary.drop(columns=["DURATION (min)"], inplace=True, errors="ignore")
 
         # Inplace drop of NA
         self._diary.dropna(inplace=True)
@@ -44,34 +57,28 @@ class SleepDiary:
 
         # Create a time series with ACTIVE as default value.
         self._raw_data = pd.Series(
-            data=self._state_index['ACTIVE'],
-            index=pd.date_range(
-                start_time,
-                periods=periods,
-                freq=frequency
-            ),
-            dtype=int
+            data=self._state_index["ACTIVE"],
+            index=pd.date_range(start_time, periods=periods, freq=frequency),
+            dtype=int,
         )
 
         # Replace the default value with the ones found in the sleep diary.
         for index, row in self._diary.iterrows():
-            self._raw_data[
-                row['START']:row['END']
-            ] = self._state_index[row['TYPE']]
+            self._raw_data[row["START"] : row["END"]] = self._state_index[row["TYPE"]]
 
         # Create a template shape to overlay over a plotly plot
         self._shaded_area = dict(
-            type='rect',
-            xref='x',
-            yref='paper',
+            type="rect",
+            xref="x",
+            yref="paper",
             x0=0,
             y0=0,
             x1=1,
             y1=1,
-            fillcolor='',
+            fillcolor="",
             opacity=0.5,
-            layer='below',
-            line=dict(width=0)
+            layer="below",
+            line=dict(width=0),
         )
 
     def __str__(self):
@@ -128,21 +135,20 @@ class SleepDiary:
         shapes = []
         for index, row in self._diary.iterrows():
             shape = self._shaded_area.copy()
-            shape['x0'] = row['START']
-            shape['x1'] = row['END']
-            shape['fillcolor'] = self._state_colour[row['TYPE']]
+            shape["x0"] = row["START"]
+            shape["x1"] = row["END"]
+            shape["fillcolor"] = self._state_colour[row["TYPE"]]
             shapes.append(shape)
         return shapes
 
     def summary(self):
-        """ Returns a dataframe of summary statistics."""
-        if 'DURATION' not in self._diary.columns:
-            self._diary['DURATION'] = self._diary['END']\
-                - self._diary['START']
-        return self._diary.groupby(['TYPE'])['DURATION'].describe()
+        """Returns a dataframe of summary statistics."""
+        if "DURATION" not in self._diary.columns:
+            self._diary["DURATION"] = self._diary["END"] - self._diary["START"]
+        return self._diary.groupby(["TYPE"])["DURATION"].describe()
 
     def state_infos(self, state):
-        """ Returns summary statistics for a given state
+        """Returns summary statistics for a given state
 
         Parameters
         ----------
@@ -154,6 +160,16 @@ class SleepDiary:
             Mean duration of the required state.
         std: pd.Timedelta
             Standard deviation of the durations of the required state.
+
+        References
+        ----------
+        [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+        pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+        PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+        [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+        Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+        LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
         """
 
         # Re-use the summary function
@@ -168,14 +184,14 @@ class SleepDiary:
             )
 
         # Access the summary object to get the mean
-        mean = summary.loc[state, 'mean']
+        mean = summary.loc[state, "mean"]
         # Access the summary object to get the std
-        std = summary.loc[state, 'std']
+        std = summary.loc[state, "std"]
 
         return mean, std
 
-    def total_bed_time(self, state='NIGHT'):
-        """ Returns the total in-bed time
+    def total_bed_time(self, state="NIGHT"):
+        """Returns the total in-bed time
 
         Parameters
         ----------
@@ -190,12 +206,21 @@ class SleepDiary:
         std: pd.Timedelta
             Standard deviation of the durations of the required state.
 
+        References
+        ----------
+        [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+        pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+        PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+        [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+        Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+        LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
         """
 
         return self.state_infos(state)
 
-    def total_nap_time(self, state='NAP'):
-        """ Returns the total nap time
+    def total_nap_time(self, state="NAP"):
+        """Returns the total nap time
 
         Parameters
         ----------
@@ -210,12 +235,21 @@ class SleepDiary:
         std: pd.Timedelta
             Standard deviation of the durations of the required state.
 
+        References
+        ----------
+        [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+        pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+        PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+        [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+        Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+        LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
         """
 
         return self.state_infos(state)
 
-    def total_nowear_time(self, state='NOWEAR'):
-        """ Returns the total 'no-wear' time
+    def total_nowear_time(self, state="NOWEAR"):
+        """Returns the total 'no-wear' time
 
         Parameters
         ----------
@@ -230,10 +264,18 @@ class SleepDiary:
         std: pd.Timedelta
             Standard deviation of the durations of the required state.
 
+        References
+        ----------
+        [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+        pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+        PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+        [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+        Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+        LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
         """
 
         return self.state_infos(state)
-
 
     def sleep_efficiency(self, data):
         """
@@ -248,7 +290,6 @@ class SleepDiary:
         -------
         float
             Sleep efficiency (decimal)
-
         """
         # Calculate average total sleep time (within the main sleep bout)
         avg_total_sleep_time = main_sleep_bouts(data=data)[1]
@@ -258,16 +299,17 @@ class SleepDiary:
 
         # If avg_total_bed_time is zero, do not return a result
         if avg_total_bed_time == 0:
-            warnings.warn('Average total sleep time is 0.')
+            warnings.warn("Average total sleep time is 0.")
             return None
 
         # If avg_total_bed_time < avg_total_sleep_time
         if avg_total_sleep_time > avg_total_bed_time:
-            warnings.warn('Average total sleep time is greater than average total sleep time.')
+            warnings.warn(
+                "Average total sleep time is greater than average total sleep time."
+            )
             return None
 
         return avg_total_sleep_time / avg_total_bed_time
-
 
     def sleep_onset_latency(self, data):
         """
@@ -290,7 +332,7 @@ class SleepDiary:
 
         """
         main_sleep_df = main_sleep_bouts(data=data)[0]
-        diary_nights_df = self._diary[self._diary['TYPE'] == 'NIGHT']
+        diary_nights_df = self._diary[self._diary["TYPE"] == "NIGHT"]
 
         # Create an empty dictionary to store sleep_onset_latency (sol) values
         sol = {}
@@ -298,18 +340,18 @@ class SleepDiary:
         # Iterate over the rows of the sleep diary corresponding to nighttime
         for _, row in diary_nights_df.iterrows():
             # Extract the date from the current row
-            date = row['START'].date()
+            date = row["START"].date()
 
             # Identify matches between the sleep diary and detected periods of sleep
-            matches = main_sleep_df[main_sleep_df['start_time'].dt.date == date]
+            matches = main_sleep_df[main_sleep_df["start_time"].dt.date == date]
 
             # If a match was found, then calculate the latency between bedtime and sleep onsets
             if not matches.empty:
                 # Extract sleep onset
-                sleep_onset = matches.iloc[0]['start_time']
+                sleep_onset = matches.iloc[0]["start_time"]
 
                 # Calculate the latency and store it in the sol dictionary
-                latency = sleep_onset - row['START']
+                latency = sleep_onset - row["START"]
 
                 # Return as missing value if predicted sleep time occurs before recorded bed time
                 if latency < pd.Timedelta(0):
@@ -323,13 +365,24 @@ class SleepDiary:
         return pd.Series(sol), np.mean(sol)
 
     def plot(self, data):
-        """Plot the sleep diary."""
+        """Plot the sleep diary.
+
+        References
+        ----------
+        [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+        pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+        PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+        [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+        Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+        LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+        """
         layout = go.Layout(
             title="Actigraphy data",
             xaxis=dict(title="Date time"),
             yaxis=dict(title="Counts/period"),
             shapes=self.shapes(),
-            showlegend=False
+            showlegend=False,
         )
         fig = go.Figure(data=go.Scatter(x=data.index, y=data), layout=layout)
         return fig

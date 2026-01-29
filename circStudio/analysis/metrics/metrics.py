@@ -7,11 +7,12 @@ from circStudio.analysis.sleep import *
 import plotly.graph_objects as go
 
 
-def daily_profile(data, cyclic=False, time_origin=None, whs="1h", plot=False, log=False):
+def daily_profile(
+    data, cyclic=False, time_origin=None, whs="1h", plot=False, log=False
+):
     r"""Average daily activity/light/temperature distribution
 
-    Calculate the daily profile of activity. Data are averaged over all the
-    days.
+    Calculate the daily profile of activity. Data are averaged over all the days.
 
     Parameters
     ----------
@@ -43,7 +44,18 @@ def daily_profile(data, cyclic=False, time_origin=None, whs="1h", plot=False, lo
     -------
     raw : pandas.Series
         A Series containing the daily activity profile with a 24h index.
+
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
+
     def _format(to_plot, to_log, profile):
         """
         Internal function that decides whether to present daily profile as pd.Series
@@ -62,23 +74,36 @@ def daily_profile(data, cyclic=False, time_origin=None, whs="1h", plot=False, lo
         -------
         pandas.Series or go.Figure
 
+        References
+        ----------
+        [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+        pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+        PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+        [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+        Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+        LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
         """
         if to_plot:
             layout = go.Layout(
                 title="Daily profile",
                 xaxis=dict(title="Date time"),
                 yaxis=dict(title="Data"),
-                showlegend=False
+                showlegend=False,
             )
             if to_log:
-                fig = go.Figure(data=[
-                    go.Scatter(x=profile.index.astype(str), y=np.log10(profile+1))
-                ], layout=layout)
+                fig = go.Figure(
+                    data=[
+                        go.Scatter(x=profile.index.astype(str), y=np.log10(profile + 1))
+                    ],
+                    layout=layout,
+                )
                 return fig
             else:
-                fig = go.Figure(data=[
-                    go.Scatter(x=profile.index.astype(str), y=profile)
-                ], layout=layout)
+                fig = go.Figure(
+                    data=[go.Scatter(x=profile.index.astype(str), y=profile)],
+                    layout=layout,
+                )
                 return fig
         else:
             return profile
@@ -164,6 +189,16 @@ def daily_profile_auc(data, start_time=None, stop_time=None, time_origin=None):
     -------
     auc : float
         Area under the curve.
+
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     # Compute average daily profile
     avgdaily = _average_daily_activity(data, cyclic=False)
@@ -232,6 +267,16 @@ def adat(data, rescale=True, exclude_ends=False):
     Returns
     -------
     adat : int
+
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     return _average_daily_total_activity(
         data, rescale=rescale, exclude_ends=exclude_ends
@@ -270,6 +315,17 @@ def adatp(data, period="7D", rescale=True, exclude_ends=False, verbose=False):
     Returns
     -------
     adatp : list of int
+
+
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     intervals = _interval_maker(data.index, period, verbose)
 
@@ -310,12 +366,17 @@ def l5(data):
 
     References
     ----------
+    [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F. (1997). Long-Term Fitness Training Improves
+    the Circadian Rest-Activity Rhythm in Healthy Elderly Males. Journal of Biological Rhythms, 12(2), 146–156.
+    http://doi.org/10.1177/074873049701200206
 
-    .. [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F.
-            (1997). Long-Term Fitness Training Improves the Circadian
-            Rest-Activity Rhythm in Healthy Elderly Males.
-            Journal of Biological Rhythms, 12(2), 146–156.
-            http://doi.org/10.1177/074873049701200206
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
 
     l5_onset, l5 = _lmx(data, "5h", lowest=True)
@@ -349,12 +410,17 @@ def m10(data):
 
     References
     ----------
+    [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F. (1997). Long-Term Fitness Training Improves
+    the Circadian Rest-Activity Rhythm in Healthy Elderly Males. Journal of Biological Rhythms, 12(2), 146–156.
+    http://doi.org/10.1177/074873049701200206
 
-    .. [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F.
-           (1997). Long-Term Fitness Training Improves the Circadian
-           Rest-Activity Rhythm in Healthy Elderly Males.
-           Journal of Biological Rhythms, 12(2), 146–156.
-           http://doi.org/10.1177/074873049701200206
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     m10_onset, m10 = _lmx(data, "10h", lowest=False)
     return m10_onset, m10
@@ -389,12 +455,17 @@ def ra(data):
 
     References
     ----------
+    [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F. (1997). Long-Term Fitness Training Improves the
+    Circadian Rest-Activity Rhythm in Healthy Elderly Males. Journal of Biological Rhythms, 12(2), 146–156.
+    http://doi.org/10.1177/074873049701200206
 
-    .. [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F.
-            (1997). Long-Term Fitness Training Improves the Circadian
-            Rest-Activity Rhythm in Healthy Elderly Males.
-            Journal of Biological Rhythms, 12(2), 146–156.
-            http://doi.org/10.1177/074873049701200206
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     _, l5 = _lmx(data, "5h", lowest=True)
     _, m10 = _lmx(data, "10h", lowest=False)
@@ -438,11 +509,17 @@ def l5p(data, period="7D", verbose=False):
     References
     ----------
 
-    .. [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F.
-            (1997). Long-Term Fitness Training Improves the Circadian
-            Rest-Activity Rhythm in Healthy Elderly Males.
-            Journal of Biological Rhythms, 12(2), 146–156.
-            http://doi.org/10.1177/074873049701200206
+    [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F. (1997). Long-Term Fitness Training Improves the
+    Circadian Rest-Activity Rhythm in Healthy Elderly Males. Journal of Biological Rhythms, 12(2), 146–156.
+    http://doi.org/10.1177/074873049701200206
+
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     intervals = _interval_maker(data.index, period, verbose)
 
@@ -490,11 +567,17 @@ def m10p(data, period="7D", verbose=False):
     References
     ----------
 
-    .. [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F.
-            (1997). Long-Term Fitness Training Improves the Circadian
-            Rest-Activity Rhythm in Healthy Elderly Males.
-            Journal of Biological Rhythms, 12(2), 146–156.
-            http://doi.org/10.1177/074873049701200206
+    [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F. (1997). Long-Term Fitness Training Improves the
+    Circadian Rest-Activity Rhythm in Healthy Elderly Males. Journal of Biological Rhythms, 12(2), 146–156.
+    http://doi.org/10.1177/074873049701200206
+
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     intervals = _interval_maker(data.index, period, verbose)
 
@@ -538,11 +621,17 @@ def rap(data, period="7D", verbose=False):
     References
     ----------
 
-    .. [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F.
-           (1997). Long-Term Fitness Training Improves the Circadian
-           Rest-Activity Rhythm in Healthy Elderly Males.
-           Journal of Biological Rhythms, 12(2), 146–156.
-           http://doi.org/10.1177/074873049701200206
+    [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F. (1997). Long-Term Fitness Training Improves the
+    Circadian Rest-Activity Rhythm in Healthy Elderly Males. Journal of Biological Rhythms, 12(2), 146–156.
+    http://doi.org/10.1177/074873049701200206
+
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     intervals = _interval_maker(data.index, period, verbose)
 
@@ -611,9 +700,16 @@ def IS(data):
     References
     ----------
 
-    .. [1] Witting W., Kwa I.H., Eikelenboom P., Mirmiran M., Swaab D.F.
-            Alterations in the circadian rest–activity rhythm in aging and
-            Alzheimer׳s disease. Biol Psychiatry. 1990;27:563–572.
+    [1] Witting W., Kwa I.H., Eikelenboom P., Mirmiran M., Swaab D.F. Alterations in the circadian rest–activity
+    rhythm in aging and Alzheimer׳s disease. Biol Psychiatry. 1990;27:563–572.
+
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     d_24h = (
         data.groupby([data.index.hour, data.index.minute, data.index.second])
@@ -656,6 +752,17 @@ def ISp(data, period="7D", verbose=False):
     Periods are consecutive and all of the required duration. If the last
     consecutive period is shorter than required, the IS is not calculated
     for that period.
+
+
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     intervals = _interval_maker(data.index, period, verbose)
 
@@ -712,9 +819,16 @@ def IV(data):
     References
     ----------
 
-    .. [1] Witting W., Kwa I.H., Eikelenboom P., Mirmiran M., Swaab D.F.
-            Alterations in the circadian rest–activity rhythm in aging and
-            Alzheimer׳s disease. Biol Psychiatry. 1990;27:563–572.
+    [1] Witting W., Kwa I.H., Eikelenboom P., Mirmiran M., Swaab D.F. Alterations in the circadian rest–activity
+    rhythm in aging and Alzheimer׳s disease. Biol Psychiatry. 1990;27:563–572.
+
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     c_1h = data.diff(1).pow(2).mean()
 
@@ -753,6 +867,17 @@ def IVp(data, period="7D", verbose=False):
     Periods are consecutive and all of the required duration. If the last
     consecutive period is shorter than required, the IV is not calculated
     for that period.
+
+
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     intervals = _interval_maker(data.index, period, verbose)
 
@@ -786,6 +911,16 @@ def summary_stats(light, bins="24h", agg_func=None):
     -------
     ss : pd.DataFrame
         A pandas DataFrame with summary statistics per channel.
+
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     if agg_func is None:
         agg_func = ["mean", "median", "sum", "std", "min", "max"]
@@ -795,9 +930,7 @@ def summary_stats(light, bins="24h", agg_func=None):
         df_col = []
         for idx, (start, end) in enumerate(bins):
             df_bins = (
-                light.loc[start:end, :]
-                .apply(agg_func)
-                .pivot_table(columns=agg_func)
+                light.loc[start:end, :].apply(agg_func).pivot_table(columns=agg_func)
             )
 
             channels = df_bins
@@ -808,9 +941,7 @@ def summary_stats(light, bins="24h", agg_func=None):
     return summary_stats
 
 
-def light_exposure(
-    light, threshold=None, start_time=None, stop_time=None, agg="mean"
-):
+def light_exposure(light, threshold=None, start_time=None, stop_time=None, agg="mean"):
     r"""Light exposure level
 
     Calculate the aggregated (mean, median, etc) light exposure level
@@ -844,6 +975,16 @@ def light_exposure(
     -------
     levels : pd.Series
         A pandas Series with aggreagted light exposure levels per channel
+
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     light_exposure = _light_exposure(
         light=light, threshold=threshold, start_time=start_time, stop_time=stop_time
@@ -854,9 +995,7 @@ def light_exposure(
     return levels()
 
 
-def TAT(
-    data, threshold=None, start_time=None, stop_time=None, oformat=None
-):
+def TAT(data, threshold=None, start_time=None, stop_time=None, oformat=None):
     r"""Time above light threshold.
 
     Calculate the total light exposure time above the threshold.
@@ -891,6 +1030,16 @@ def TAT(
     -------
     tat : pd.Series
         A pandas Series with aggreagted light exposure levels per channel
+
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     available_formats = [None, "minute", "timedelta"]
 
@@ -916,9 +1065,7 @@ def TAT(
     return tat
 
 
-def TATp(
-    data, threshold=None, start_time=None, stop_time=None, oformat=None
-):
+def TATp(data, threshold=None, start_time=None, stop_time=None, oformat=None):
     r"""Time above light threshold (per day).
 
     Calculate the total light exposure time above the threshold,
@@ -955,6 +1102,16 @@ def TATp(
     tatp : pd.DataFrame
         A pandas DataFrame with aggreagted light exposure levels
         per channel and per day.
+
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     available_formats = [None, "minute", "timedelta"]
 
@@ -1006,6 +1163,16 @@ def VAT(data, threshold=None):
     -------
     vat : pd.Series
         A pandas Series with light exposure levels per channel
+
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     return _light_exposure(
         light=data, threshold=threshold, start_time=None, stop_time=None
@@ -1060,11 +1227,16 @@ def mlit(light, threshold):
     References
     ----------
 
-    .. [1] Reid K.J., Santostasi G., Baron K.G., Wilson J., Kang J.,
-           Zee P.C., Timing and Intensity of Light Correlate with Body
-           Weight in Adults. PLoS ONE 9(4): e92251.
-           https://doi.org/10.1371/journal.pone.0092251
+    [1] Reid K.J., Santostasi G., Baron K.G., Wilson J., Kang J., Zee P.C., Timing and Intensity of Light
+    Correlate with Body Weight in Adults. PLoS ONE 9(4): e92251. https://doi.org/10.1371/journal.pone.0092251
 
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     # Binarized data and convert to float in order to handle 'DivideByZero'
     I_jk = _binarize(data=light, threshold=threshold).astype("float64")
@@ -1114,11 +1286,16 @@ def mlitp(light, threshold):
     References
     ----------
 
-    .. [1] Reid K.J., Santostasi G., Baron K.G., Wilson J., Kang J.,
-           Zee P.C., Timing and Intensity of Light Correlate with Body
-           Weight in Adults. PLoS ONE 9(4): e92251.
-           https://doi.org/10.1371/journal.pone.0092251
+    [1] Reid K.J., Santostasi G., Baron K.G., Wilson J., Kang J., Zee P.C., Timing and Intensity of Light Correlate
+    with Body Weight in Adults. PLoS ONE 9(4): e92251. https://doi.org/10.1371/journal.pone.0092251
 
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     # Binarized data and convert to float in order to handle 'DivideByZero'
     I_jk = _binarize(data=light, threshold=threshold).astype("float64")
@@ -1151,6 +1328,16 @@ def get_extremum(data, extremum):
     -------
     ext : pd.DataFrame
         A pandas DataFrame with extremum info per channel.
+
+    References
+    ----------
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     # Return either the maximum or minimum, as well as the respective timestamp
     if extremum == "max":
@@ -1194,19 +1381,24 @@ def lmx(data, length="5h", lowest=True):
 
     References
     ----------
+    [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F. (1997). Long-Term Fitness Training Improves
+    the Circadian Rest-Activity Rhythm in Healthy Elderly Males. Journal of Biological Rhythms, 12(2), 146–156.
+    http://doi.org/10.1177/074873049701200206
 
-    .. [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F.
-           (1997). Long-Term Fitness Training Improves the Circadian
-           Rest-Activity Rhythm in Healthy Elderly Males.
-           Journal of Biological Rhythms, 12(2), 146–156.
-           http://doi.org/10.1177/074873049701200206
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
 
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
     # Calculate time of LMX and the value of LMX
     lmx_ts, lmx = _lmx(data, length, lowest=lowest)
 
     # Return these values back to the user
     return lmx_ts, lmx
+
 
 def temporal_centroid(data):
     """
@@ -1227,11 +1419,17 @@ def temporal_centroid(data):
     pd.Timestamp
         The temporal centroid of the time series, expressed as a timestamp.
 
+    References
+    ----------
+    [1] Zauner, J., Hartmeyer, S., & Spitschan, M. (2025). LightLogR: Reproducible analysis of personal light
+    exposure data. Journal of Open Source Software, 10(107), 7601. https://doi.org/10.21105/joss.07601.
+    RRID:SCR_025408
     """
     weights = data / data.sum()
     time = data.index.astype(np.int64)
     temp_centroid = np.round(np.sum(time * weights))
     return pd.to_datetime(temp_centroid)
+
 
 def spectral_centroid(data):
     """
@@ -1249,6 +1447,11 @@ def spectral_centroid(data):
     pd.Timestamp
         The spectral (frequency) centroid of the time series, expressed as a timestamp.
 
+    References
+    ----------
+    [1] Zauner, J., Hartmeyer, S., & Spitschan, M. (2025). LightLogR: Reproducible analysis of personal light
+    exposure data. Journal of Open Source Software, 10(107), 7601. https://doi.org/10.21105/joss.07601.
+    RRID:SCR_025408
     """
     # Infer sampling rate
     delta = (data.index[1] - data.index[0]).total_seconds()
@@ -1260,10 +1463,10 @@ def spectral_centroid(data):
     n = len(data.values)
 
     # y axis - magnitude corresponding to each frequency - x(fi)
-    amplitude = np.abs(fft(data.values))[:n//2]
+    amplitude = np.abs(fft(data.values))[: n // 2]
 
     # x axis (frequencies)
-    frequencies = fftfreq(n, delta)[:n//2]
+    frequencies = fftfreq(n, delta)[: n // 2]
 
     # Avoid dividing by zero
     if np.sum(amplitude) == 0:
@@ -1316,18 +1519,22 @@ def pRA(data, start=None, period=None):
     References
     ----------
 
-    .. [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S.,
-           Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
-           Quantification of the Fragmentation of Rest-Activity Patterns in
-           Elderly Individuals Using a State Transition Analysis. Sleep,
-           34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
+    [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S., Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
+    Quantification of the Fragmentation of Rest-Activity Patterns in Elderly Individuals Using a State Transition
+    Analysis. Sleep, 34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
+
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
 
     # Restrict data range to period 'Start, Start+Period'
     if start is not None:
-        end = _td_format(
-            pd.Timedelta(start)+pd.Timedelta(period)
-        )
+        end = _td_format(pd.Timedelta(start) + pd.Timedelta(period))
 
         data = data.between_time(start, end)
     else:
@@ -1337,6 +1544,7 @@ def pRA(data, start=None, period=None):
     pRA, pRA_weights = _transition_prob(data, True)
 
     return pRA, pRA_weights
+
 
 def pAR(data, start=None, period=None):
     r"""Activity->Rest transition probability distribution
@@ -1381,18 +1589,22 @@ def pAR(data, start=None, period=None):
     References
     ----------
 
-    .. [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S.,
-           Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
-           Quantification of the Fragmentation of Rest-Activity Patterns in
-           Elderly Individuals Using a State Transition Analysis. Sleep,
-           34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
+    [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S., Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
+    Quantification of the Fragmentation of Rest-Activity Patterns in Elderly Individuals Using a State Transition
+    Analysis. Sleep, 34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
+
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
 
     # Restrict data range to period 'Start, Start+Period'
     if start is not None:
-        end = _td_format(
-            pd.Timedelta(start)+pd.Timedelta(period)
-        )
+        end = _td_format(pd.Timedelta(start) + pd.Timedelta(period))
 
         data = data.between_time(start, end)
     else:
@@ -1403,10 +1615,7 @@ def pAR(data, start=None, period=None):
     return pAR, pAR_weights
 
 
-def kRA(
-    data, start=None, period=None, frac=.3, it=0, logit=False,
-    freq=None, offset='15min'
-):
+def kRA(data, start=None, period=None, frac=0.3, it=0, logit=False, offset="15min"):
     r"""Rest->Activity transition probability
 
     Weighted average value of pRA(t) within the constant regions, defined
@@ -1439,11 +1648,6 @@ def kRA(
         If True, the kRA value is logit-transformed (ln(p/1-p)). Useful
         when kRA is used in a regression model.
         Default is False.
-    freq: str, optional
-        Data resampling `frequency string
-        <https://pandas.pydata.org/pandas-docs/stable/timeseries.html>`_
-        applied to the daily profile if start='AonT' or 'AoffT'.
-        Default is None.
     offset: str, optional
         Time offset with respect to the activity onset and offset times
         used as start times.
@@ -1455,29 +1659,34 @@ def kRA(
 
     References
     ----------
+    [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S., Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
+    Quantification of the Fragmentation of Rest-Activity Patterns in Elderly Individuals Using a State Transition
+    Analysis. Sleep, 34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
 
-    .. [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S.,
-           Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
-           Quantification of the Fragmentation of Rest-Activity Patterns in
-           Elderly Individuals Using a State Transition Analysis. Sleep,
-           34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
 
-    if start is not None and re.match(r'AonT|AoffT', start):
+    if start is not None and re.match(r"AonT|AoffT", start):
         aont = AonT(data)
         aofft = AoffT(data)
 
         offset = pd.Timedelta(offset)
-        if start == 'AonT':
-            start_time = str(aont+offset).split(' ')[-1]
+        if start == "AonT":
+            start_time = str(aont + offset).split(" ")[-1]
             period = str(
-                pd.Timedelta('24H') - ((aont+offset) - (aofft-offset))
-            ).split(' ')[-1]
-        elif start == 'AoffT':
-            start_time = str(aofft+offset).split(' ')[-1]
+                pd.Timedelta("24H") - ((aont + offset) - (aofft - offset))
+            ).split(" ")[-1]
+        elif start == "AoffT":
+            start_time = str(aofft + offset).split(" ")[-1]
             period = str(
-                pd.Timedelta('24H') - ((aofft+offset) - (aont-offset))
-            ).split(' ')[-1]
+                pd.Timedelta("24H") - ((aofft + offset) - (aont - offset))
+            ).split(" ")[-1]
     else:
         start_time = start
 
@@ -1485,15 +1694,11 @@ def kRA(
     pra, pra_weights = pRA(data, start=start_time, period=period)
     # Fit the pRA distribution with a LOWESS and return mean value for
     # the constant region (i.e. the region where |pRA-lowess|<1SD)
-    kRA = _transition_prob_sustain_region(
-        pra,
-        pra_weights,
-        frac=frac,
-        it=it
-        )
-    return np.log(kRA/(1-kRA)) if logit else kRA
+    kRA = _transition_prob_sustain_region(pra, pra_weights, frac=frac, it=it)
+    return np.log(kRA / (1 - kRA)) if logit else kRA
 
-def kAR(data, start=None, period=None, frac=.3, it=0, logit=False, offset='15min'):
+
+def kAR(data, start=None, period=None, frac=0.3, it=0, logit=False, offset="15min"):
     r"""Rest->Activity transition probability
 
     Weighted average value of pAR(t) within the constant regions, defined
@@ -1542,28 +1747,33 @@ def kAR(data, start=None, period=None, frac=.3, it=0, logit=False, offset='15min
 
     References
     ----------
+    [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S., Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
+    Quantification of the Fragmentation of Rest-Activity Patterns in Elderly Individuals Using a State Transition
+    Analysis. Sleep, 34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
 
-    .. [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S.,
-           Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
-           Quantification of the Fragmentation of Rest-Activity Patterns in
-           Elderly Individuals Using a State Transition Analysis. Sleep,
-           34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
 
-    if start is not None and re.match(r'AonT|AoffT', start):
+    if start is not None and re.match(r"AonT|AoffT", start):
         aont = AonT(data)
         aofft = AoffT(data)
         offset = pd.Timedelta(offset)
-        if start == 'AonT':
-            start_time = str(aont+offset).split(' ')[-1]
+        if start == "AonT":
+            start_time = str(aont + offset).split(" ")[-1]
             period = str(
-                pd.Timedelta('24H') - ((aont+offset) - (aofft-offset))
-            ).split(' ')[-1]
-        elif start == 'AoffT':
-            start_time = str(aofft+offset).split(' ')[-1]
+                pd.Timedelta("24H") - ((aont + offset) - (aofft - offset))
+            ).split(" ")[-1]
+        elif start == "AoffT":
+            start_time = str(aofft + offset).split(" ")[-1]
             period = str(
-                pd.Timedelta('24H') - ((aofft+offset) - (aont-offset))
-            ).split(' ')[-1]
+                pd.Timedelta("24H") - ((aofft + offset) - (aont - offset))
+            ).split(" ")[-1]
     else:
         start_time = start
 
@@ -1571,12 +1781,5 @@ def kAR(data, start=None, period=None, frac=.3, it=0, logit=False, offset='15min
     par, par_weights = pAR(data, start=start_time, period=period)
     # Fit the pAR distribution with a LOWESS and return mean value for
     # the constant region (i.e. the region where |pAR-lowess|<1SD)
-    kAR = _transition_prob_sustain_region(
-        par,
-        par_weights,
-        frac=frac,
-        it=it
-        )
-    return np.log(kAR/(1-kAR)) if logit else kAR
-
-
+    kAR = _transition_prob_sustain_region(par, par_weights, frac=frac, it=it)
+    return np.log(kAR / (1 - kAR)) if logit else kAR
