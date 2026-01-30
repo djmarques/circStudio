@@ -2,7 +2,8 @@ import numpy as np
 
 
 def pearsonr(x, y):
-    r'''Local implementation of the calculation of the Pearson's r correlation
+    """
+    Local implementation of the calculation of the Pearson's r correlation
 
     Parameters
     ----------
@@ -16,7 +17,19 @@ def pearsonr(x, y):
     r : float
         Pearson's correlation coefficient
 
-    '''
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     xmean = x.mean()
     ymean = y.mean()
 
@@ -37,7 +50,7 @@ def pearsonr(x, y):
 
 
 def correlation_series(x, Y):
-    r'''Correlation between the input array x and each column of the matrix Y
+    """Correlation between the input array x and each column of the matrix Y
 
     Parameters
     ----------
@@ -51,7 +64,19 @@ def correlation_series(x, Y):
     corr : (N,) array_like
         List of Pearson's correlation coefficients
 
-    '''
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     n, m = Y.shape
     corr = np.empty(n, dtype=np.float64)
     for i in range(n):
@@ -60,7 +85,7 @@ def correlation_series(x, Y):
 
 
 def rolling_window(a, win_size):
-    r'''Split input array in an array of window-sized arrays, shifted by one
+    """Split input array in an array of window-sized arrays, shifted by one
     element. Emulate rolling function of pandas.Series.
 
     Parameters
@@ -75,14 +100,26 @@ def rolling_window(a, win_size):
     roll : (N,win_size) array_like
         Array containing the successive windows.
 
-    '''
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     shape = a.shape[:-1] + (a.shape[-1] - win_size + 1, win_size)
     strides = a.strides + (a.strides[-1],)
     return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strides)
 
 
 def is_a_peak(x):
-    r'''Define a peak as an element whose value is greater than those of all
+    """Define a peak as an element whose value is greater than those of all
     the following elements.
 
     Parameters
@@ -95,13 +132,25 @@ def is_a_peak(x):
     peak : bool
         True if the first value is greater than any succesive one.
 
-    '''
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
 
     return np.all(x[0] > x[1:])
 
 
 def find_highest_peak_idx(x, n_succ=3):
-    r'''Find the index of the highest peak.
+    """Find the index of the highest peak.
 
     A peak is defined as an element whose value is higher than those of the
     successive Nth elements.
@@ -126,7 +175,19 @@ def find_highest_peak_idx(x, n_succ=3):
     When several peaks with the same heigh are found, the index of the first
     peak is returned.
 
-    '''
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
 
     peak_candidate_idx, = np.apply_along_axis(
         is_a_peak,
@@ -142,7 +203,7 @@ def find_highest_peak_idx(x, n_succ=3):
 
 
 def consecutive_values(x, target=1, min_length=10):
-    r'''Returns the start and end indices of series of consecutive values
+    """Returns the start and end indices of series of consecutive values
 
 
     Parameters
@@ -162,7 +223,19 @@ def consecutive_values(x, target=1, min_length=10):
     ranges : (N,2) array_like
         Array with the start and end of the series.
 
-    '''
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     # Create an array that is 1 where x is equal to target,
     # and pad each end with an extra 0.
     targets = np.concatenate(([0], np.equal(x, target).view(np.int8), [0]))
@@ -174,7 +247,8 @@ def consecutive_values(x, target=1, min_length=10):
 
 
 def rescore_if_preceded(scoring, n_periods, n_previous, sleep_score=1):
-    r'''Returns a binary series with 0 at indices of epochs scored as sleep
+    """
+    Returns a binary series with 0 at indices of epochs scored as sleep
     that are preceded by epochs scored as wake.
 
     Parameters
@@ -198,7 +272,19 @@ def rescore_if_preceded(scoring, n_periods, n_previous, sleep_score=1):
     mask : array_like
         Binary array.
 
-    '''
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     # Check input type
     if not isinstance(scoring, (np.ndarray)):
         raise TypeError(
@@ -226,7 +312,8 @@ def rescore_if_preceded(scoring, n_periods, n_previous, sleep_score=1):
 
 
 def rescore_if_surrounded(scoring, n_periods, n_surround, sleep_score=1):
-    r'''Returns a binary series with 0 at indices of epochs scored as sleep
+    """
+    Returns a binary series with 0 at indices of epochs scored as sleep
     that are surrounded by epochs scored as wake.
 
     Parameters
@@ -250,7 +337,19 @@ def rescore_if_surrounded(scoring, n_periods, n_surround, sleep_score=1):
     mask : array_like
         Binary array.
 
-    '''
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     # Check input type
     if not isinstance(scoring, (np.ndarray)):
         raise TypeError(
@@ -280,7 +379,8 @@ def rescore_if_surrounded(scoring, n_periods, n_surround, sleep_score=1):
 
 
 def rescore(scoring, sleep_score=1):
-    r'''Returns a binary series with 0 at indices of epochs scored as sleep
+    """
+    Returns a binary series with 0 at indices of epochs scored as sleep
     that should rescored as wake according to Webster's rules.
 
     Parameters
@@ -297,7 +397,19 @@ def rescore(scoring, sleep_score=1):
     mask : array_like
         Binary array.
 
-    '''
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     # create an initial series of 1
     rescoring_masks = np.empty((5, len(scoring)))
 

@@ -5,7 +5,7 @@ from .utils import find_highest_peak_idx
 
 
 def _extract_trend(data, period='24h', min_period='12h', closed='right'):
-    r''' Calculate the trend of the time series using a centered 24 hours window
+    """Calculate the trend of the time series using a centered 24 hours window
 
     Parameters
     ----------
@@ -42,7 +42,7 @@ def _extract_trend(data, period='24h', min_period='12h', closed='right'):
     [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
-    '''
+    """
     win_size = int(pd.Timedelta(period)/data.index.freq)
     min_win_size = int(pd.Timedelta(min_period)/data.index.freq)
 
@@ -54,7 +54,7 @@ def _extract_trend(data, period='24h', min_period='12h', closed='right'):
 
 
 def _sleep_wake_categorization(data, trend, threshold=0.15):
-    r'''Categorize data as wake (0) or sleep (1)
+    """Categorize data as wake (0) or sleep (1)
 
     If the data are above `thr` % of the trend, they are assigned wake.
     Otherwise, they are assigned sleep.
@@ -88,7 +88,7 @@ def _sleep_wake_categorization(data, trend, threshold=0.15):
     [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
-    '''
+    """
 
     # Binarize data according to specified trend and threshold.
     # True evaluates to 1
@@ -100,7 +100,7 @@ def _sleep_wake_categorization(data, trend, threshold=0.15):
 
 
 def _find_sleep_bout_seeds(data, min_period='30Min'):
-    r'''Find indices of the start of all series of consecutive values of 1.
+    """Find indices of the start of all series of consecutive values of 1.
 
     Parameters
     ----------
@@ -128,7 +128,7 @@ def _find_sleep_bout_seeds(data, min_period='30Min'):
     [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
-    '''
+    """
 
     win_size = int(pd.Timedelta(min_period)/data.index.freq)
 
@@ -139,7 +139,7 @@ def _find_sleep_bout_seeds(data, min_period='30Min'):
 
 
 def _test_sleep_bout(uncleaned_binary_data, period='12h'):
-    r'''Calculate the correlation of the raw input binary sleep bout with the
+    """Calculate the correlation of the raw input binary sleep bout with the
     test series.
 
     Parameters
@@ -150,7 +150,6 @@ def _test_sleep_bout(uncleaned_binary_data, period='12h'):
     period : str, optional
         Maximal period of the test series.
         Default is '12h'
-
 
     Return
     ----------
@@ -169,7 +168,7 @@ def _test_sleep_bout(uncleaned_binary_data, period='12h'):
     [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
-    '''
+    """
     win_size = int(pd.Timedelta(period)/uncleaned_binary_data.index.freq)
 
     # Creation of the data to test
@@ -187,7 +186,7 @@ def _test_sleep_bout(uncleaned_binary_data, period='12h'):
 def _clean_sleep_bout(
     uncleaned_binary_data, period='12h', r_consec_below='30Min'
 ):
-    r'''Find the time index of the sleep offset.
+    """Find the time index of the sleep offset.
 
     The sleep offset is defined as the index at which the current time series
     maximizes the Pearson's correlation with a consolidated sleep bout of the
@@ -224,7 +223,7 @@ def _clean_sleep_bout(
     [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
-    '''
+    """
     # Calculate the list of Pearson's correlations with the test series
     corr = _test_sleep_bout(uncleaned_binary_data, period=period)
 
@@ -247,7 +246,7 @@ def roenneberg(
     max_test_period='12h',
     r_consec_below='30Min'
 ):
-    r'''Automatic sleep detection.
+    """Automatic sleep detection.
 
     Identification of consolidated sleep episodes using the
     algorithm developped by Roenneberg et al. [1]_.
@@ -298,8 +297,7 @@ def roenneberg(
     [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
-    '''
-
+    """
     # Extract trend
     trend = _extract_trend(
         data=data,
