@@ -12,7 +12,7 @@ __all__ = [
 ]
 
 def _actiware_automatic_threshold(data, scale_factor=0.88888):
-    r'''Automatic Wake Threshold Value calculation
+    """Automatic Wake Threshold Value calculation
 
 
     1. Sum the activity counts for all epochs of the data set.
@@ -39,7 +39,7 @@ def _actiware_automatic_threshold(data, scale_factor=0.88888):
     [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
-    '''
+    """
 
     # Sum of activity counts
     counts_sum = data.sum()
@@ -63,6 +63,9 @@ def _padded_data(data, value, periods, frequency):
     """
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -101,6 +104,9 @@ def _ratio_sequences_of_zeroes(
     """
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -127,6 +133,9 @@ def _estimate_zeta(data, seq_length_max, n_boostrap=100, level=0.05):
     """
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -150,6 +159,9 @@ def _window_convolution(x, scale, window, offset=0.0):
     """
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -162,10 +174,14 @@ def _window_convolution(x, scale, window, offset=0.0):
 
 
 def filter_ts_duration(ts, duration_min='3H', duration_max='12H'):
-    """Filter time series according to their duration
+    """
+    Filter time series according to their duration.
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514

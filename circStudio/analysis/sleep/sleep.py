@@ -30,8 +30,11 @@ def AonT(data, whs=12):
     aot: Timedelta
         Activity onset time.
 
-     References
+    References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -66,6 +69,9 @@ def AoffT(data, whs=12):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -81,9 +87,7 @@ def AoffT(data, whs=12):
 def Cole_Kripke(data, settings=None, threshold=1.0, rescoring=True):
     r"""Cole&Kripke algorithm for sleep-wake identification.
 
-    Algorithm for automatic sleep scoring based on wrist activity,
-    developped by Cole, Kripke et al [1]_.
-
+    Algorithm for automatic sleep scoring based on wrist activity, developped by Cole, Kripke et al [1]_.
 
     Parameters
     ----------
@@ -118,13 +122,19 @@ def Cole_Kripke(data, settings=None, threshold=1.0, rescoring=True):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Cole, R. J., Kripke, D. F., Gruen, W., Mullaney, D. J., & Gillin, J. C. (1992). Automatic Sleep/Wake
     Identification From Wrist Activity. Sleep, 15(5), 461–469. http://doi.org/10.1093/sleep/15.5.461
+
     [2] Webster, J. B., Kripke, D. F., Messin, S., Mullaney, D. J., & Wyborney, G. (1982). An Activity-Based Sleep
     Monitor System for Ambulatory Use. Sleep, 5(4), 389–399. https://doi.org/10.1093/sleep/5.4.389
+
     [3] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
     [4] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
@@ -137,7 +147,9 @@ def Cole_Kripke(data, settings=None, threshold=1.0, rescoring=True):
     ]
 
     def _cole_kripke(data, scale, window, threshold):
-        """Automatic scoring methods from Cole and Kripke"""
+        """
+        Automatic scoring methods from Cole and Kripke.
+        """
 
         ck = data.rolling(
             window.size, center=True
@@ -286,16 +298,27 @@ def Sadeh(data, offset=7.601, weights=None, threshold=0.0):
 
     Returns
     -------
+    pandas.Series
+        Sleep–wake classification time series with the same ``DatetimeIndex``
+        as the input data. Values are binary, where ``1`` indicates sleep and
+        ``0`` indicates wake, as determined by the Sadeh scoring rule and the
+        specified threshold.
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Sadeh, A., Alster, J., Urbach, D., & Lavie, P. (1989). Actigraphically based automatic bedtime sleep-wake
     scoring: validity and clinical applications. Journal of ambulatory monitoring, 2(3), 209-216.
+
     [2] Sadeh, A., Sharkey, M., & Carskadon, M. A. (1994). Activity-Based Sleep-Wake Identification: An Empirical
     Test of Methodological Issues. Sleep, 17(3), 201–207. http://doi.org/10.1093/sleep/17.3.201
+
     [3] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
     [4] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
@@ -328,9 +351,7 @@ def Sadeh(data, offset=7.601, weights=None, threshold=0.0):
 def Scripps(data, scale=0.204, window=None, threshold=1.0):
     r"""Scripps Clinic algorithm for sleep-wake identification.
 
-    Algorithm for automatic sleep scoring based on wrist activity,
-    developed by Kripke et al [1]_.
-
+    Algorithm for automatic sleep scoring based on wrist activity, developed by Kripke et al.
 
     Parameters
     ----------
@@ -351,20 +372,23 @@ def Scripps(data, scale=0.204, window=None, threshold=1.0):
 
     Returns
     -------
-
     scripps: pandas.core.Series
         Time series containing the `D` scores (0: sleep, 1: wake) for each
         epoch.
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
     [1] Kripke, D. F., Hahn, E. K., Grizas, A. P., Wadiak, K. H., Loving, R. T., Poceta, J. S., … Kline, L. E. (2010).
     Wrist actigraphic scoring for sleep laboratory patients: algorithm development. Journal of Sleep Research, 19(4),
     612–619. http://doi.org/10.1111/j.1365-2869.2010.00835.x
+
     [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
     [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
@@ -402,10 +426,9 @@ def Scripps(data, scale=0.204, window=None, threshold=1.0):
 
 
 def Oakley(data, threshold=40):
-    r"""Oakley's algorithm for sleep/wake scoring.
+    """Oakley's algorithm for sleep/wake scoring.
 
-    Algorithm for automatic sleep/wake scoring based on wrist activity,
-    developed by Oakley [1]_.
+    Algorithm for automatic sleep/wake scoring based on wrist activity, developed by Oakley.
 
 
     Parameters
@@ -428,14 +451,19 @@ def Oakley(data, threshold=40):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
     [1] Oakley, N.R. Validation with Polysomnography of the Sleepwatch Sleep/Wake Scoring Algorithm Used by
     the Actiwatch Activity Monitoring System; Technical Report; Mini-Mitter: Bend, OR, USA, 1997
+
     [2] Instruction manual, Actiwatch Communication and Sleep Analysis Software
     (https://fccid.io/JIAAWR1/Users-Manual/USERS-MANUAL-1-920937)
+
     [3] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
     [4] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
@@ -556,6 +584,9 @@ def CSM(ZCMn, settings="auto",score_rest=2,score_sleep=1,binarize=False):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -660,6 +691,9 @@ def SoD(data, whs=4, start='12:00:00', period='5h', algo='Roenneberg', *args, **
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -734,6 +768,9 @@ def fSoD(data, whs=12, start='12:00:00', period='5h', algo='Roenneberg', *args, 
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -760,10 +797,11 @@ def Crespo(
     verbose=False,
     plot=False
 ):
-    r"""Crespo algorithm for activity/rest identification
+    """
+    Crespo algorithm for activity/rest identification.
 
     Algorithm for automatic identification of activity-rest periods based
-    on actigraphy, developed by Crespo et al. [1]_.
+    on actigraphy, developed by Crespo et al. [1].
 
     Parameters
     ----------
@@ -812,12 +850,17 @@ def Crespo(
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Crespo, C., Aboy, M., Fernández, J. R., & Mojón, A. (2012). Automatic identification of activity–rest
     periods based on actigraphy. Medical & Biological Engineering & Computing, 50(4), 329–340.
     http://doi.org/10.1007/s11517-012-0875-y
+
     [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
     [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
@@ -1000,12 +1043,11 @@ def Crespo_AoT(
     seq_length_max=100,
     verbose=False
 ):
-    """Automatic identification of activity onset/offset times, based on
-    the Crespo algorithm.
+    """
+    Automatic identification of activity onset/offset times, based on the Crespo algorithm.
 
-    Identification of the activity onset and offset times using the
-    algorithm for automatic identification of activity-rest periods based
-    on actigraphy, developed by Crespo et al. [1]_.
+    Identification of the activity onset and offset times using the algorithm for automatic identification of
+    activity-rest periods based on actigraphy, developed by Crespo et al.
 
     Parameters
     ----------
@@ -1053,6 +1095,8 @@ def Crespo_AoT(
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
     [1] Crespo, C., Aboy, M., Fernández, J. R., & Mojón, A. (2012). Automatic identification of activity–rest
     periods based on actigraphy. Medical & Biological Engineering & Computing, 50(4), 329–340.
@@ -1144,16 +1188,22 @@ def Roenneberg(
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Roenneberg, T., Keller, L. K., Fischer, D., Matera, J. L., Vetter, C., & Winnebeck, E. C. (2015).
     Human Activity and Rest In Situ. In Methods in Enzymology (Vol. 552, pp. 257-283).
     http://doi.org/10.1016/bs.mie.2014.11.028
+
     [2] Loock, A., Khan Sullivan, A., Reis, C., Paiva, T., Ghotbi, N., Pilz, L. K., Biller, A. M., Molenda, C.,
     Vuori‐Brodowski, M. T., Roenneberg, T., & Winnebeck, E. C. (2021). Validation of the Munich Actimetry Sleep
     Detection Algorithm for estimating sleep–wake patterns from activity recordings. Journal of Sleep
     Research, April, 1–12. https://doi.org/10.1111/jsr.13371
+
     [3] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
     [4] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
@@ -1244,17 +1294,22 @@ def Roenneberg_AoT(
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
     [1] Roenneberg, T., Keller, L. K., Fischer, D., Matera, J. L., Vetter, C., & Winnebeck, E. C. (2015). Human
     Activity and Rest In Situ. In Methods in Enzymology (Vol. 552, pp. 257-283).
     http://doi.org/10.1016/bs.mie.2014.11.028
+
     [2] Loock, A., Khan Sullivan, A., Reis, C., Paiva, T., Ghotbi, N., Pilz, L. K., Biller, A. M., Molenda, C.,
     Vuori‐Brodowski, M. T., Roenneberg, T., & Winnebeck, E. C. (2021). Validation of the Munich Actimetry Sleep
     Detection Algorithm for estimating sleep–wake patterns from activity recordings. Journal of Sleep
     Research, April, 1–12. https://doi.org/10.1111/jsr.13371
+
     [3] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
     [4] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
@@ -1279,8 +1334,8 @@ def Roenneberg_AoT(
 
 
 def SleepProfile(data, freq='15min', algo='Roenneberg', *args, **kwargs):
-    r"""Normalized sleep daily profile
-
+    """
+    Normalized sleep daily profile
 
     Parameters
     ----------
@@ -1305,6 +1360,9 @@ def SleepProfile(data, freq='15min', algo='Roenneberg', *args, **kwargs):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -1312,7 +1370,6 @@ def SleepProfile(data, freq='15min', algo='Roenneberg', *args, **kwargs):
     [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
-
     """
 
     # Retrieve sleep scoring function dynamically by name
@@ -1329,11 +1386,10 @@ def SleepProfile(data, freq='15min', algo='Roenneberg', *args, **kwargs):
 
 
 def SleepRegularityIndex(data, bin_threshold=None, algo='Roenneberg', *args, **kwargs):
-    r""" Sleep regularity index
+    """ Sleep regularity index
 
     Likelihood that any two time-points (epoch-by-epoch) 24 hours apart are
-    in the same sleep/wake state, across all days. This index is originally
-    defined in [1]_ and validated in older adults in [2]_.
+    in the same sleep/wake state, across all days.
 
     Parameters
     ----------
@@ -1354,7 +1410,7 @@ def SleepRegularityIndex(data, bin_threshold=None, algo='Roenneberg', *args, **k
     *args
         Variable length argument list passed to the scoring algorithm.
     **kwargs
-        Arbitrary keyword arguements passed to the scoring algorithm.
+        Arbitrary keyword arguments passed to the scoring algorithm.
 
     Returns
     -------
@@ -1376,15 +1432,21 @@ def SleepRegularityIndex(data, bin_threshold=None, algo='Roenneberg', *args, **k
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Phillips, A. J. K., Clerx, W. M., O’Brien, C. S., Sano, A., Barger, L. K., Picard, R. W., … Czeisler, C. A.
     (2017). Irregular sleep/wake patterns are associated with poorer academic performance and delayed circadian and
     sleep/wake timing. Scientific Reports, 7(1), 1–13. https://doi.org/10.1038/s41598-017-03171-4
+
     [2] Lunsford-Avery, J. R., Engelhard, M. M., Navar, A. M., & Kollins, S. H. (2018). Validation of the Sleep
     Regularity Index in Older Adults and Associations with Cardiometabolic Risk. Scientific Reports, 8(1), 14158.
     https://doi.org/10.1038/s41598-018-32402-5
+
     [3] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
     [4] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
@@ -1402,7 +1464,9 @@ def SleepRegularityIndex(data, bin_threshold=None, algo='Roenneberg', *args, **k
 def SleepMidPoint(data, bin_threshold=None, to_td=True, algo='Roenneberg', *args, **kwargs):
     r""" Sleep midpoint
 
-    Center of the mean sleep periods
+    Center of the mean sleep periods.
+
+    The sleep midpoint is defined as the time halfway between sleep onset and wake-up time.
 
     Parameters
     ----------
@@ -1429,15 +1493,37 @@ def SleepMidPoint(data, bin_threshold=None, to_td=True, algo='Roenneberg', *args
     -------
     smp: float or Timedelta
 
+    Notes
+    -----
+    Sleep midpoint (SMP) is an index of sleep timing and is calculated as the following [1]:
+
+    .. math::
+
+        SMP = \frac{1440}{2\pi} arctan2\left(
+              \sum_{j=1}^M\sum_{i=1}^N
+              s_{i,j} \times sin\left(\frac{2\pi t_i}{1440}\right),
+              \sum_{j=1}^M\sum_{i=1}^N
+              s_{i,j} \times cos\left(\frac{2\pi t_i}{1440}\right)
+              \right)
+
+    with:
+        * :math:`t_j`, time of day in minutes at epoch j,
+        * :math:`\delta(s_{i,j}, s_{i+1,j}) = 1` if
+          :math:`s_{i,j} = s_{i+1,j}` and 0 otherwise.
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Lunsford-Avery, J. R., Engelhard, M. M., Navar, A. M., & Kollins, S. H. (2018). Validation of the Sleep
     Regularity Index in Older Adults and Associations with Cardiometabolic Risk. Scientific Reports, 8(1), 14158.
     https://doi.org/10.1038/s41598-018-32402-5
+
     [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
     [4] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
@@ -1478,7 +1564,7 @@ def sleep_bouts(data, duration_min=None, duration_max=None, algo='Roenneberg', *
     *args
         Variable length argument list passed to the scoring algorithm.
     **kwargs
-        Arbitrary keyword arguements passed to the scoring algorithm.
+        Arbitrary keyword arguments passed to the scoring algorithm.
 
     Returns
     -------
@@ -1486,6 +1572,9 @@ def sleep_bouts(data, duration_min=None, duration_max=None, algo='Roenneberg', *
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -1540,6 +1629,9 @@ def active_bouts(data, duration_min=None, duration_max=None, algo='Roenneberg', 
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -1606,6 +1698,9 @@ def sleep_durations(data, duration_min=None, duration_max=None, algo='Roenneberg
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -1659,6 +1754,9 @@ def active_durations(data, duration_min=None, duration_max=None, algo='Roenneber
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514

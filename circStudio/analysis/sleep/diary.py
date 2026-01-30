@@ -5,10 +5,14 @@ from .sleep import *
 
 
 class SleepDiary:
-    """Class for reading sleep diaries.
+    """
+    Class for reading sleep diaries.
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -163,6 +167,9 @@ class SleepDiary:
 
         References
         ----------
+        This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+        Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
         [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
         pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
         PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -208,6 +215,9 @@ class SleepDiary:
 
         References
         ----------
+        This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+        Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
         [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
         pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
         PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -237,6 +247,9 @@ class SleepDiary:
 
         References
         ----------
+        This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+        Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
         [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
         pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
         PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -266,6 +279,9 @@ class SleepDiary:
 
         References
         ----------
+        This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+        Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
         [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
         pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
         PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -329,7 +345,6 @@ class SleepDiary:
             Array containing sleep onset latency indexed by day of the recording.
         pd.Timedelta
             Mean sleep onset latency.
-
         """
         main_sleep_df = main_sleep_bouts(data=data)[0]
         diary_nights_df = self._diary[self._diary["TYPE"] == "NIGHT"]
@@ -369,6 +384,9 @@ class SleepDiary:
 
         References
         ----------
+        This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+        Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
         [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
         pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
         PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
