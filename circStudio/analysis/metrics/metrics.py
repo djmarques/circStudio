@@ -47,6 +47,9 @@ def daily_profile(
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -76,6 +79,9 @@ def daily_profile(
 
         References
         ----------
+        This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+        Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
         [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
         pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
         PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -192,6 +198,9 @@ def daily_profile_auc(data, start_time=None, stop_time=None, time_origin=None):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -270,6 +279,9 @@ def adat(data, rescale=True, exclude_ends=False):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -319,6 +331,9 @@ def adatp(data, period="7D", rescale=True, exclude_ends=False, verbose=False):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -366,6 +381,9 @@ def l5(data):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F. (1997). Long-Term Fitness Training Improves
     the Circadian Rest-Activity Rhythm in Healthy Elderly Males. Journal of Biological Rhythms, 12(2), 146–156.
     http://doi.org/10.1177/074873049701200206
@@ -410,6 +428,9 @@ def m10(data):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F. (1997). Long-Term Fitness Training Improves
     the Circadian Rest-Activity Rhythm in Healthy Elderly Males. Journal of Biological Rhythms, 12(2), 146–156.
     http://doi.org/10.1177/074873049701200206
@@ -455,6 +476,9 @@ def ra(data):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F. (1997). Long-Term Fitness Training Improves the
     Circadian Rest-Activity Rhythm in Healthy Elderly Males. Journal of Biological Rhythms, 12(2), 146–156.
     http://doi.org/10.1177/074873049701200206
@@ -496,7 +520,6 @@ def l5p(data, period="7D", verbose=False):
     -------
     l5p: list of float
 
-
     Notes
     -----
 
@@ -508,6 +531,8 @@ def l5p(data, period="7D", verbose=False):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
     [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F. (1997). Long-Term Fitness Training Improves the
     Circadian Rest-Activity Rhythm in Healthy Elderly Males. Journal of Biological Rhythms, 12(2), 146–156.
@@ -566,6 +591,8 @@ def m10p(data, period="7D", verbose=False):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
     [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F. (1997). Long-Term Fitness Training Improves the
     Circadian Rest-Activity Rhythm in Healthy Elderly Males. Journal of Biological Rhythms, 12(2), 146–156.
@@ -620,6 +647,8 @@ def rap(data, period="7D", verbose=False):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
     [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F. (1997). Long-Term Fitness Training Improves the
     Circadian Rest-Activity Rhythm in Healthy Elderly Males. Journal of Biological Rhythms, 12(2), 146–156.
@@ -699,6 +728,8 @@ def IS(data):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
     [1] Witting W., Kwa I.H., Eikelenboom P., Mirmiran M., Swaab D.F. Alterations in the circadian rest–activity
     rhythm in aging and Alzheimer׳s disease. Biol Psychiatry. 1990;27:563–572.
@@ -756,6 +787,9 @@ def ISp(data, period="7D", verbose=False):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -818,6 +852,8 @@ def IV(data):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
     [1] Witting W., Kwa I.H., Eikelenboom P., Mirmiran M., Swaab D.F. Alterations in the circadian rest–activity
     rhythm in aging and Alzheimer׳s disease. Biol Psychiatry. 1990;27:563–572.
@@ -871,6 +907,9 @@ def IVp(data, period="7D", verbose=False):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -914,6 +953,9 @@ def summary_stats(light, bins="24h", agg_func=None):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -978,6 +1020,9 @@ def light_exposure(light, threshold=None, start_time=None, stop_time=None, agg="
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -1033,6 +1078,9 @@ def TAT(data, threshold=None, start_time=None, stop_time=None, oformat=None):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -1105,6 +1153,9 @@ def TATp(data, threshold=None, start_time=None, stop_time=None, oformat=None):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -1166,6 +1217,9 @@ def VAT(data, threshold=None):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -1226,6 +1280,8 @@ def mlit(light, threshold):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
     [1] Reid K.J., Santostasi G., Baron K.G., Wilson J., Kang J., Zee P.C., Timing and Intensity of Light
     Correlate with Body Weight in Adults. PLoS ONE 9(4): e92251. https://doi.org/10.1371/journal.pone.0092251
@@ -1253,7 +1309,6 @@ def mlitp(light, threshold):
     r"""Mean light timing per day.
 
     Mean light timing above threshold, MLiT^C, per calendar day.
-
 
     Parameters
     ----------
@@ -1285,6 +1340,8 @@ def mlitp(light, threshold):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
     [1] Reid K.J., Santostasi G., Baron K.G., Wilson J., Kang J., Zee P.C., Timing and Intensity of Light Correlate
     with Body Weight in Adults. PLoS ONE 9(4): e92251. https://doi.org/10.1371/journal.pone.0092251
@@ -1331,6 +1388,9 @@ def get_extremum(data, extremum):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
@@ -1381,6 +1441,9 @@ def lmx(data, length="5h", lowest=True):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Van Someren, E.J.W., Lijzenga, C., Mirmiran, M., Swaab, D.F. (1997). Long-Term Fitness Training Improves
     the Circadian Rest-Activity Rhythm in Healthy Elderly Males. Journal of Biological Rhythms, 12(2), 146–156.
     http://doi.org/10.1177/074873049701200206
@@ -1518,6 +1581,8 @@ def pRA(data, start=None, period=None):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
     [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S., Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
     Quantification of the Fragmentation of Rest-Activity Patterns in Elderly Individuals Using a State Transition
@@ -1588,6 +1653,8 @@ def pAR(data, start=None, period=None):
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
     [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S., Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
     Quantification of the Fragmentation of Rest-Activity Patterns in Elderly Individuals Using a State Transition
@@ -1659,6 +1726,9 @@ def kRA(data, start=None, period=None, frac=0.3, it=0, logit=False, offset="15mi
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S., Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
     Quantification of the Fragmentation of Rest-Activity Patterns in Elderly Individuals Using a State Transition
     Analysis. Sleep, 34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
@@ -1699,11 +1769,11 @@ def kRA(data, start=None, period=None, frac=0.3, it=0, logit=False, offset="15mi
 
 
 def kAR(data, start=None, period=None, frac=0.3, it=0, logit=False, offset="15min"):
-    r"""Rest->Activity transition probability
+    """Rest->Activity transition probability
 
     Weighted average value of pAR(t) within the constant regions, defined
     as the longest stretch within which the LOWESS curve varied by no more
-    than 1 standard deviation of the pAR(t) curve [1]_.
+    than 1 standard deviation of the pAR(t) curve.
 
     Parameters
     ----------
@@ -1747,6 +1817,9 @@ def kAR(data, start=None, period=None, frac=0.3, it=0, logit=False, offset="15mi
 
     References
     ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
     [1] Lim, A. S. P., Yu, L., Costa, M. D., Buchman, A. S., Bennett, D. A., Leurgans, S. E., & Saper, C. B. (2011).
     Quantification of the Fragmentation of Rest-Activity Patterns in Elderly Individuals Using a State Transition
     Analysis. Sleep, 34(11), 1569–1581. http://doi.org/10.5665/sleep.1400
