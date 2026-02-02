@@ -10,37 +10,54 @@ from scipy.ndimage import gaussian_filter1d
 
 
 def spm_smooth(Y, fwhm=5.0):
-    '''
-    Disclaimer:
-    Copyright (C) 2025 Todd Pataky.
+    """
+    Smooth 1D signals using a Gaussian filter kernel parameterized by
+    full width at half maximum (FWHM).
 
+    This function applied Gaussian smoothing using ``scipy.ndimage.gaussian_filter1d``. Unlike the standard
+    SciPy interface, the width of the kernel is specified as full-width at
+    half-maximum (FWHM) rather than standard deviation.
+
+    Parameters
+    ----------
+    Y : ndarray, shape (J, Q)
+        Array of 1D signals to be smoothed.
+    fwhm : float, optional
+        Full-width at half-maximum of the Gaussian kernel, in samples.
+        Default is 5.0.
+
+    Returns
+    -------
+    ndarray, shape (J, Q)
+        Smoothed signals.
+
+    References
+    ----------
     This function is derived from code originally distributed as part of the spm1d package
     and is reused here in accordance with the GNU General Public License v3.0 (GPL-3.0).
     The function is included to avoid dependency conflicts associated with the full spm1d
     package.
-
-    ---
-
-    Smooth a set of 1D continua.
-    This method uses **scipy.ndimage.filters.gaussian_filter1d** but uses the *fwhm*
-    instead of the standard deviation.
-
-    :Parameters:
-
-    - *Y* --- a (J x Q) numpy array
-    - *fwhm* ---  Full-width at half-maximum of a Gaussian kernel used for smoothing.
-
-    :Returns:
-
-    - (J x Q) numpy array
-
-    '''
+    """
     sd = fwhm / sqrt(8 * log(2))
     return gaussian_filter1d(Y, sd, mode='wrap')
 
 
 def _zero_crossing_points(x):
-    r'''Zero crossing points'''
+    """Zero crossing points
+
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     x_sign = np.sign(x)
     zero_crossing = ((np.roll(x_sign, 1) - x_sign) != 0).astype(int)
     # the first point is set to 1 if the last and the first points have
@@ -50,7 +67,22 @@ def _zero_crossing_points(x):
 
 
 def _extrema_points(df_dx, d2f_dx2):
-    r'''Extrema (either minimum or maximum) points'''
+    """Extrema (either minimum or maximum) points
+
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+
+    """
     # Extrema are located where the first derivative, df_dx = 0
     extrema = _zero_crossing_points(df_dx)
     # Second derivative is used to differentiate maxima (d2f_dx2<0)
@@ -60,7 +92,21 @@ def _extrema_points(df_dx, d2f_dx2):
 
 
 def _inflexion_points(df_dx, d2f_dx2):
-    r'''Inflexion points'''
+    """Inflexion points
+
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     # Inflexion points are located where the second derivative, d2f_dx2 = 0
     # The first derivative is then used to distinguish between an
     # 'increasing' or 'decreasing' inflexion.
@@ -68,19 +114,60 @@ def _inflexion_points(df_dx, d2f_dx2):
 
 
 def _lids_func(x):
-    r'''LIDS transformation function'''
+    """LIDS transformation function
+
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
 
     return 100/(x+1)
 
 
 def _lids_inverse_func(x):
-    r'''LIDS inverse transformation function'''
+    """LIDS inverse transformation function
 
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     return 100/x - 1
 
 
 def _lids_pmf(x_lids, mu_lids):
-    r'''Probability mass function of the LIDS'''
+    """Probability mass function of the LIDS
+
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
 
     # Expected number of counts
     mu = _lids_inverse_func(mu_lids)
@@ -91,18 +178,44 @@ def _lids_pmf(x_lids, mu_lids):
 
 
 def _cosine(x, params):
-    r'''1-harmonic cosine function'''
+    """1-harmonic cosine function
 
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     A = params['amp']
     phi = params['phase']
     T = params['period']
     offset = params['offset']
-
     return A*np.cos(2*np.pi/T*x+phi) + offset
 
 
 def _lfm(x, params):
-    r'''Linear frequency modulated cosine function'''
+    """Linear frequency modulated cosine function
+
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
 
     A = params['amp']
     k = params['k']
@@ -115,7 +228,21 @@ def _lfm(x, params):
 
 
 def _lfam(x, params):
-    r'''Linear frequency and amplitude modulated cosine function'''
+    """Linear frequency and amplitude modulated cosine function
+
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
 
     A = params['amp']
     b = params['mod']
@@ -129,21 +256,49 @@ def _lfam(x, params):
 
 
 def _residual(params, x, data, fit_func):
-    r'''Residual function to minimize'''
+    """Residual function to minimize
+
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
 
     model = fit_func(x, params)
     return (data-model)
 
 
 def _residual_rel(params, x, data, sigma, fit_func):
-    r'''Residual function to minimize'''
+    """Residual function to minimize
+
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
 
     model = fit_func(x, params)
     return (data-model)/sigma
 
 
 def _lids_likelihood(params, x, data, fit_func):
-    r'''LIDS likelihood function
+    """LIDS likelihood function
 
     Defined as the product of the probability mass functions, evaluated at each
     data point, using the current fit value as the expected value.
@@ -151,7 +306,20 @@ def _lids_likelihood(params, x, data, fit_func):
     NB: when the difference between the expected value and the observed one is
     large, the probability drops to zero, due to finite floating precision.
     A temporary solution consists in replacing all values below eps with eps.
-    '''
+
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
 
     # Expected LIDS counts (i.e fitted values, 'mu_i')
     expected_val = fit_func(x, params)
@@ -176,19 +344,46 @@ def _lids_likelihood(params, x, data, fit_func):
 
 
 def _nlog(x):
+    """
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    Parameters
+    """
     return -2*np.log(np.prod(x))
 
 
 class LIDS:
     """
-    Class for Locomotor inactivity during sleep (LIDS) Analysis
+    Locomotor inactivity during sleep (LIDS) Analysis
+
 
     Winnebeck, E. C., Fischer, D., Leise, T., & Roenneberg, T. (2018).
     Dynamics and Ultradian Structure of Human Sleep in Real Life.
     Current Biology, 28(1), 49–59.e5. http://doi.org/10.1016/j.cub.2017.11.063
 
-    """
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+    """
     lids_func_list = ['lids']
     fit_func_list = ['cosine', 'chirp', 'modchirp']
 
@@ -265,7 +460,7 @@ class LIDS:
 
     @property
     def freq(self):
-        r'''Sampling frequency of the LIDS transformed data'''
+        """Sampling frequency of the LIDS transformed data"""
         if self.__freq is None:
             warnings.warn(
                 'The sampling frequency of the LIDS data is not set. '
@@ -276,12 +471,12 @@ class LIDS:
 
     @property
     def lids_func(self):
-        r'''LIDS transformation function'''
+        """LIDS transformation function"""
         return self.__lids_func
 
     @property
     def lids_fit_func(self):
-        r'''Fit function to LIDS oscillations'''
+        """Fit function to LIDS oscillations"""
         return self.__fit_func
 
     @lids_fit_func.setter
@@ -290,12 +485,12 @@ class LIDS:
 
     @property
     def lids_fit_initial_params(self):
-        r'''Initial parameters of the fit function to LIDS oscillations'''
+        """Initial parameters of the fit function to LIDS oscillations"""
         return self.__fit_initial_params
 
     @property
     def lids_fit_results(self):
-        r'''Results of the LIDS fit'''
+        """Results of the LIDS fit"""
         if self.__fit_results is None:
             warnings.warn(
                 'The fit results is None. '
@@ -305,11 +500,12 @@ class LIDS:
         return self.__fit_results
 
     def filter(self, ts, duration_min='3H', duration_max='12H'):
-        r'''Filter data according to their duration
+        """
+        Filter data according to their duration
 
         Before performing a LIDS analysis, it is necessary to drop sleep bouts
         that too short or too long.
-        '''
+        """
 
         def duration(s):
             return s.index[-1]-s.index[0]
@@ -326,10 +522,10 @@ class LIDS:
         return filtered
 
     def __smooth(self, lids, method, win_size):
-        r'''Smooth LIDS data
+        """Smooth LIDS data
 
         By default, smooth with a centered moving average using a `win_size`
-        window'''
+        window"""
 
         # Smooth functions
         lids_smooth_funcs = ['mva', 'kernel', 'none']
@@ -350,7 +546,7 @@ class LIDS:
     def lids_transform(
         self, ts, method='mva', win_td='30min', resampling_freq=None
     ):
-        r'''Apply LIDS transformation to activity data
+        """Apply LIDS transformation to activity data
 
         This transformation comprises:
 
@@ -381,7 +577,7 @@ class LIDS:
         Returns
         -------
         smooth_lids: pandas.Series
-        '''
+        """
 
         # Resample data to the required frequency
         if resampling_freq is not None:
@@ -413,7 +609,7 @@ class LIDS:
         nan_policy='raise',
         verbose=False
     ):
-        r'''Fit oscillations of the LIDS data
+        """Fit oscillations of the LIDS data
 
         The fit is performed with a fixed period ranging from 30 min to 180 min
         with a step of 5 min by default. The best-fit criterion is the maximal
@@ -456,7 +652,7 @@ class LIDS:
         .. [1] Non-Linear Least-Squares Minimization and Curve-Fitting for
                Python.
                https://lmfit.github.io/lmfit-py/index.html
-        '''
+        """
 
         # # Define residual function to minimize
         # def residual(params, x, data):
@@ -545,7 +741,7 @@ class LIDS:
         # self.lids_fit_period = fit_result.params['period'].value
 
     def lids_pearson_r(self, lids, params=None):
-        r'''Pearson correlation factor
+        """Pearson correlation factor
 
         Pearson correlation factor between LIDS data and its fit function
 
@@ -564,7 +760,7 @@ class LIDS:
             Pearson’s correlation coefficient
         p: numpy.float64
             2-tailed p-value
-        '''
+        """
 
         x = np.arange(lids.index.size)
         if params is None:
@@ -572,7 +768,7 @@ class LIDS:
         return pearsonr(lids, self.lids_fit_func(x, params))
 
     def lids_mri(self, lids, params=None):
-        r'''Munich Rhythmicity Index
+        """Munich Rhythmicity Index
 
         The Munich Rhythmicity Index (MRI) is defined as
         :math:`MRI = A \times r` with :math:`A`, the cosine fit amplitude and
@@ -591,7 +787,8 @@ class LIDS:
         -------
         mri: numpy.float64
             Munich Rhythmicity Index
-        '''
+        """
+
         if params is None:
             params = self.lids_fit_results.params
 
@@ -607,7 +804,7 @@ class LIDS:
         return mri
 
     def lids_period(self, freq='s'):
-        r'''LIDS period
+        """LIDS period
 
         Convert the period of the LIDS oscillations as estimated by the fit
         function to a TimeDelta.
@@ -630,7 +827,7 @@ class LIDS:
         parameters, the fitted period needs to be set via its own setter
         function.
 
-        '''
+        """
         if self.freq is None:
             # TODO: evaluate if raise ValueError('') more appropriate
             return None
@@ -642,7 +839,7 @@ class LIDS:
             return lids_period
 
     def lids_phases(self, lids, step=.1):
-        r'''LIDS onset and offset phases in degrees
+        """LIDS onset and offset phases in degrees
 
         Parameters
         ----------
@@ -655,7 +852,7 @@ class LIDS:
         Returns
         -------
         onset_phase, offset_phase: numpy.float64
-        '''
+        """
 
         if self.lids_fit_results is None:
             # TODO: evaluate if raise ValueError('') more appropriate
@@ -693,7 +890,7 @@ class LIDS:
         return onset_phase, offset_phase
 
     def lids_convert_to_internal_time(self, lids, t_norm='90min'):
-        r'''Convert LIDS data index to internal time.
+        """Convert LIDS data index to internal time.
 
         XXX
 
@@ -709,7 +906,7 @@ class LIDS:
         -------
         ts: pandas.Series
             LIDS data with internal time since sleep onset as index.
-        '''
+        """
 
         # External timeline of the current LIDS data since sleep onset
         t_ext = pd.timedelta_range(
@@ -739,7 +936,7 @@ class LIDS:
         return lids_resampled.interpolate(method='linear')
 
     def lids_summary(self, lids, verbose=False):
-        r'''Calculate summary statistics for LIDS
+        """Calculate summary statistics for LIDS
 
         Fit all LIDS-transformed bouts and calculate the mean period, the mean
         mri, the mean number of LIDS cycles and the dampening factor of the
@@ -757,7 +954,7 @@ class LIDS:
         -------
         summary: dict
             Dictionary with the summary statistics.
-        '''
+        """
 
         ilids = []  # LIDS profiles
         periods = []  # List of LIDS periods
