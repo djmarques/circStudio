@@ -206,7 +206,7 @@ class LIDS:
         smooth_lids: pandas.Series
         """
         # Resample data (from ts to rs) to the required frequency
-        rs = ts.resample(resampling_freq).sum() if resampling_freq is not None else rs = ts
+        rs = ts.resample(resampling_freq).sum() if resampling_freq is not None else ts
 
         # Apply LIDS transformation x: 100/(x+1)
         lids = rs.apply(self._lids_func)
