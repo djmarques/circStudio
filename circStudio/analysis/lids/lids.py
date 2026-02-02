@@ -11,7 +11,7 @@ from scipy.stats import pearsonr
 from smoothing import spm_smooth
 
 # Import LID transforms
-from transforms import _lids_func, _lids_pmf
+from transforms import _lids_func
 
 # Import functions to analyze the sleep signal
 from signal_functions import _extrema_points, _inflexion_points

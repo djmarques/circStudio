@@ -1,5 +1,7 @@
 import numpy as np
-
+"""
+Models to fit data
+"""
 def _cosine(x, params):
     """1-harmonic cosine function
 

@@ -1,7 +1,12 @@
 import numpy as np
 
+"""
+Functions to find peaks, extrema and inflexion points
+"""
+
 def _zero_crossing_points(x):
-    """Zero crossing points
+    """
+    Zero crossing points
 
     References
     ----------
@@ -25,7 +30,8 @@ def _zero_crossing_points(x):
 
 
 def _extrema_points(df_dx, d2f_dx2):
-    """Extrema (either minimum or maximum) points
+    """
+    Extrema (either minimum or maximum) points
 
     References
     ----------
@@ -50,7 +56,8 @@ def _extrema_points(df_dx, d2f_dx2):
 
 
 def _inflexion_points(df_dx, d2f_dx2):
-    """Inflexion points
+    """
+    Inflexion points
 
     References
     ----------

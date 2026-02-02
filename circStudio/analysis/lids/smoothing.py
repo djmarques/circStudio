@@ -1,6 +1,10 @@
 from math import sqrt,log
 from scipy.ndimage import gaussian_filter1d
 
+"""
+Gaussian smoothing using a full width at half maximum (FWHM) kernel
+"""
+
 def spm_smooth(Y, fwhm=5.0):
     """
     Smooth 1D signals using a Gaussian filter kernel parameterized by

@@ -1,6 +1,10 @@
 import numpy as np
 from transforms import _lids_pmf
 
+"""
+Functions to assess goodness-of-fit
+"""
+
 def _residual(params, x, data, fit_func):
     """Residual function to minimize
 
