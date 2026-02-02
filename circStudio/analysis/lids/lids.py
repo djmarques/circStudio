@@ -7,210 +7,178 @@ from functools import reduce
 from lmfit import fit_report, minimize, Parameters
 from scipy.stats import pearsonr
 
-# Import function for Gaussian smoothing using FWHM
-from smoothing import spm_smooth
+from ..sleep.sleep_tools import filter_ts_duration
+from .smoothing import spm_smooth
+from .transforms import _lids_func
+from .signal_functions import _extrema_points, _inflexion_points
+from .model_functions import _cosine, _lfm, _lfam
+from .likelihood import _residual, _lids_likelihood, _nlog
 
-# Import LID transforms
-from transforms import _lids_func
+# Dictionary of functions available for LIDS algorithm
+LIDS_FUNCS = {"lids": _lids_func}
+FIT_FUNCS = {"cosine": _cosine, "chirp": _lfm, "modchirp": _lfam}
+FIT_OBJ_FUNCS = {"residuals": _residual, "nll": _lids_likelihood}
+FIT_REDUC_FUNCS = {"residuals": None, "nll": _nlog}
 
-# Import functions to analyze the sleep signal
-from signal_functions import _extrema_points, _inflexion_points
-
-# Import model functions
-from model_functions import _cosine, _lfm, _lfam
-
-# Import likelihood functions
-from likelihood import _residual, _lids_likelihood, _nlog
+# List of LIDS functions and fit functions
+lids_func_list = ["lids"]
+fit_func_list = ["cosine", "chirp", "modchirp"]
 
 
 class LIDS:
     """
     Locomotor inactivity during sleep (LIDS) Analysis
 
+    Workflow:
+    1. lids_transform() sets the sampling frequency
+    2. lids_fit() stores model parameters
+    3. Metrics (MRI, period, phases) depend on fitted state
 
-    Winnebeck, E. C., Fischer, D., Leise, T., & Roenneberg, T. (2018).
-    Dynamics and Ultradian Structure of Human Sleep in Real Life.
-    Current Biology, 28(1), 49–59.e5. http://doi.org/10.1016/j.cub.2017.11.063
 
     References
     ----------
     This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
     Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
-    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    [1] Winnebeck, E. C., Fischer, D., Leise, T., & Roenneberg, T. (2018). Dynamics and Ultradian Structure of Human
+    Sleep in Real Life. Current Biology, 28(1), 49–59.e5. http://doi.org/10.1016/j.cub.2017.11.063
+
+    [2] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
 
-    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    [3] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+
+    Examples
+    --------
+    >>> lids = LIDS()
+    >>> lids_ts = lids.lids_transform(activity_sleep)
+    >>> lids.lids_fit(lids_ts)
+    >>> lids.lids_mri(lids_ts)
     """
-    lids_func_list = ['lids']
-    fit_func_list = ['cosine', 'chirp', 'modchirp']
+
+    lids_func_list = ["lids"]
+    fit_func_list = ["cosine", "chirp", "modchirp"]
 
     def __init__(
         self,
-        lids_func='lids',
-        fit_func='cosine',
-        fit_obj_func='residuals',
-        fit_params=None
+        lids_func: str = "lids",
+        fit_func: str = "cosine",
+        fit_obj_func: str = "residuals",
+        fit_params=None,
     ):
-
-        # LIDS functions
-        lids_funcs = {'lids': _lids_func}
-        if lids_func not in lids_funcs.keys():
+        # Validate user input
+        if lids_func not in LIDS_FUNCS:
+            raise ValueError(f"`lids_func` must be one of {list(LIDS_FUNCS.keys())}")
+        if fit_func not in FIT_FUNCS:
+            raise ValueError(f"`fit_func` must be one of {list(FIT_FUNCS.keys())}")
+        if fit_obj_func not in FIT_OBJ_FUNCS:
             raise ValueError(
-                '`LIDS function` must be "%s". You passed: "%s"' %
-                ('" or "'.join(list(lids_funcs.keys())), lids_func)
+                f"`fit_obj_func` must be one of {list(FIT_OBJ_FUNCS.keys())}"
             )
 
-        # Fit functions
-        fit_funcs = {'cosine': _cosine, 'chirp': _lfm, 'modchirp': _lfam}
-        if fit_func not in fit_funcs.keys():
-            raise ValueError(
-                '`Fit function` must be "%s". You passed: "%s"' %
-                ('" or "'.join(list(fit_funcs.keys())), fit_func)
-            )
+        # Set LIDS attributes
+        self._freq = None  # pd.Timedelta
+        self._lids_func = LIDS_FUNCS[lids_func]  # LIDS transformation function
+        self._fit_func = FIT_FUNCS[fit_func]  # Fit function to LIDS
+        self._fit_obj_func = FIT_OBJ_FUNCS[fit_obj_func]  # Fit obj function
+        self._fit_reduc_func = FIT_REDUC_FUNCS[fit_obj_func]  # Fit reduc function
+        self._fit_initial_params = self._init_fit_params(fit_func, fit_params)
+        self._fit_results = None
 
-        # Fit objective functions (i.e. funcitons to be minimized)
-        fit_obj_funcs = {
-            'residuals': _residual,
-            'nll': _lids_likelihood
-        }
-        # and associated functions to convert the residuals to a scalar value
-        fit_reduc_funcs = {
-            'residuals': None,
-            'nll': _nlog
-        }
-
-        if fit_obj_func not in fit_obj_funcs.keys():
-            raise ValueError(
-                '`Fit objective function` must be "%s". You passed: "%s"' %
-                ('" or "'.join(list(fit_obj_funcs.keys())), fit_obj_func)
-            )
-
-        self.__freq = None  # pd.Timedelta
-        self.__lids_func = lids_funcs[lids_func]  # LIDS transformation fct
-        self.__fit_func = fit_funcs[fit_func]  # Fit function to LIDS
-        self.__fit_obj_func = fit_obj_funcs[fit_obj_func]  # Fit obj function
-        self.__fit_reduc_func = fit_reduc_funcs[fit_obj_func]
-
+    @staticmethod
+    def _init_fit_params(fit_func: str, fit_params: Parameters | None) -> Parameters:
+        """Initialize default fit parameters."""
         if fit_params is None:
             fit_params = Parameters()
             # Default parameters for the cosine fit function
-            fit_params.add('amp', value=50, min=0, max=100)
-            fit_params.add('phase', value=0.0, min=-2*np.pi, max=2*np.pi)
-            fit_params.add('period', value=9, min=0)  # Dummy value
+            fit_params.add("amp", value=50, min=0, max=100)
+            fit_params.add("phase", value=0.0, min=-2 * np.pi, max=2 * np.pi)
+            fit_params.add("period", value=9, min=0)  # Dummy value
             # Introduce inequality amp+offset < 100
-            fit_params.add('delta', value=60, max=100, vary=True)
-            fit_params.add('offset', expr='delta-amp')
-            # Additional parameters for the chirp fit function
-            if fit_func == 'chirp':
-                fit_params.add('k', value=-.0001, min=-1, max=1)
-                fit_params.add('slope', value=-0.5)
-            # Additional parameters for the modchirp fit function
-            if fit_func == 'modchirp':
-                fit_params.add('k', value=-.0001, min=-1, max=1)
-                fit_params.add('slope', value=-0.5)
-                fit_params.add('mod', value=0.0001, min=-10, max=10)
+            fit_params.add("delta", value=60, max=100, vary=True)
+            fit_params.add("offset", expr="delta-amp")
 
-        self.__fit_initial_params = fit_params
-        # self.__fit_params = None
-        self.__fit_results = None
-        # self.__fit_period = None
+            # Additional parameters for the chirp fit function
+            if fit_func == "chirp":
+                fit_params.add("k", value=-0.0001, min=-1, max=1)
+                fit_params.add("slope", value=-0.5)
+
+            # Additional parameters for the modchirp fit function
+            if fit_func == "modchirp":
+                fit_params.add("k", value=-0.0001, min=-1, max=1)
+                fit_params.add("slope", value=-0.5)
+                fit_params.add("mod", value=0.0001, min=-10, max=10)
+
+        return fit_params
 
     @property
     def freq(self):
         """Sampling frequency of the LIDS transformed data"""
-        if self.__freq is None:
+        if self._freq is None:
             warnings.warn(
-                'The sampling frequency of the LIDS data is not set. '
-                'Run lids_transform() before accessing this attribute.',
-                UserWarning
+                "The sampling frequency of the LIDS data is not set. "
+                "Run lids_transform() before accessing this attribute.",
+                UserWarning,
             )
-        return self.__freq
-
-    @property
-    def lids_func(self):
-        """LIDS transformation function"""
-        return self.__lids_func
-
-    @property
-    def lids_fit_func(self):
-        """Fit function to LIDS oscillations"""
-        return self.__fit_func
-
-    @lids_fit_func.setter
-    def lids_fit_func(self, func):
-        self.__fit_func = func
-
-    @property
-    def lids_fit_initial_params(self):
-        """Initial parameters of the fit function to LIDS oscillations"""
-        return self.__fit_initial_params
+        return self._freq
 
     @property
     def lids_fit_results(self):
         """Results of the LIDS fit"""
-        if self.__fit_results is None:
+        if self._fit_results is None:
             warnings.warn(
-                'The fit results is None. '
-                'Run lids_fit() before accessing this attribute.',
-                UserWarning
+                "The fit results is None. "
+                "Run lids_fit() before accessing this attribute.",
+                UserWarning,
             )
-        return self.__fit_results
+        return self._fit_results
 
-    def filter(self, ts, duration_min='3H', duration_max='12H'):
+    # ---------------------------
+    # Data Preprocessing
+    # ---------------------------
+    @staticmethod
+    def filter(ts: pd.Series, duration_min="3H", duration_max="12H"):
         """
         Filter data according to their duration
 
         Before performing a LIDS analysis, it is necessary to drop sleep bouts
         that too short or too long.
         """
-
-        def duration(s):
-            return s.index[-1]-s.index[0]
-
-        td_min = pd.Timedelta(duration_min)
-        td_max = pd.Timedelta(duration_max)
-
-        from itertools import filterfalse
-        filtered = []
-        filtered[:] = filterfalse(
-            lambda x: duration(x) < td_min or duration(x) > td_max,
-            ts
+        return filter_ts_duration(
+            ts, duration_min=duration_min, duration_max=duration_max
         )
-        return filtered
 
-    def __smooth(self, lids, method, win_size):
-        """Smooth LIDS data
+    @staticmethod
+    def _smooth(lids, method, win_size):
+        """
+        Smooth LIDS data using moving average (mva) or kernel (kernel).
+        """
+        match method:
+            case "mva":
+                return lids.rolling(win_size, center=True, min_periods=1).mean()
+            case "kernel":
+                smooth_lids = spm_smooth(lids.values, fwhm=win_size)
+                return pd.Series(data=smooth_lids, index=lids.index)
+            case "none":
+                return lids
+            case _:
+                raise ValueError(
+                    f"Method must be either mva, kernel or None, got {method} instead."
+                )
 
-        By default, smooth with a centered moving average using a `win_size`
-        window"""
-
-        # Smooth functions
-        lids_smooth_funcs = ['mva', 'kernel', 'none']
-        if method not in lids_smooth_funcs:
-            raise ValueError(
-                '`LIDS smooth function` must be "%s". You passed: "%s"' %
-                ('" or "'.join(list(lids_smooth_funcs)), method)
-            )
-
-        if method == 'mva':
-            return lids.rolling(win_size, center=True, min_periods=1).mean()
-        elif method == 'kernel':
-            smooth_lids = spm_smooth(lids.values, fwhm=win_size)
-            return pd.Series(data=smooth_lids, index=lids.index)
-        elif method == 'none':
-            return lids
-
-    def lids_transform(
-        self, ts, method='mva', win_td='30min', resampling_freq=None
-    ):
-        """Apply LIDS transformation to activity data
+    def lids_transform(self,
+                       ts: pd.Series,
+                       method="mva",
+                       win_td="30min",
+                       resampling_freq: str | None = None) -> pd.Series:
+        """
+        Transform activity data from regions identified as rest to
+        locomotor inactivity during sleep (LIDS).
 
         This transformation comprises:
-
         * resampling via summation (optional)
         * non-linear LIDS transformation
         * smoothing with a centered moving average
@@ -221,12 +189,10 @@ class LIDS:
             Data identified as locomotor activity during sleep.
         method: str, optional
             Method to smooth the data.
-            Available options are:
-
+            Available options:
             * 'mva': moving average
             * 'kernel': gaussian kernel
             * 'none': no smoothing
-
             Default is 'mva'.
         win_td: str, optional
             Size of the moving average window.
@@ -239,36 +205,35 @@ class LIDS:
         -------
         smooth_lids: pandas.Series
         """
+        # Resample data (from ts to rs) to the required frequency
+        rs = ts.resample(resampling_freq).sum() if resampling_freq is not None else rs = ts
 
-        # Resample data to the required frequency
-        if resampling_freq is not None:
-            rs = ts.resample(resampling_freq).sum()
-        else:
-            rs = ts
         # Apply LIDS transformation x: 100/(x+1)
-        lids = rs.apply(self.lids_func)
+        lids = rs.apply(self._lids_func)
 
         # Store actual sampling frequency
-        self.__freq = pd.Timedelta(lids.index.freq)
+        self._freq = pd.Timedelta(lids.index.freq)
 
         # Series with a DateTimeIndex don't accept 'time-aware' centered window
         # Convert win_size (TimeDelta) into a number of time bins
-        win_size = int(pd.Timedelta(win_td)/self.__freq)
+        win_size = int(pd.Timedelta(win_td) / self._freq)
 
         # Smooth LIDS-transformed data
-        smooth_lids = self.__smooth(lids, method=method, win_size=win_size)
+        smooth_lids = self.__class__._smooth(lids, method=method, win_size=win_size)
 
         return smooth_lids
 
+    # ---------------------------
+    # Model fitting
+    # ---------------------------
     def lids_fit(
         self,
         lids,
-        method='leastsq',
         scan_period=True,
-        bounds=('30min', '180min'),
-        step='5min',
-        nan_policy='raise',
-        verbose=False
+        bounds=("30min", "180min"),
+        step="5min",
+        nan_policy="raise",
+        verbose=False,
     ):
         """Fit oscillations of the LIDS data
 
@@ -280,9 +245,6 @@ class LIDS:
         ----------
         lids: pandas.Series
             Output data from LIDS transformation.
-        method: str, optional
-            Name of the fitting method to use [1]_.
-            Default is 'leastsq'.
         scan_period: bool, optional
             If set to True, the period of the LIDS fit function is fixed and
             varied between the specified bounds.
@@ -309,61 +271,51 @@ class LIDS:
 
         References
         ----------
-
-        .. [1] Non-Linear Least-Squares Minimization and Curve-Fitting for
-               Python.
-               https://lmfit.github.io/lmfit-py/index.html
+        [1] Non-Linear Least-Squares Minimization and Curve-Fitting for
+        Python. https://lmfit.github.io/lmfit-py/index.html
         """
-
-        # # Define residual function to minimize
-        # def residual(params, x, data):
-        #     model = self.lids_fit_func(x, params)
-        #     return (data-model)
-
         # Define the x range
         x = np.arange(lids.index.size)
 
         if scan_period:
 
             # Define bounds for the period
-            period_start = pd.Timedelta(bounds[0])/self.__freq
-            period_end = pd.Timedelta(bounds[1])/self.__freq
-            period_range = period_end-period_start
-            period_step = pd.Timedelta(step)/self.__freq
+            period_start = pd.Timedelta(bounds[0]) / self._freq
+            period_end = pd.Timedelta(bounds[1]) / self._freq
+            period_range = period_end - period_start
+            period_step = pd.Timedelta(step) / self._freq
 
             test_periods = np.linspace(
-                period_start,
-                period_end,
-                num=int(period_range/period_step)+1
+                period_start, period_end, num=int(period_range / period_step) + 1
             )
 
             # Fit data for each test period
             mri = -np.inf
             fit_result_tmp = None
-            initial_period = self.__fit_initial_params['period'].value
+            initial_period = self._fit_initial_params["period"].value
             for test_period in test_periods:
                 # Fix test period
-                self.__fit_initial_params['period'].value = test_period
-                self.__fit_initial_params['period'].vary = False
+                self._fit_initial_params["period"].value = test_period
+                self._fit_initial_params["period"].vary = False
 
                 # Minimize residuals
                 fit_result_tmp = minimize(
-                    self.__fit_obj_func,
-                    self.__fit_initial_params,
-                    args=(x,  lids.values, self.lids_fit_func),
+                    self._fit_obj_func,
+                    self._fit_initial_params,
+                    args=(x, lids.values, self._fit_func),
                     nan_policy=nan_policy,
-                    reduce_fcn=self.__fit_reduc_func
+                    reduce_fcn=self._fit_reduc_func,
                 )
                 # Print fit parameters if verbose
                 if verbose:
                     print(fit_report(fit_result_tmp))
+
                 # Calculate the MR index
                 mri_tmp = self.lids_mri(lids, fit_result_tmp.params)
                 if verbose:
-                    pearson_r = self.lids_pearson_r(
-                        lids, fit_result_tmp.params)[0]
-                    print('Pearson r: {}'.format(pearson_r))
-                    print('MRI: {}'.format(mri_tmp))
+                    pearson_r = self.lids_pearson_r(lids, fit_result_tmp.params)[0]
+                    print("Pearson r: {}".format(pearson_r))
+                    print("MRI: {}".format(mri_tmp))
 
                 # If the newly calculated MRI is higher than the current MRI
                 if mri_tmp > mri and (test_period != period_end):
@@ -373,19 +325,18 @@ class LIDS:
                     fit_result = fit_result_tmp
 
             if verbose:
-                print('Highest MRI: {}'.format(mri))
+                print("Highest MRI: {}".format(mri))
             # Set back original value
-            self.__fit_initial_params['period'].value = initial_period
-            self.__fit_initial_params['period'].vary = True
+            self._fit_initial_params["period"].value = initial_period
+            self._fit_initial_params["period"].vary = True
         else:
-
             # Minimize residuals
             fit_result = minimize(
-                self.__fit_obj_func,
-                self.__fit_initial_params,
-                args=(x,  lids.values, self.lids_fit_func),
+                self._fit_obj_func,
+                self._fit_initial_params,
+                args=(x, lids.values, self._fit_func),
                 nan_policy=nan_policy,
-                reduce_fcn=self.__fit_reduc_func
+                reduce_fcn=self._fit_reduc_func,
             )
             # Print fit parameters if verbose
             if verbose:
@@ -394,16 +345,13 @@ class LIDS:
                 # Calculate the MR index
                 pearson_r = self.lids_pearson_r(lids, fit_result.params)[0]
                 mri = self.lids_mri(lids, fit_result.params)
-                print('Pearson r: {}'.format(pearson_r))
-                print('MRI: {}'.format(mri))
+                print("Pearson r: {}".format(pearson_r))
+                print("MRI: {}".format(mri))
 
-        self.__fit_results = fit_result
-        # self.lids_fit_params = fit_result.params
-        # self.lids_fit_period = fit_result.params['period'].value
+        self._fit_results = fit_result
 
     def lids_pearson_r(self, lids, params=None):
-        """Pearson correlation factor
-
+        """
         Pearson correlation factor between LIDS data and its fit function
 
         Parameters
@@ -424,9 +372,8 @@ class LIDS:
         """
 
         x = np.arange(lids.index.size)
-        if params is None:
-            params = self.lids_fit_results.params
-        return pearsonr(lids, self.lids_fit_func(x, params))
+        params = self.lids_fit_results.params if params is None else params
+        return pearsonr(lids, self._fit_func(x, params))
 
     def lids_mri(self, lids, params=None):
         """Munich Rhythmicity Index
@@ -449,22 +396,18 @@ class LIDS:
         mri: numpy.float64
             Munich Rhythmicity Index
         """
+        params = self.lids_fit_results.params if params is None else params
 
-        if params is None:
-            params = self.lids_fit_results.params
-
-        # Pearson's r
+        # Calculate Pearson's r
         pearson_r = self.lids_pearson_r(lids, params)[0]
 
         # Oscillation range = [-A,+A] => 2*A
-        oscillation_range = 2*params['amp'].value
+        oscillation_range = 2 * params["amp"].value
 
         # MRI
-        mri = pearson_r*oscillation_range
+        return pearson_r * oscillation_range
 
-        return mri
-
-    def lids_period(self, freq='s'):
+    def lids_period(self, freq="s"):
         """LIDS period
 
         Convert the period of the LIDS oscillations as estimated by the fit
@@ -472,7 +415,7 @@ class LIDS:
 
         Parameters
         ----------
-        s: str, optional
+        freq: str, optional
             Frequency to cast the output timedelta to.
             Default is 's'.
 
@@ -489,17 +432,15 @@ class LIDS:
         function.
 
         """
-        if self.freq is None:
-            # TODO: evaluate if raise ValueError('') more appropriate
-            return None
-        elif self.lids_fit_results is None:
-            # TODO: evaluate if raise ValueError('') more appropriate
+        if self.freq is None or self.lids_fit_results is None:
             return None
         else:
-            lids_period = self.lids_fit_results.params['period']*self.freq
-            return lids_period
+            return self.lids_fit_results.params["period"] * self.freq
 
-    def lids_phases(self, lids, step=.1):
+    # ---------------------------
+    # Phase & time conversions
+    # ---------------------------
+    def lids_phases(self, lids, step=0.1):
         """LIDS onset and offset phases in degrees
 
         Parameters
@@ -514,13 +455,7 @@ class LIDS:
         -------
         onset_phase, offset_phase: numpy.float64
         """
-
-        if self.lids_fit_results is None:
-            # TODO: evaluate if raise ValueError('') more appropriate
-            return None
-
-        if self.lids_fit_results is None:
-            # TODO: evaluate if raise ValueError('') more appropriate
+        if self.lids_fit_results is None or self.lids_fit_results is None:
             return None
 
         # Access fit parameters
@@ -530,13 +465,13 @@ class LIDS:
         x = np.arange(lids.index.size, step=step)
 
         # LIDS fit derivatives (1st and 2nd)
-        df_dx = np.gradient(self.lids_fit_func(x, params), step)
+        df_dx = np.gradient(self._fit_func(x, params), step)
         d2f_dx2 = np.gradient(df_dx, step)
 
         # Index of the 1st maxima (i.e 1st maximum of the LIDS oscillations)
         first_max_idx = np.argmax(_extrema_points(df_dx, d2f_dx2))
         # Convert the index into a phase using the fitted period
-        onset_phase = (first_max_idx*step)/params['period']*360
+        onset_phase = (first_max_idx * step) / params["period"] * 360
 
         # Index of the last 'increasing' inflexion points in LIDS oscillations
         # before sleep offset
@@ -546,11 +481,11 @@ class LIDS:
             + 1  # to account for index shifting during reverse (-1: 0th elem)
         )
         # Convert the index into a phase using the fitted period
-        offset_phase = np.abs(last_inflex_idx*step/params['period']*360)
+        offset_phase = np.abs(last_inflex_idx * step / params["period"] * 360)
 
         return onset_phase, offset_phase
 
-    def lids_convert_to_internal_time(self, lids, t_norm='90min'):
+    def lids_convert_to_internal_time(self, lids, t_norm="90min"):
         """Convert LIDS data index to internal time.
 
         XXX
@@ -571,17 +506,15 @@ class LIDS:
 
         # External timeline of the current LIDS data since sleep onset
         t_ext = pd.timedelta_range(
-            start='0 day',
-            periods=lids.index.size,
-            freq=self.freq
+            start="0 day", periods=lids.index.size, freq=self.freq
         )
 
         # Scaling factor, relative to the LIDS period, normalized to t_norm
-        scaling_factor = pd.Timedelta(t_norm)/self.lids_period()
+        scaling_factor = pd.Timedelta(t_norm) / self.lids_period()
 
         # Internal timeline (aka: external timeline, rescaled to LIDS period)
         # t_int = scaling_factor*t_ext
-        t_int = pd.TimedeltaIndex(scaling_factor*t_ext.values, freq='infer')
+        t_int = pd.TimedeltaIndex(scaling_factor * t_ext.values, freq="infer")
 
         # Construct a new Series with internal timeline as index
         lids_rescaled = pd.Series(lids.values, index=t_int)
@@ -594,8 +527,11 @@ class LIDS:
             # closed='right'
         ).mean()
 
-        return lids_resampled.interpolate(method='linear')
+        return lids_resampled.interpolate(method="linear")
 
+    # ---------------------------
+    # Summaries
+    # ---------------------------
     def lids_summary(self, lids, verbose=False):
         """Calculate summary statistics for LIDS
 
@@ -627,21 +563,21 @@ class LIDS:
             self.lids_fit(s, verbose=False)
 
             # Verify LIDS period
-            period = self.lids_period(freq='s')
+            period = self.lids_period(freq="s")
 
             # Calculate MRI
             mri = self.lids_mri(s)
 
             # Calculate the number of LIDS cycle (as sleep bout length/period):
-            ncycle = s.index.values.ptp()/np.timedelta64(1, 's')
+            ncycle = s.index.values.ptp() / np.timedelta64(1, "s")
             ncycle /= period.astype(float)
 
             if verbose:
-                print('-'*20)
-                print('Sleep bout nr {}'.format(idx))
-                print('- Period: {!s}'.format(period))
-                print('- MRI: {}'.format(mri))
-                print('- Number of cycles: {}'.format(ncycle))
+                print("-" * 20)
+                print("Sleep bout nr {}".format(idx))
+                print("- Period: {!s}".format(period))
+                print("- MRI: {}".format(mri))
+                print("- Number of cycles: {}".format(ncycle))
 
             # Rescale LIDS timeline to LIDS period
             rescaled_lids = self.lids_convert_to_internal_time(s)
@@ -652,25 +588,18 @@ class LIDS:
             ilids.append(rescaled_lids)
 
         # Create the mean LIDS profile
-        lids_profile = reduce(
-            (lambda x, y: x.add(y, fill_value=0)),
-            ilids
-        )/len(ilids)
+        lids_profile = reduce((lambda x, y: x.add(y, fill_value=0)), ilids) / len(ilids)
 
         # Fit mean LIDS profile with a pol0
         fit_params = np.polyfit(
-            x=range(len(lids_profile.index)),
-            y=lids_profile.values,
-            deg=1
+            x=range(len(lids_profile.index)), y=lids_profile.values, deg=1
         )
 
         # LIDS summary
         summary = {}
-        summary['Mean number of LIDS cycles'] = np.mean(ncycles)
-        summary['Mean LIDS period (s)'] = np.mean(periods).astype(float)
-        summary['Mean MRI'] = np.mean(mris)
-        summary[
-            'LIDS dampening factor (counts/{})'.format(self.freq)
-        ] = fit_params[0]
+        summary["Mean number of LIDS cycles"] = np.mean(ncycles)
+        summary["Mean LIDS period (s)"] = np.mean(periods).astype(float)
+        summary["Mean MRI"] = np.mean(mris)
+        summary["LIDS dampening factor (counts/{})".format(self.freq)] = fit_params[0]
 
         return summary

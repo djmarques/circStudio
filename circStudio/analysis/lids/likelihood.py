@@ -1,5 +1,5 @@
 import numpy as np
-from transforms import _lids_pmf
+from .transforms import _lids_pmf
 
 """
 Functions to assess goodness-of-fit
