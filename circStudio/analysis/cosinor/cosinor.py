@@ -54,24 +54,66 @@ class Cosinor:
     """
     @staticmethod
     def _cosinor(x, params):
-        """1-harmonic cosine function"""
+        """
+        1-harmonic cosine function
 
+        Parameters
+        ----------
+        x : np.ndarray
+            Time values expressed in sample units (e.g., minutes since start).
+        params : lmfit.Parameters
+            Must contain: 'Amplitude', 'Acrophase', 'Period', 'Mesor'.
+
+        Returns
+        -------
+        np.ndarray
+            Model values evaluated at `x`.
+        """
         A = params['Amplitude']
         phi = params['Acrophase']
         T = params['Period']
         M = params['Mesor']
-
         return M + A * np.cos(2 * np.pi / T * x + phi)
 
     @staticmethod
     def _residual(params, x, data, fit_func):
-        """Residual function to minimize"""
+        """
+        Residuals to be minimized by the optimizer.
+
+        Residuals are simply: observed - model.
+
+        Parameters
+        ----------
+        params : lmfit.Parameters
+            Candidate parameter values during optimization.
+        x : np.ndarray
+            Time values (in sample units).
+        data : np.ndarray
+            Observed data values.
+        fit_func : callable
+            Model function such as `_cosinor`.
+
+        Returns
+        -------
+        np.ndarray
+            Residual vector used by the optimizer.
+
+        """
         model = fit_func(x, params)
         return data - model
 
     def __init__(self,fit_params=None):
-        self.__fit_func = self.__class__._cosinor
-        self.__fit_obj_func = self.__class__._residual
+        """
+        Create a Cosinor model with default or user-provided initial parameters.
+
+        Parameters
+        ----------
+        fit_params : lmfit.Parameters, optional
+            Initial guesses and bounds for the fit. If None, sensible defaults
+            are created.
+        """
+        self.fit_func = self.__class__._cosinor
+        self.fit_obj_func = self.__class__._residual
 
         if fit_params is None:
             fit_params = Parameters()
@@ -80,7 +122,11 @@ class Cosinor:
             fit_params.add('Acrophase', value=np.pi, min=0, max=2*np.pi)
             fit_params.add('Period', value=1440, min=0)
             fit_params.add('Mesor', value=50, min=0)
-        self.__fit_initial_params = fit_params
+        self.fit_initial_params = fit_params
+
+    # ----------------------------
+    # Time handling
+    # ----------------------------
 
     @staticmethod
     def _convert_timestamp_to_index(data):
@@ -88,20 +134,6 @@ class Cosinor:
         # Define the x range by converting timestamps to indices, in order to
         # deal with time series with irregular index.
         return ((data.index - data.index[0]) / data.index.freq).values
-
-    @property
-    def fit_func(self):
-        """Cosinor fit function"""
-        return self.__fit_func
-
-    @property
-    def fit_initial_params(self):
-        """Initial parameters of the cosinor fit function"""
-        return self.__fit_initial_params
-
-    @fit_initial_params.setter
-    def fit_initial_params(self, params):
-        self.__fit_initial_params = params
 
     def fit(
         self,
@@ -154,7 +186,18 @@ class Cosinor:
 
         References
         ----------
-        [1] Non-Linear Least-Squares Minimization and Curve-Fitting for Python.
+        This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+        Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+        [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+        pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+        PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+        [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+        Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+        LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+
+        [3] Non-Linear Least-Squares Minimization and Curve-Fitting for Python.
         https://lmfit.github.io/lmfit-py/index.html
         """
 
@@ -164,7 +207,7 @@ class Cosinor:
 
         # Minimize residuals
         fit_results = minimize(
-            self.__fit_obj_func,
+            self.fit_obj_func,
             self.fit_initial_params if params is None else params,
             method=method,
             args=(x, data.values, self.fit_func),
@@ -195,8 +238,18 @@ class Cosinor:
 
         References
         ----------
+        This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+        Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
-        [1] Non-Linear Least-Squares Minimization and Curve-Fitting for Python.
+        [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+        pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+        PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+        [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+        Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+        LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+
+        [3] Non-Linear Least-Squares Minimization and Curve-Fitting for Python.
         https://lmfit.github.io/lmfit-py/index.html
         """
         # Define the x range by converting timestamps to indices, in order to
