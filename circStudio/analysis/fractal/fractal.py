@@ -27,18 +27,21 @@ class Fractal:
     This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
     Original author: Grégory Hammad (gregory.hammad@uliege.be).
 
-    [1] Peng, C.-K., Buldyrev, S. V., Havlin, S., Simons, M., Stanley, H. E., & Goldberger, A. L. (1994). Mosaic
+    [1] Ihlen, E. A. F. (2012). Introduction to Multifractal Detrended Fluctuation Analysis in Matlab.
+    Frontiers in Physiology, 3. https://doi.org/10.3389/fphys.2012.00141
+
+    [2] Peng, C.-K., Buldyrev, S. V., Havlin, S., Simons, M., Stanley, H. E., & Goldberger, A. L. (1994). Mosaic
     organization of DNA nucleotides. Physical Review E, 49(2), 1685–1689. https://doi.org/10.1103/PhysRevE.49.1685
 
-    [2] Kantelhardt, J. W., Zschiegner, S. A., Koscielny-Bunde, E., Havlin, S., Bunde, A., & Stanley, H. E. (2002).
+    [3] Kantelhardt, J. W., Zschiegner, S. A., Koscielny-Bunde, E., Havlin, S., Bunde, A., & Stanley, H. E. (2002).
     Multifractal detrended fluctuation analysis of nonstationary time series. Physica A: Statistical Mechanics and
     Its Applications, 316(1–4), 87–114. https://doi.org/10.1016/S0378-4371(02)01383-3
 
-    [3] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    [4] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
     pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
     PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
 
-    [4] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    [5] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
     Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
     LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
     """
@@ -616,46 +619,50 @@ class Fractal:
 
         When `F(n)` follows a single power law across all scales, the
         log(F(n)) versus log(n) curve is approximately a straight line
-        and the slope is constant.
+        and the slope is approximately constant.
 
-        In real data, scaling can vary with scale. This function estimates a local
-        slope around each scale by fitting a straight line (a polynomial of degree 1)
-        to a small sliding window (min. 3)
+        In real data, however, scaling may vary with the timescale (window size).
+         This function estimates a local slope around each scale by fitting
+        a straight line to a small sliding window of points in the log(F(n)) versus
+        log(n) plot.
 
-
-        to a small sliding window of points in log(F(n)) versus log(n).
-
-
-
-
-        The local slope of the curve log(F(n)) is calculated at each point by
-        fitting polynomial of degree 1, using the 2*s surrounding points.
+        The local slope of the curve log(F(n)) is calculated at each point n by
+        fitting a straight line, using surrounding points (default is 2).
         At the boundaries of {F(n)}, the local slope is calculated with a
         reduced number of points (min. 3).
 
+        This is useful for:
+            - Visually diagnosing crossovers
+            - Identifying scale ranges with stable scaling
+            - Checking whether a single global Hurst exponent is appropriate
+
         Parameters
         ----------
-        F_n : array
-            Array of fluctuations.
-        n_array: array of int
-            Time scales (i.e window sizes). In minutes.
+        F_n : np.array
+            Fluctuation amplitudes in function of timescale.
+        n_array: np.array
+            Time scales (window sizes), in minutes.
         s: int, optional
-            Half size of the window used to estimate the local slope.
-            The total window size is (2*s+1). Default is 2.
+            Half-window size (in number of points) used to estimate the local
+            slope. The total number of points used per local fit is (2*s + 1)
+            Default is 2.
         log: bool, optional
-            If set to True, assume that the input values have already been
-            log-transformed.
+            If True, assume input values have already been log-transformed.
             Default is False.
         verbose: bool, optional
-            If set to True, display informations about the calculations.
+            If set to True, print diagnostic information for each local fit.
             Default is False.
 
         Returns
         -------
-        alpha_loc, alpha_loc_err, n_x: arrays of floats
-            Local slopes (alpha_loc), and associated uncertainties, obtained
-            for various time scales n_x.
+        alpha_loc : numpy.ndarray
+            Local slope estimates (local scaling exponents).
 
+        alpha_loc_err : numpy.ndarray
+            Standard error of each local slope estimate.
+
+        n_x : numpy.ndarray
+            The scale (center of each sliding window) associated with each local slope.
         """
         # Check if inputs have the same dimension
         assert len(F_n) == len(n_array)
@@ -701,14 +708,14 @@ class Fractal:
 
     @staticmethod
     def equally_spaced_logscale_range(n, start=1, stop=1440):
-        """Equally spaced numbers in log-scale
+        """
+        Construct a series of equally spaced numbers in log scale.
 
-        Construct a series of equally spaced numbers in log scale
 
         Parameters
         ----------
         n: int
-            Time scales (i.e window sizes). In minutes.
+            Time scales (i.e., window sizes). In minutes.
         start: int, optional
             Starting number.
             Default is 1.
@@ -718,8 +725,9 @@ class Fractal:
 
         Returns
         -------
-        n_array: numpy.array of int
-            Array of equally spaced numbers.
+        numpy.ndarray
+            Sorted array of unique integer time scales between ``start`` and
+            ``stop`` (inclusive) that are approximately log-spaced.
         """
 
         # Create series of exponentiated numbers evenly spaced in log-space.
