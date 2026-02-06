@@ -526,9 +526,9 @@ class Fractal:
         This function performs a simple crossover search by trying many candidate
         points :math:`n_x`. For each candidate :math:`n_x`, it:
 
-           1) Fits a Hurst exponent using scales below :math:`n_x`.
-           2) Fits a Hurst exponent using scales above :math:`n_x`.
-           3) Computes the ratio of the two exponents.
+           - Fits a Hurst exponent using scales below :math:`n_x`.
+           - Fits a Hurst exponent using scales above :math:`n_x`.
+           - Computes the ratio of the two exponents.
 
         If the ratio deviates strongly from 1, it suggests that scaling differs
         between small and large time scales, consistent with a crossover.

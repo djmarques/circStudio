@@ -4,67 +4,99 @@ from lmfit import fit_report, minimize, Parameters
 import plotly.graph_objects as go
 
 
-def _cosinor(x, params):
-    r'''1-harmonic cosine function'''
-
-    A = params['Amplitude']
-    phi = params['Acrophase']
-    T = params['Period']
-    M = params['Mesor']
-
-    return M + A*np.cos(2*np.pi/T*x+phi)
-
-
-def _residual(params, x, data, fit_func):
-    r'''Residual function to minimize'''
-
-    model = fit_func(x, params)
-    return (data-model)
-
-
 class Cosinor:
     """
-    Class for Cosinor analysis.
+    Class for Cosinor analysis. Cosinor analysis fits a cosine curve to a time series
+    to summarize a rhythmic pattern using a small set of interpretable parameters.
 
-    Cornelissen, G. (2014). Cosinor-based rhythmometry.
-    Theoretical Biology and Medical Modelling, 11(1), 16.
+    It answers questions like:
+        - What is the typical baseline level of the signal?  -> **Mesor**
+        - How large is the rhythm around that baseline?      -> **Amplitude**
+        - When does the peak occur within the cycle?         -> **Acrophase**
+        - What cycle length best matches the data?           -> **Period**
+
+    Model
+    -----
+    This implementation uses a standard 1-harmonic cosinor model:
+
+        y(x) = Mesor + Amplitude * cos(2π/Period * x + Acrophase)
+
+    where `x`is time expressed in sample units (e.g., minutes since start),
+    not necessarily clock time.
+
+    Typical usage
+    -------------
+    >>> model = Cosinor()
+    >>> result = model.fit(series)
+    >>> mesor = result.params['Mesor'].value
+    >>> amplitude = result.params['Amplitude'].value
+    >>> period = result.params['Period'].value
+    >>> acrophase = result.params['Acrophase'].value
+    >>> best = model.best_fit(series, result.params)
+    >>> fig = model.plot(series, result.params)
+
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+
+    [3] Cornelissen, G. (2014). Cosinor-based rhythmometry. Theoretical Biology and Medical Modelling, 11(1), 16.
     https://doi.org/10.1186/1742-4682-11-16
 
     """
+    @staticmethod
+    def _cosinor(x, params):
+        """1-harmonic cosine function"""
 
-    def __init__(
-        self,
-        fit_params=None
-    ):
+        A = params['Amplitude']
+        phi = params['Acrophase']
+        T = params['Period']
+        M = params['Mesor']
 
-        self.__fit_func = _cosinor  # Fit function
-        self.__fit_obj_func = _residual
+        return M + A * np.cos(2 * np.pi / T * x + phi)
+
+    @staticmethod
+    def _residual(params, x, data, fit_func):
+        """Residual function to minimize"""
+        model = fit_func(x, params)
+        return data - model
+
+    def __init__(self,fit_params=None):
+        self.__fit_func = self.__class__._cosinor
+        self.__fit_obj_func = self.__class__._residual
 
         if fit_params is None:
             fit_params = Parameters()
             # Default parameters for the cosinor fit function
             fit_params.add('Amplitude', value=50, min=0)
             fit_params.add('Acrophase', value=np.pi, min=0, max=2*np.pi)
-            fit_params.add('Period', value=1440, min=0)  # Dummy value
+            fit_params.add('Period', value=1440, min=0)
             fit_params.add('Mesor', value=50, min=0)
         self.__fit_initial_params = fit_params
 
     @staticmethod
     def _convert_timestamp_to_index(data):
-        r'''Convert timestamps'''
+        """Convert timestamps"""
         # Define the x range by converting timestamps to indices, in order to
         # deal with time series with irregular index.
-        x = ((data.index - data.index[0]) / data.index.freq).values
-        return x
+        return ((data.index - data.index[0]) / data.index.freq).values
 
     @property
     def fit_func(self):
-        r'''Cosinor fit function'''
+        """Cosinor fit function"""
         return self.__fit_func
 
     @property
     def fit_initial_params(self):
-        r'''Initial parameters of the cosinor fit function'''
+        """Initial parameters of the cosinor fit function"""
         return self.__fit_initial_params
 
     @fit_initial_params.setter
@@ -80,7 +112,8 @@ class Cosinor:
         reduce_fcn=None,
         verbose=False
     ):
-        r'''Fit the actigraphy data using a cosinor function.
+        """
+        Fit the actigraphy data using a cosinor function.
 
         Parameters
         ----------
@@ -121,12 +154,9 @@ class Cosinor:
 
         References
         ----------
-
-        .. [1] Non-Linear Least-Squares Minimization and Curve-Fitting for
-               Python.
-               https://lmfit.github.io/lmfit-py/index.html
-
-        '''
+        [1] Non-Linear Least-Squares Minimization and Curve-Fitting for Python.
+        https://lmfit.github.io/lmfit-py/index.html
+        """
 
         # Define the x range by converting timestamps to indices, in order to
         # deal with time series with irregular index.
@@ -148,7 +178,8 @@ class Cosinor:
         return fit_results
 
     def best_fit(self, data, params):
-        """Best fit function of the data.
+        """
+        Best fit function of the data.
 
         Parameters
         ----------
@@ -165,24 +196,22 @@ class Cosinor:
         References
         ----------
 
-        .. [1] Non-Linear Least-Squares Minimization and Curve-Fitting for
-               Python.
-               https://lmfit.github.io/lmfit-py/index.html
-
+        [1] Non-Linear Least-Squares Minimization and Curve-Fitting for Python.
+        https://lmfit.github.io/lmfit-py/index.html
         """
-
         # Define the x range by converting timestamps to indices, in order to
         # deal with time series with irregular index.
         x = self._convert_timestamp_to_index(data)
         y = self.fit_func(x, params)
-
         return pd.Series(index=data.index, data=y)
 
     def plot(self, data, best_params):
-        layout = go.Layout(title="Cosinor",
-                           xaxis=dict(title="Date time"),
-                           yaxis=dict(title="Counts/period"),
-                           showlegend=False)
+        layout = go.Layout(
+            title="Cosinor",
+            xaxis=dict(title="Date time"),
+            yaxis=dict(title="Counts/period"),
+            showlegend=False
+        )
 
         fig = go.Figure(
             data=[
