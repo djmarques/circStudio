@@ -3,205 +3,254 @@ import pandas as pd
 from scipy import linalg
 
 
-def _weights(L, K):
-
-    N = L + K
-    # weights = np.empty(N-1, dtype=np.float32)
-    weights = np.empty(N-1, dtype=np.int32)
-    for k in range(1, L):
-        weights[k-1] = k
-
-    # for k in range(L,K+1):
-    weights[L-1:K] = L
-
-    for k in range(K+1, N):
-        weights[k-1] = N-k
-
-    return weights
-
-
-def _weighted_scalar_product(X, Y, w):
-    return np.dot(X, np.multiply(Y, w).T)
-
-
-def _weighted_correlation(X, Y, w):
-
-    w_norm_X = np.sqrt(_weighted_scalar_product(X, X, w))
-    w_norm_Y = np.sqrt(_weighted_scalar_product(Y, Y, w))
-
-    w_rho = _weighted_scalar_product(X, Y, w) / (w_norm_X*w_norm_Y)
-
-    return w_rho
-
-
-def _x_elementary(U, s, Vh, L, K, i):
-
-    X_i = np.empty((L, K), dtype=np.float32)
-
-    # Implement the dot product s * U[,i] x Vh[i].T
-    sVh_i = s*Vh[i]
-    for j in range(L):
-        X_i[j] = U[j, i]*sVh_i
-
-    return X_i
-
-
-def _diagonal_averaging(X):
-
-    L, K = X.shape
-    L_star, K_star = min(L, K), max(L, K)
-    # N_star = L_star + K_star
-    if not L < K:
-        X = X.T
-
-    sum_antidiags = np.empty(L_star + K_star - 1, dtype=np.float32)
-    for k in range(1-L_star, K_star):
-        # Avoid using np.flipud as it does not compile with numba.
-        # Besides, it seems slower than [::-1,...]
-        sum_antidiags[k+L_star-1] = np.trace(X[::-1, ...], offset=k)
-
-    scale_factors = _weights(L_star, K_star)
-
-    sum_antidiags /= scale_factors
-
-    return sum_antidiags
-
-
 class SSA:
-    """ Class for Singular Spectrum Analysis"""
+    """
+    Singular Spectrum Analysis (SSA)
 
-    def __init__(self, data, window_length='24H'):
+    SSA is a PCA-like method for time series. It decomposes the actigraphic
+    signal into additive components and estimates how important each component
+    is.
 
-        self.__data = data
-        self.__freq = pd.Timedelta(data.index.freq)
-        self.__window_dim = int(pd.Timedelta(window_length)/self.__freq)
-        self.__L = self.__window_dim
-        self.__K = len(data.values) - self.__L + 1
-        self.__U = None
-        self.__sigma = None
-        self.__Vh = None
-        self.__lambda_s = None
+    1) **Embed** the time series into a matrix where each column is a sliding
+    windows of the signal (the *trajectory matrix*).
+    2) **Decompose** the trajectory matrix into a set of ranked components using
+    Singular Value Decomposition (SVD). Largest component explains most variance,
+    like PCA.
+    3) **Reconstruct** one component (or a group of them) back into a time series
+    by diagonal averaging.
 
-    @property
-    def window_dim(self):
-        r"""Window dimension for immersion of the signal.
-        Window dimension (or embedding dimension) in number of epochs.
-        """
-        return self.__window_dim
+    Parameters
+    ----------
+    data : pandas.Series
+        Time series with a DateTimeIndex and a defined sampling frequency
+        (i.e., `data.index.freq` must not be None).
+    window_length : str or pandas.Timedelta, optional
+        Size of the embedding window. For example "24H" or "90min".
+        This is converted into an integer number of samples based on the series
+        sampling frequency.
+
+    References
+    ----------
+    This code is derived from the original implementation in pyActigraphy, distributed under the BSD 3-Clause License.
+    Original author: Grégory Hammad (gregory.hammad@uliege.be).
+
+    [1] Hammad, G., Reyt, M., Beliy, N., Baillet, M., Deantoni, M., Lesoinne, A., Muto, V., & Schmidt, C. (2021).
+    pyActigraphy: Open-source python package for actigraphy data visualization and analysis.
+    PLoS Computational Biology, 17(10), 1009514–1009535. https://doi.org/10.1371/journal.pcbi.1009514
+
+    [2] Hammad, G., Wulff, K., Skene, D. J., Münch, M., & Spitschan, M. (2024). Open-Source Python Module for the
+    Analysis of Personalized Light Exposure Data from Wearable Light Loggers and Dosimeters.
+    LEUKOS, 20(4), 380–389. https://doi.org/10.1080/15502724.2023.2296863
+
+    [3] Golyandina, N., & Zhigljavsky, A. (2013). Singular Spectrum Analysis for Time Series. Springer Berlin
+    Heidelberg. http://doi.org/10.1007/978-3-642-34913-3
+
+    Examples
+    --------
+    >>> ssa = SSA(activity, window_length="24h")
+    >>> ssa.fit()
+    >>> ssa.variance_explained.sum()
+    >>> trend = ssa.X_tilde(0)
+    >>> reconstructed = ssa.reconstructed_signal([0,1,2,3,4,5,6])
+    >>> w_corr_mat = ssa.w_correlation_matrix(10)
+    """
+    # -------------------------
+    # Construction/validation
+    # -------------------------
+    def __init__(self, data: pd.Series, window_length: str|pd.Timedelta = '24h'):
+
+        # ----------------------------
+        # Input time series
+        # ----------------------------
+
+        # The input signal must be a pd.Series
+        if not isinstance(data, pd.Series):
+            raise TypeError("`data` must be a pandas.Series.")
+
+        # SSA assumes regularly sampled data
+        # Sampling frequency is used to convert time windows (e.g. 24h)
+        # into a number of samples
+        if data.index.freq is None:
+            raise ValueError(
+                "SSA requires a regularly sampled time series (data.index.freq is None).\n"
+                "Fix: resample your series first, e.g. series.resample('1min').mean()."
+            )
+
+        # Store the original time series
+        self.data = data
+
+        # Store data sampling interval
+        self.freq = pd.Timedelta(data.index.freq)
+
+        # -----------------------------
+        # Window / embedding parameters
+        # -----------------------------
+
+        # Window length defines the size of the sliding window
+        # used to build the trajectory matrix.
+        # Intuitively, a small window captures short-term structure
+        # A large window captures long-term structure
+        window_length = (pd.Timedelta(window_length)
+              if not isinstance(window_length, pd.Timedelta)
+              else window_length)
+
+        # Number of samples (rows) in each column, that is, in
+        # each sliding window. This  window length (L) is also
+        # called "embedding dimension"
+        self.L = int(pd.Timedelta(window_length)/self.freq)
+
+        # Number of windows I can slide over the signal (K)
+        # This determines how many columns the trajectory matrix has
+        # If N is the length of the signal, K = N - L + 1
+        self.K = len(data.values) - self.L + 1
+
+        # ------------------------
+        # Results filled by fit()
+        # ------------------------
+
+        # Left singular vectors => each column represents a basic pattern
+        # within each window
+        self.U = None
+
+        # Singular values, measuring the importance of each component
+        self.sigma = None
+
+        # Right singular vectors (transposed)
+        # Describe how each pattern evolves over time
+        self.Vh = None
+
+        # Fraction of total variance explained by each component
+        self.variance_explained = None
+
+    # ---------------
+    # Core SSA steps
+    # ---------------
 
     def trajectory_matrix(self):
-        r'''Trajectory matrix of the signal.
-        Time-series :math:`x=(x_0,x_1,\dots,x_n,\dots,x_{N−1})^\intercal`, with
-        length N, represents the signal under analysis. The mapping of this
-        signal into a matrix A, of dimension L × K , assuming :math:`L \leq K`,
-        is called immersion, and can be defined as:
+        """
+        Build the trajectory matrix (a Hankel matrix) from the time series.
 
-        .. math::
+        Each column corresponds to a sliding window of length `L` (number of rows)
+        and `K` (number of columns), where :math:`K = N - L + 1`.
+        """
+        # Collect the time series (ts)
+        ts = self.data.values
 
-            A = \begin{bmatrix}
-                x_{0} & x_{1} & x_{2} & \dots  & x_{K-1} \\
-                x_{1} & x_{2} & x_{3} & \dots  & x_{K} \\
-                \vdots & \vdots & \vdots & \ddots & \vdots \\
-                x_{L-1} & x_{L} & x_{L+1} & \dots  & x_{N-1}
-                \end{bmatrix}
+        # Collect columns and rows
+        columns = ts[:self.L]
+        rows = ts[-self.K:]
 
-        where L is the window length, or embedding dimension, and
-        :math:`K = N − L + 1`. A is a Hankel matrix, called the trajectory
-        matrix.
-        '''
-        ts = self.__data.values
-        c = ts[:self.__L]
-        r = ts[-self.__K:]
-        A = linalg.hankel(c, r)
-        return A
+        # Return Hankel matrix
+        return linalg.hankel(columns, rows)
 
     def fit(self, check_finite=False, overwrite_a=True):
-        r'''Singular value decomposition of the trajectory matrix.
-        Wrapper around the scipy.linalg.svd function.
+        """
+        Decompose trajectory matrix using singular value decomposition (SVD).
+
+        In SSA, we first build a trajectory matrix (a Henkel matrix, where each
+        column represents an overlapping window of the signal). SVD splits this
+        matrix into three other matrices:
+
+            - U: patterns that describe what the component looks like inside a window.
+            - S: how much does each component explain structure/variance in the signal.
+            - Vh: how each component changes across windows.
+
+        For each component, `fit()` also computes how the fraction of total variance
+        explained by each component.
 
         Parameters
         ----------
-        overwrite_a : bool, optional
-            Whether to overwrite `a`; may improve performance.
-            Default is False.
         check_finite : bool, optional
-            Whether to check that the input matrix contains only finite
-            numbers. Disabling may give a performance gain, but may result in
-            problems (crashes, non-termination) if the inputs do contain
-            infinities or NaNs.
+            If True, SciPy checks for NaN/inf values inside the trajectory matrix.
+            Safer, but slower. Default is False.
+        overwrite_a : bool, optional
+            If True, SciPy may overwrite the trajectory matrix during the SVD to save memory.
             Default is True.
+        """
+        # Build the trajectory matrix (overlapping windows of the signal)
+        a = self.trajectory_matrix()
 
-
-        Notes
-        -----
-
-        Factorization of the trajectory matrix A, using Singular Value
-        Decomposition (SVD), yields to [1]_:
-
-        .. math::
-
-            A &= U\Sigma V^\intercal \\
-              &= \sum_{r=1}^{R} \sigma_r u_r v_{r}^\intercal
-
-        where :math:`R = rank(A) \leq L`, :math:`{u_1,\ldots, u_d }` is the
-        corresponding orthonormal system of the eigenvectors of the matrix
-        :math:`S = AA^{\intercal}` such as :math:`ui \cdot uj = 0` for
-        :math:`i \neq j` and :math:`\lVert u_r \rVert = 1`,
-        :math:`v_r = A^{\intercal} u_r / \sigma_r`, and :math:`\Sigma` is a
-        diagonal matrix :math:`\in \mathbb{R}^{L×K}`, whose diagonal elements
-        :math:`{\sigma_r}` are the singular values of A. The eigenvalues of
-        :math:`AA^\intercal` are given by :math:`\lambda_r = \sigma_r^2`.
-
-
-        References
-        ----------
-
-        .. [1] Golyandina, N., & Zhigljavsky, A. (2013). Singular Spectrum
-               Analysis for Time Series. Springer Berlin Heidelberg
-               http://doi.org/10.1007/978-3-642-34913-3
-        '''
-
-        A = self.trajectory_matrix()
-        U, s, Vh = linalg.svd(
-            A,
-            full_matrices=False,
-            check_finite=check_finite,
-            overwrite_a=overwrite_a
+        # Obtain U, S and Vh
+        u, s, vh = linalg.svd(
+            a, full_matrices=False, check_finite=check_finite, verwrite_a=overwrite_a
         )
-        self.__U = U
-        self.__sigma = np.diag(s)
-        self.__Vh = Vh
-        self.__lambda_s = np.square(s)/np.sum(np.square(s))
+        self.U = u
+        self.sigma = np.diag(s)
+        self.Vh = vh
+        self.variance_explained = np.square(s)/np.sum(np.square(s))
 
-    @property
-    def U(self):
-        r'''Unitary matrix having left singular vectors as columns.
-        '''
-        return self.__U
 
-    @property
-    def sigma(self):
-        r'''Singular values, sorted in decreasing order.
-        '''
-        return self.__sigma
+    @staticmethod
+    def _weights(L, K):
 
-    @property
-    def Vh(self):
-        r'''Unitary matrix having right singular vectors as rows.
-        '''
-        return self.__Vh
+        N = L + K
+        # weights = np.empty(N-1, dtype=np.float32)
+        weights = np.empty(N - 1, dtype=np.int32)
+        for k in range(1, L):
+            weights[k - 1] = k
 
-    @property
-    def lambda_s(self):
-        r'''Partial variances, sorted in decreasing order.
-        The partial variances :math:`\lambda_k = \sigma^2_k`, ordered according
-        to magnitude from the most to the least dominant, where
-        :math:`\lambda_k` can be interpreted as the variance of the
-        *sub phase-space* of time-series component :math:`g_k(n)` and where
-        :math:`\lambda_{tot} = \sum^r_{k=1} \lambda_k` is the total variance of
-        the phase space of the original time series.
-        '''
-        return self.__lambda_s
+        # for k in range(L,K+1):
+        weights[L - 1:K] = L
+
+        for k in range(K + 1, N):
+            weights[k - 1] = N - k
+
+        return weights
+
+    # ------------------------------------
+    # Component similarity (W-correlation)
+    # ------------------------------------
+    @staticmethod
+    def _weighted_scalar_product(X, Y, w):
+        return np.dot(X, np.multiply(Y, w).T)
+
+    def _weighted_correlation(self, X, Y, w):
+        """
+        Weighted correlation between two reconstructed components.
+
+        In SSA, diagonal averaging gives edge points fewer contributions.
+        W-correlation accounts for that so correlation isn’t biased by edges.
+        """
+        w_norm_X = np.sqrt(self.__class__._weighted_scalar_product(X, X, w))
+        w_norm_Y = np.sqrt(self.__class__._weighted_scalar_product(Y, Y, w))
+
+        w_rho = self.__class__._weighted_scalar_product(X, Y, w) / (w_norm_X * w_norm_Y)
+
+        return w_rho
+
+    @staticmethod
+    def _x_elementary(U, s, Vh, L, K, i):
+
+        X_i = np.empty((L, K), dtype=np.float32)
+
+        # Implement the dot product s * U[,i] x Vh[i].T
+        sVh_i = s * Vh[i]
+        for j in range(L):
+            X_i[j] = U[j, i] * sVh_i
+
+        return X_i
+
+    def _diagonal_averaging(self, X):
+
+        L, K = X.shape
+        L_star, K_star = min(L, K), max(L, K)
+        # N_star = L_star + K_star
+        if not L < K:
+            X = X.T
+
+        sum_antidiags = np.empty(L_star + K_star - 1, dtype=np.float32)
+        for k in range(1 - L_star, K_star):
+            # Avoid using np.flipud as it does not compile with numba.
+            # Besides, it seems slower than [::-1,...]
+            sum_antidiags[k + L_star - 1] = np.trace(X[::-1, ...], offset=k)
+
+        scale_factors = self.__class__._weights(L_star, K_star)
+
+        sum_antidiags /= scale_factors
+
+        return sum_antidiags
+
+
 
     def X_elementary(self, r):
         r'''Elementary matrix
@@ -230,18 +279,10 @@ class SSA:
 
         The matrices :math:`X_r` have rank 1. Such matrices are sometimes
         called *elementary* matrices.
-
-
-        References
-        ----------
-
-        .. [1] Golyandina, N., & Zhigljavsky, A. (2013). Singular Spectrum
-               Analysis for Time Series. Springer Berlin Heidelberg
-               http://doi.org/10.1007/978-3-642-34913-3
         '''
         #  TODO: check if r is in range
 
-        X_r = _x_elementary(
+        X_r = self.__class__._x_elementary(
             self.__U,
             self.__sigma[r][r],
             self.__Vh,
@@ -311,13 +352,6 @@ class SSA:
           .. math::
              \tilde{x}_n^{(k)} = \frac{1}{N-n+1} *
              \sum_{m=n-K^{\star}+1}^{N-K^{\star}+1} x^{\star}_{I_k, (m,n-m+1)}
-
-        References
-        ----------
-
-        .. [1] Golyandina, N., & Zhigljavsky, A. (2013). Singular Spectrum
-               Analysis for Time Series. Springer Berlin Heidelberg
-               http://doi.org/10.1007/978-3-642-34913-3
         '''
         if isinstance(r, list):
             X_elementaries = [self.X_elementary(i) for i in r]
@@ -326,7 +360,7 @@ class SSA:
         else:
             X_elementary = self.X_elementary(r)
 
-        X_tilde = _diagonal_averaging(X_elementary)
+        X_tilde = self.__class__._diagonal_averaging(X_elementary)
 
         return X_tilde
 
@@ -377,13 +411,13 @@ class SSA:
 
         w_corr_mat = np.empty((k, k))
 
-        w = _weights(self.__L, self.__K)
+        w = self.__class__._weights(self.__L, self.__K)
 
         X_tildes = [self.X_tilde(i) for i in n]
 
         for i in n:
             for j in n[i:]:
-                w_corr = _weighted_correlation(
+                w_corr = self.__class__._weighted_correlation(
                     X_tildes[i],
                     X_tildes[j],
                     w
