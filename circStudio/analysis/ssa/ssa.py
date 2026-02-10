@@ -172,20 +172,33 @@ class SSA:
 
         # Obtain U, S and Vh
         u, s, vh = linalg.svd(
-            a, full_matrices=False, check_finite=check_finite, verwrite_a=overwrite_a
+            a,
+            full_matrices=False,
+            check_finite=check_finite,
+            verwrite_a=overwrite_a
         )
+
+        # Store U, S and Vh
         self.U = u
         self.sigma = np.diag(s)
         self.Vh = vh
+
+        # Calculate fraction of variance explained by each component
         self.variance_explained = np.square(s)/np.sum(np.square(s))
 
+    # ----------------------------
+    # Component reconstruction
+    # ----------------------------
 
     @staticmethod
     def _weights(L, K):
-
+        """
+        Weights for diagonal averaging.
+        """
         N = L + K
-        # weights = np.empty(N-1, dtype=np.float32)
+
         weights = np.empty(N - 1, dtype=np.int32)
+
         for k in range(1, L):
             weights[k - 1] = k
 
@@ -196,27 +209,6 @@ class SSA:
             weights[k - 1] = N - k
 
         return weights
-
-    # ------------------------------------
-    # Component similarity (W-correlation)
-    # ------------------------------------
-    @staticmethod
-    def _weighted_scalar_product(X, Y, w):
-        return np.dot(X, np.multiply(Y, w).T)
-
-    def _weighted_correlation(self, X, Y, w):
-        """
-        Weighted correlation between two reconstructed components.
-
-        In SSA, diagonal averaging gives edge points fewer contributions.
-        W-correlation accounts for that so correlation isn’t biased by edges.
-        """
-        w_norm_X = np.sqrt(self.__class__._weighted_scalar_product(X, X, w))
-        w_norm_Y = np.sqrt(self.__class__._weighted_scalar_product(Y, Y, w))
-
-        w_rho = self.__class__._weighted_scalar_product(X, Y, w) / (w_norm_X * w_norm_Y)
-
-        return w_rho
 
     @staticmethod
     def _x_elementary(U, s, Vh, L, K, i):
@@ -247,10 +239,6 @@ class SSA:
         scale_factors = self.__class__._weights(L_star, K_star)
 
         sum_antidiags /= scale_factors
-
-        return sum_antidiags
-
-
 
     def X_elementary(self, r):
         r'''Elementary matrix
@@ -283,11 +271,11 @@ class SSA:
         #  TODO: check if r is in range
 
         X_r = self.__class__._x_elementary(
-            self.__U,
-            self.__sigma[r][r],
-            self.__Vh,
-            self.__L,
-            self.__K,
+            self.U,
+            self.sigma[r][r],
+            self.Vh,
+            self.L,
+            self.K,
             r
         )
 
@@ -387,10 +375,32 @@ class SSA:
 
         reco_signal = pd.Series(
             data=X_reco,
-            index=self.__data.index
+            index=self.data.index
         )
 
         return reco_signal
+
+    # ------------------------------------
+    # Component similarity (W-correlation)
+    # ------------------------------------
+
+    @staticmethod
+    def _weighted_scalar_product(X, Y, w):
+        return np.dot(X, np.multiply(Y, w).T)
+
+    def _weighted_correlation(self, X, Y, w):
+        """
+        Weighted correlation between two reconstructed components.
+
+        In SSA, diagonal averaging gives edge points fewer contributions.
+        W-correlation accounts for that so correlation isn’t biased by edges.
+        """
+        w_norm_X = np.sqrt(self.__class__._weighted_scalar_product(X, X, w))
+        w_norm_Y = np.sqrt(self.__class__._weighted_scalar_product(Y, Y, w))
+
+        w_rho = self.__class__._weighted_scalar_product(X, Y, w) / (w_norm_X * w_norm_Y)
+
+        return w_rho
 
     def w_correlation_matrix(self, k):
         r'''W-correlation matrix.
