@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy import linalg
+from functools import reduce
 
 
 class SSA:
@@ -54,10 +55,11 @@ class SSA:
     >>> reconstructed = ssa.reconstructed_signal([0,1,2,3,4,5,6])
     >>> w_corr_mat = ssa.w_correlation_matrix(10)
     """
+
     # -------------------------
     # Construction/validation
     # -------------------------
-    def __init__(self, data: pd.Series, window_length: str|pd.Timedelta = '24h'):
+    def __init__(self, data: pd.Series, window_length: str | pd.Timedelta = "24h"):
 
         # ----------------------------
         # Input time series
@@ -90,14 +92,16 @@ class SSA:
         # used to build the trajectory matrix.
         # Intuitively, a small window captures short-term structure
         # A large window captures long-term structure
-        window_length = (pd.Timedelta(window_length)
-              if not isinstance(window_length, pd.Timedelta)
-              else window_length)
+        window_length = (
+            pd.Timedelta(window_length)
+            if not isinstance(window_length, pd.Timedelta)
+            else window_length
+        )
 
         # Number of samples (rows) in each column, that is, in
         # each sliding window. This  window length (L) is also
         # called "embedding dimension"
-        self.L = int(pd.Timedelta(window_length)/self.freq)
+        self.L = int(pd.Timedelta(window_length) / self.freq)
 
         # Number of windows I can slide over the signal (K)
         # This determines how many columns the trajectory matrix has
@@ -123,25 +127,31 @@ class SSA:
         self.variance_explained = None
 
     # ---------------
-    # Core SSA steps
+    # Step 1: Embed
     # ---------------
 
-    def trajectory_matrix(self):
+    def build_trajectory_matrix(self) -> np.ndarray:
         """
         Build the trajectory matrix (a Hankel matrix) from the time series.
 
         Each column corresponds to a sliding window of length `L` (number of rows)
         and `K` (number of columns), where :math:`K = N - L + 1`.
         """
-        # Collect the time series (ts)
-        ts = self.data.values
+        # Collect sequence of values from data
+        values = self.data.values
 
-        # Collect columns and rows
-        columns = ts[:self.L]
-        rows = ts[-self.K:]
+        # Extract number of columns
+        columns = values[: self.L]
 
-        # Return Hankel matrix
+        # Extract number of rows
+        rows = values[-self.K :]
+
+        # Construct Hankel matrix with L columns and K rows
         return linalg.hankel(columns, rows)
+
+    # -----------------------
+    # Step 2: Decompose (SVD)
+    # -----------------------
 
     def fit(self, check_finite=False, overwrite_a=True):
         """
@@ -168,192 +178,237 @@ class SSA:
             Default is True.
         """
         # Build the trajectory matrix (overlapping windows of the signal)
-        a = self.trajectory_matrix()
+        trajectory = self.build_trajectory_matrix()
 
-        # Obtain U, S and Vh
-        u, s, vh = linalg.svd(
-            a,
+        # Compute SVD store U, s and Vh
+        svd = linalg.svd(
+            trajectory,
             full_matrices=False,
             check_finite=check_finite,
-            verwrite_a=overwrite_a
+            overwrite_a=overwrite_a,
         )
-
-        # Store U, S and Vh
-        self.U = u
-        self.sigma = np.diag(s)
-        self.Vh = vh
+        # Store U, s and Vh
+        self.U = svd[0]
+        self.sigma = np.diag(svd[1])
+        self.Vh = svd[2]
 
         # Calculate fraction of variance explained by each component
-        self.variance_explained = np.square(s)/np.sum(np.square(s))
+        self.variance_explained = np.square(svd[1]) / np.sum(np.square(svd[1]))
 
-    # ----------------------------
-    # Component reconstruction
-    # ----------------------------
-
-    @staticmethod
-    def _weights(L, K):
-        """
-        Weights for diagonal averaging.
-        """
-        N = L + K
-
-        weights = np.empty(N - 1, dtype=np.int32)
-
-        for k in range(1, L):
-            weights[k - 1] = k
-
-        # for k in range(L,K+1):
-        weights[L - 1:K] = L
-
-        for k in range(K + 1, N):
-            weights[k - 1] = N - k
-
-        return weights
+    # --------------------------
+    # Step 3: Reconstruct signal
+    # --------------------------
 
     @staticmethod
-    def _x_elementary(U, s, Vh, L, K, i):
+    def _weights(num_rows: int, num_cols: int) -> np.ndarray:
+        """
+        Calculate how many elements belong to each anti-diagonal of a matrix.
 
-        X_i = np.empty((L, K), dtype=np.float32)
+        Anti-diagonals are sets of elements whose row and column indices sum to
+        a constant.
 
-        # Implement the dot product s * U[,i] x Vh[i].T
-        sVh_i = s * Vh[i]
-        for j in range(L):
-            X_i[j] = U[j, i] * sVh_i
+        Example
+        -------
+        For the 3*3 Hankel matrix:
 
-        return X_i
+            [[1,2,3],
+            [3,4,5],
+            [4,5,6]]
 
-    def _diagonal_averaging(self, X):
+        the anti-diagonals are:
 
-        L, K = X.shape
-        L_star, K_star = min(L, K), max(L, K)
-        # N_star = L_star + K_star
-        if not L < K:
-            X = X.T
+            [[1],
+            [2,2],
+            [3,3,3],
+            [4,4],
+            [5]]
 
-        sum_antidiags = np.empty(L_star + K_star - 1, dtype=np.float32)
-        for k in range(1 - L_star, K_star):
-            # Avoid using np.flipud as it does not compile with numba.
-            # Besides, it seems slower than [::-1,...]
-            sum_antidiags[k + L_star - 1] = np.trace(X[::-1, ...], offset=k)
+        Notice how:
+            - Anti-diagonals near the edges contain fewer elements.
+            - Anti-diagonals near the center contain more elements.
 
-        scale_factors = self.__class__._weights(L_star, K_star)
+        In SSA, diagonal averaging is used to reconstruct a time series by
+        averaging each anti-diagonal of a matrix.
 
-        sum_antidiags /= scale_factors
-
-    def X_elementary(self, r):
-        r'''Elementary matrix
+        Because different anti-diagonals contain different numbers of elements,
+        we must divide by their counts. Otherwise, central time points would
+        receive more contributions than edge points, introducing bias.
 
         Parameters
         ----------
-        r: int
-            Index of the elementary matrix.
-            Must lower or equal to the embedding dimension, L.
+        num_rows : int
+            Number of rows of the matrix (L).
+        num_cols : int
+            Number of columns of the matrix (K).
 
         Returns
         -------
-        x_elem: ndarray of shape (L,K)
+        np.ndarray
+            A 1D array where each entry contains the number of elements
+            in the corresponding anti-diagonal.
+        """
+        # Calculate total number of anti-diagonals present in the matrix
+        total_antidiagonals = num_rows + num_cols - 1
 
+        # Create empty vector to store count of matrix elements in each anti-diagonal
+        weights = np.empty(total_antidiagonals, dtype=np.int32)
+
+        # Increasing part (the anti-diagonals grow)
+        for k in range(1, num_rows):
+            weights[k - 1] = k
+        # Constant middle part (plateau in the size of the anti-diagonals)
+        weights[num_rows - 1 : num_cols] = num_rows
+
+        # Decreasing part (the anti-diagonals shrink)
+        for k in range(num_cols + 1, total_antidiagonals + 1):
+            weights[k - 1] = total_antidiagonals + 1 - k
+
+        return weights
+
+    def _diagonal_averaging(self, component_matrix: np.ndarray) -> np.ndarray:
+        """
+        Convert a trajectory matrix (a Hankel matrix) back to a 1D signal by
+        averaging its anti-diagonals.
+
+        In SSA reconstruction of the actigraphy signal, each time point of the
+        reconstructed component is obtained by taking the mean of one anti-diagonal
+        of the component matrix. Think about each component as a particular pattern
+        that explains part of the variance in the signal.
+
+        Steps
+        -----
+            - Sum each anti-diagonal of the component matrix.
+            - Divide by how many elements that anti-diagonal contains (weights)
+
+        Parameters
+        ----------
+        component_matrix : np.ndarray
+            Matrix of shape (L, K) representing an SSA component in matrix form.
+
+        Returns
+        -------
+        np.ndarray
+            Reconstructed 1D signal of length L + K - 1 (same length as the original
+            series).
+        """
+        # Check if component_matrix is a 2D array
+        if component_matrix.ndim != 2:
+            raise ValueError("The input matrix must be a 2D array.")
+
+        # Unpack the number of rows and columns
+        rows, cols = component_matrix.shape
+
+        # The number of rows must be smaller than the number of columns
+        # Transpose matrix if that is not the case
+        if rows > cols:
+            component_matrix = component_matrix.T
+            rows, cols = component_matrix.shape
+
+        # Total number of anti-diagonals in the matrix
+        antidiagonals = rows + cols - 1
+
+        # Initialize array to accumulate sums for each anti-diagonal
+        sums = np.zeros(antidiagonals, dtype=float)
+
+        # Accumulate values into their corresponding anti-diagonal (r + c)
+        for r in range(rows):
+            for c in range(cols):
+                sums[r + c] += component_matrix[r, c]
+
+        # Compute how many elements belong to each anti-diagonal
+        counts = self.__class__._weights(rows, cols)
+
+        # Return the mean value of each anti-diagonal
+        return sums / counts
+
+    def get_component_matrix(self, r: int) -> np.ndarray:
+        """
+        Return one SSA component in matrix form.
+
+        Parameters
+        ----------
+        r : int
+        Index of the SSA component (0 = most important component).
+
+        Returns
+        -------
+        np.ndarray
+            Matrix representation of the selected component.
 
         Notes
         -----
+        You must call `fit()` before using this method.
+        """
+        # Check if user has already run fit() method
+        if self.U is None or self.sigma is None or self.Vh is None:
+            raise RuntimeError(" Run fit() before calling this method.")
 
-        The SVD of the trajectory matrix X can be written as [1]_ :
+        # Check if requested number of components (R) is valid
+        if not (0 <= r < self.Vh.shape[0]):
+            raise ValueError("Invalid row index.")
 
-        .. math:
+        # Rename L and K self-parameters to become clearer
+        rows = self.L
+        columns = self.K
 
-            X = X_1 + \ldots + X_R
+        # Allocate the (rows, columns) matrix for the component
+        component_matrix = np.empty((rows, columns), dtype=np.float32)
 
-        where :math:`X_r = \sqrt{\lambda_r} u_r v_{r}^\intercal`.
+        # For a single component i, use X_r = s_r * u_r * v_r^T, where:
+        #   - s_r is the singular value
+        #   - u_r is the i-th left singular vector (column of U)
+        #   - v_r^T is the i-th right singular vector (row of Vh)
 
-        The matrices :math:`X_r` have rank 1. Such matrices are sometimes
-        called *elementary* matrices.
-        '''
-        #  TODO: check if r is in range
+        # Scale the i-th right singular vector (v_i) by its singular value (s_i)
+        scaled_right_vector = self.sigma[r][r] * self.Vh[r]
 
-        X_r = self.__class__._x_elementary(
-            self.U,
-            self.sigma[r][r],
-            self.Vh,
-            self.L,
-            self.K,
-            r
-        )
+        # For each row of the component matrix,
+        for row in range(rows):
+            component_matrix[row] = self.U[row, r] * scaled_right_vector
 
-        return X_r
+        return component_matrix
 
-    def X_tilde(self, r):
-        r'''Diagonal averaged matrix.
+
+    def reconstruct_component(self, r):
+        """
+        Reconstruct a 1D SSA component by diagonal averaging.
+
+        In SSA, each component is first represented as a matrix (same shape as the
+        trajectory matrix). To turn that matrix back into a time series, we perform
+        diagonal averaging: we take the mean of each anti-diagonal, producing a 1D
+        signal.
 
         Parameters
         ----------
         r: int or list of int
-            Index of the elementary matrix to be diagonal-averaged.
-            Must be lower than or equal to the embedding dimension, L.
-            If a list of indices is given instead, the corresponding elementary
-            matrices are grouped (ie. reduced to a single matrix by summation)
-            before diagonal-averaging.
+            Specifies which SSA component(s) to reconstruct.
+            - If an int is given, reconstruct that single component (0 = strongest)
+            - If a list/tuple of ints is given, those component matrices are summed
+            first (grouped), then reconstructed as one combined signal.
 
         Returns
         -------
-        x_tilde: ndarray of shape (M,)
-
+        np.ndarray:
+            A 1D array of length `L + K - 1` (same length as the original input series).
 
         Notes
         -----
-
-        [1]_ : if the components of the series are separable and the indices
-        are being split accordingly, then all the matrices in the expansion
-        :math:`X = X_{I_1} + \ldots + X_{I_m}` are the Hankel matrices.
-        We thus immediately obtain the decomposition
-        :math:`x_n = \sum_{k=1}^m \tilde{x}_n^{(k)}` of the original series:
-        for all k and n, :math:`\tilde{x}_n^{(k)}` is equal to all entries
-        :math:`x^{(k)}_{ij}` along the antidiagonal
-        :math:`{(i, j)| i + j = n+1}` of the matrix :math:`X_{Ik}`. In
-        practice, however, this situation is not realistic. In the general
-        case, no antidiagonal consists of equal elements. We thus need a formal
-        procedure of transforming an arbitrary matrix into a Hankel matrix and
-        therefore into a series. As such, we shall consider the procedure of
-        *diagonal averaging*, which defines the values of the time series
-
-        .. math::
-
-            \tilde{\mathbb{X}}^{(k)} = \left(
-                \tilde{x}^{(k)}_1, \ldots, \tilde{x}^{(k)}_N \right)
-
-        as averages for the corresponding antidiagonals of the matrices
-        :math:`X_{I_k}`.
-
-        * for :math:`1 \leq n < L^{\star}`:
-
-          .. math::
-             \tilde{x}_n^{(k)} = \frac{1}{n} *
-             \sum_{m=1}^{n} x^{\star}_{I_k, (m,n-m+1)}
-
-        * for :math:`L^{\star} \leq n < K^{\star}`:
-
-          .. math::
-             \tilde{x}_n^{(k)} = \frac{1}{L^{\star}} *
-             \sum_{m=1}^{L^{\star}} x^{\star}_{I_k, (m,n-m+1)}
-
-        * for :math:`K^{\star} < n \leq N`:
-
-          .. math::
-             \tilde{x}_n^{(k)} = \frac{1}{N-n+1} *
-             \sum_{m=n-K^{\star}+1}^{N-K^{\star}+1} x^{\star}_{I_k, (m,n-m+1)}
-        '''
+        You must call `fit()` before using this method.
+        """
         if isinstance(r, list):
-            X_elementaries = [self.X_elementary(i) for i in r]
+            component_matrices = [self.get_component_matrix(i) for i in r]
             from functools import reduce
-            X_elementary = reduce((lambda x, y: np.add(x, y)), X_elementaries)
-        else:
-            X_elementary = self.X_elementary(r)
 
-        X_tilde = self.__class__._diagonal_averaging(X_elementary)
+            component_matrices = reduce((lambda x, y: np.add(x, y)), component_matrices)
+        else:
+            component_matrices = self.get_component_matrix(r)
+
+        return self._diagonal_averaging(component_matrices)
 
         return X_tilde
 
     def reconstructed_signal(self, n):
-        r'''Reconstructed signal from diagonal averaged matrices.
+        r"""Reconstructed signal from diagonal averaged matrices.
 
         Parameters
         ----------
@@ -365,18 +420,14 @@ class SSA:
         -------
         reco: pandas.Series
 
-        '''
+        """
 
         X_tildes = [self.X_tilde(i) for i in n]
 
         # add the X_tilde matrices recursively
-        from functools import reduce
         X_reco = reduce((lambda x, y: np.add(x, y)), X_tildes)
 
-        reco_signal = pd.Series(
-            data=X_reco,
-            index=self.data.index
-        )
+        reco_signal = pd.Series(data=X_reco, index=self.data.index)
 
         return reco_signal
 
@@ -403,7 +454,7 @@ class SSA:
         return w_rho
 
     def w_correlation_matrix(self, k):
-        r'''W-correlation matrix.
+        r"""W-correlation matrix.
 
         Parameters
         ----------
@@ -415,7 +466,7 @@ class SSA:
         -------
         wmat: numpy.ndarray
 
-        '''
+        """
 
         n = range(k)
 
@@ -428,9 +479,7 @@ class SSA:
         for i in n:
             for j in n[i:]:
                 w_corr = self.__class__._weighted_correlation(
-                    X_tildes[i],
-                    X_tildes[j],
-                    w
+                    X_tildes[i], X_tildes[j], w
                 )
                 w_corr_mat[i][j] = w_corr
                 w_corr_mat[j][i] = w_corr
