@@ -380,7 +380,7 @@ class SSA:
 
         Parameters
         ----------
-        r: int or list of int
+        r: int or list[int]
             Index (or indices) of the SSA component(s) to reconstruct.
             - If an int is given, reconstruct that single component (0 = strongest)
             - If a list/tuple of ints is given, those component matrices are summed
@@ -396,45 +396,54 @@ class SSA:
         You must call `fit()` before using this method.
         """
         if isinstance(r, list):
-            # If multiple component indices are provided, build each component
-            # matrix and sum them
+            # If multiple component indices are provided, build each component matrix and sum them
             component_matrices = [self.get_component_matrix(i) for i in r]
 
             # Sum all selected component matrices into a single matrix
             component_matrices = reduce((lambda x, y: np.add(x, y)), component_matrices)
         else:
-            # If a single component index is provided,
-            # retrieve its matrix representation directly
+            # If a single component index is provided, retrieve its matrix representation directly
             component_matrices = self.get_component_matrix(r)
 
-        # Convert the (L, K) component matrix back to a 1D signal by averaging
-        # its anti-diagonals
+        # Convert the (L, K) component matrix back to a 1D signal by averaging its anti-diagonals
         return self._diagonal_averaging(component_matrices)
 
 
-    def reconstructed_signal(self, n):
-        r"""Reconstructed signal from diagonal averaged matrices.
+    def reconstruct_signal(self, n):
+        """
+        Reconstruct actigraphy signal by summing several SSA components
+
+        This method reconstructs multiple SSA components (each as 1D time
+        series via diagonal averaging) and then adds them together to produce
+        a combined reconstruction.
+
+        Typical use cases
+        -----------------
+        - Reconstruct the trend using the first component(s): [0] or [0, 1]
+        - Reconstruct a smoothed signal using the first few components: [0..k]
+        - Reconstruct a band of components that represent a rhythm or noise
 
         Parameters
         ----------
-        n: array of int
-            Indices of the diagonal-averaged matrices to merge.
-            Must be lower than or equal to the embedding dimension, L.
+        n: list[int]
+            Component indices to include in the reconstruction.
+            Example: [0, 1, 2] sums the first three SSA components.
+
 
         Returns
         -------
-        reco: pandas.Series
-
+        pandas.Series
+            Reconstructed signal aligned to the original time index.
+            Same length as the input series.
         """
+        # Reconstruct each requested component into a 1D signal
+        reconstructed_components = [self.reconstruct_component(i) for i in n]
 
-        X_tildes = [self.X_tilde(i) for i in n]
+        # Sum all reconstructed components into one combined signal
+        reconstructed = reduce((lambda x, y: np.add(x, y)), reconstructed_components)
 
-        # add the X_tilde matrices recursively
-        X_reco = reduce((lambda x, y: np.add(x, y)), X_tildes)
-
-        reco_signal = pd.Series(data=X_reco, index=self.data.index)
-
-        return reco_signal
+        # Wrap the reconstructed array back into a pandas.Series with the original time index
+        return pd.Series(data=reconstructed, index=self.data.index)
 
     # ------------------------------------
     # Component similarity (W-correlation)
