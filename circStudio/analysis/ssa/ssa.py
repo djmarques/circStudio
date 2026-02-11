@@ -450,25 +450,72 @@ class SSA:
     # ------------------------------------
 
     @staticmethod
-    def _weighted_scalar_product(X, Y, w):
-        return np.dot(X, np.multiply(Y, w).T)
-
-    def _weighted_correlation(self, X, Y, w):
+    def _weighted_scalar_product(x, y, weights):
         """
-        Weighted correlation between two reconstructed components.
+        Compute a weighted dot product between two 1D arrays.
 
-        In SSA, diagonal averaging gives edge points fewer contributions.
-        W-correlation accounts for that so correlation isn’t biased by edges.
+        This is like a standard dot product, except each element is
+        multiplied by a weight first, so that some positions contribute
+        more than others.
+
+        Parameters
+        ----------
+        x, y : np.ndarray
+            1D arrays (reconstructed SSA components) of the same length.
+        w : np.ndarray
+            1D weights of the same length (typically counts per anti-diagonal).
+
+        Returns
+        -------
+        float
+            Weighted dot product: sum_i x[i] * y[i] * weights[i]
         """
-        w_norm_X = np.sqrt(self.__class__._weighted_scalar_product(X, X, w))
-        w_norm_Y = np.sqrt(self.__class__._weighted_scalar_product(Y, Y, w))
+        return np.dot(x, np.multiply(y, weights).T)
 
-        w_rho = self.__class__._weighted_scalar_product(X, Y, w) / (w_norm_X * w_norm_Y)
+    def _weighted_correlation(self, x, y, weights):
+        """
+        Compute the weighted correlation (W-correlation) between two components
 
-        return w_rho
+        Why "weighted"?
+        ---------------
+        In SSA reconstruction (diagonal averaging), samples near the start and end
+        of the time series are based on fewer matrix entries than samples in the
+        middle. If we used a normal correlation, edges could distort the similarity.
+
+        W-correlation fixes this by down-weighting edge points so the similarity is
+        dominated by the region where reconstruction is most stable.
+
+        Parameters
+        ----------
+        x, y : np.ndarray
+            Reconstructed SSA components (1D arrays) of the same length.
+        weights : np.ndarray
+            Weight per time point (how many matrix entries contributed to that point).
+
+        Returns
+        -------
+        float
+            Weighted correlation coefficient in [-1, 1].
+        """
+        # Compute weighted "length" (norm) of x
+        norm_x = np.sqrt(self.__class__._weighted_scalar_product(x, x, weights))
+
+        # Compute weighted "length" (norm) of y
+        norm_y = np.sqrt(self.__class__._weighted_scalar_product(y, y, weights))
+
+        # Avoid division by zero if a component is all zeros (or nearly so)
+        if norm_x == 0 or norm_y == 0:
+            return np.nan
+
+        # Return weighted rho
+        return self.__class__._weighted_scalar_product(x, y, weights) / (norm_x * norm_y)
 
     def w_correlation_matrix(self, k):
-        r"""W-correlation matrix.
+        """
+        Compute the W-correlation matrix for the first k SSA components.
+
+        This is a diagnostic tool: it tells you which reconstructed components
+        look similar to each other (high correlation) vs. independent (low correlation).
 
         Parameters
         ----------
@@ -478,24 +525,33 @@ class SSA:
 
         Returns
         -------
-        wmat: numpy.ndarray
-
+        numpy.ndarray
+            Symmetric (k,k) matrix where entry (i,j) is the W-correlation
+            between reconstructed components i and j.
         """
-
+        # Create a range object for the first k components (0 to k-1)
         n = range(k)
 
+        # Allocate an empty (k x k) matrix to store W-correlations
         w_corr_mat = np.empty((k, k))
 
-        w = self.__class__._weights(self.__L, self.__K)
+        # Compute the weights used to correct edge effects during correlation
+        weights = self.__class__._weights(self.L, self.K)
 
-        X_tildes = [self.X_tilde(i) for i in n]
+        # Reconstruct the first k SSA components into 1D signals
+        components_1d = [self.reconstruct_component(i) for i in n]
 
         for i in n:
             for j in n[i:]:
-                w_corr = self.__class__._weighted_correlation(
-                    X_tildes[i], X_tildes[j], w
+                # Compute weighted correlation between component i and j
+                w_corr = self._weighted_correlation(
+                    components_1d[i], components_1d[j], weights
                 )
+                # Store correlation in (i, j)
                 w_corr_mat[i][j] = w_corr
+
+                # Mirror value to (j, i) since correlation matrix is symmetric
                 w_corr_mat[j][i] = w_corr
 
+        # Return the symmetric W-correlation matrix
         return w_corr_mat
