@@ -368,7 +368,6 @@ class SSA:
 
         return component_matrix
 
-
     def reconstruct_component(self, r):
         """
         Reconstruct one (or several grouped) SSA component(s) as a 1D time series.
@@ -407,7 +406,6 @@ class SSA:
 
         # Convert the (L, K) component matrix back to a 1D signal by averaging its anti-diagonals
         return self._diagonal_averaging(component_matrices)
-
 
     def reconstruct_signal(self, n):
         """
@@ -508,7 +506,9 @@ class SSA:
             return np.nan
 
         # Return weighted rho
-        return self.__class__._weighted_scalar_product(x, y, weights) / (norm_x * norm_y)
+        return self.__class__._weighted_scalar_product(x, y, weights) / (
+            norm_x * norm_y
+        )
 
     def w_correlation_matrix(self, k):
         """
