@@ -554,21 +554,6 @@ class Fractal:
         h_ratios, h_ratios_err, n_x: arrays of floats
             Ratio of h(q), and associated uncertainties, obtained for various
             time scales n_x.
-
-        Notes
-        -----
-
-        .. warning::
-
-            The calculation of the uncertainty on the ratio of scaling
-            exponents assumes uncorrelated variables:
-            :math:`\sigma_{A/B}^2=(A/B)^2(\sigma_{A}^2/A^2+\sigma_{B}^2/B^2)`.
-            Most likely, the scaling exponents calculated for time scales
-            :math:`n<n_x` is not uncorrelated to the scaling exponents
-            calculated for time scales :math:`n>n_x`. Therefore, the resulting
-            uncertainty is either overestimated in case of positively
-            correlated variables or underestimated otherwise. However, the
-            magnitude of the calculated uncertainty provides a rough estimate.
         """
 
         n_x = np.empty(len(n_array) - 2 * n_min + 1)
