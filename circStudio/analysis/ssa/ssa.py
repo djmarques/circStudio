@@ -371,20 +371,20 @@ class SSA:
 
     def reconstruct_component(self, r):
         """
-        Reconstruct a 1D SSA component by diagonal averaging.
+        Reconstruct one (or several grouped) SSA component(s) as a 1D time series.
 
-        In SSA, each component is first represented as a matrix (same shape as the
-        trajectory matrix). To turn that matrix back into a time series, we perform
-        diagonal averaging: we take the mean of each anti-diagonal, producing a 1D
-        signal.
+        In SSA, each component is first represented as a matrix of shape (L, K).
+        To convert that matrix back into a time series, we perform diagonal averaging:
+        we average the values along each anti-diagonal of the matrix, which produces
+        a reconstructed 1D signal of length L + K - 1.
 
         Parameters
         ----------
         r: int or list of int
-            Specifies which SSA component(s) to reconstruct.
+            Index (or indices) of the SSA component(s) to reconstruct.
             - If an int is given, reconstruct that single component (0 = strongest)
             - If a list/tuple of ints is given, those component matrices are summed
-            first (grouped), then reconstructed as one combined signal.
+            first and then diagonal-averaged.
 
         Returns
         -------
@@ -396,16 +396,21 @@ class SSA:
         You must call `fit()` before using this method.
         """
         if isinstance(r, list):
+            # If multiple component indices are provided, build each component
+            # matrix and sum them
             component_matrices = [self.get_component_matrix(i) for i in r]
-            from functools import reduce
 
+            # Sum all selected component matrices into a single matrix
             component_matrices = reduce((lambda x, y: np.add(x, y)), component_matrices)
         else:
+            # If a single component index is provided,
+            # retrieve its matrix representation directly
             component_matrices = self.get_component_matrix(r)
 
+        # Convert the (L, K) component matrix back to a 1D signal by averaging
+        # its anti-diagonals
         return self._diagonal_averaging(component_matrices)
 
-        return X_tilde
 
     def reconstructed_signal(self, n):
         r"""Reconstructed signal from diagonal averaged matrices.
