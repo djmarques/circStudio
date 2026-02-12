@@ -6,7 +6,55 @@ from ..metrics import daily_profile
 
 
 class FLM:
-    """ Class for Functional Linear Modelling"""
+    """
+    Class for Functional Linear Modelling.
+
+    This class smoothes noisy activity signals in order to capture the main
+    24-hour structure. It supports two main workflows:
+
+    * Daily-template modeling
+        - `fit()` builds an average 24-hour profile and fits a smooth function using either
+            * Fourier basis (period waves; ideal for circadian rhythms).
+            * B-splines (flexible smooth curves)
+        - `evaluate()` reconstructs the fitted 24-hour cycle.
+
+        Use this to characterize the typical daily rhythm (shape or phase comparisons).
+
+    * Full time-series smoothing
+        - `smooth_timeseries()` denoises the entire recording while preserving the original
+        timeline.
+
+        Smoothing widths are chosen automatically using robust rules that reduce
+        sensitivity to spikes or artifacts (e.g., non-wear).
+
+    Parameters
+    ----------
+    basis : {'fourier', 'spline'}
+        Type of smooth representation used by `fit()` / `evaluate()`.
+
+    sampling_freq : str or pandas-like frequency
+        Sampling frequency of the signal (e.g., '1min', '30s').
+
+    max_order : int or None, optional
+        Controls model complexity (Fourier harmonics or spline degree).
+
+    Attributes
+    ----------
+    beta : dict
+        Stores fitted parameters after `fit()`.
+
+    nsamples : int
+        Number of time points in one 24-hour profile.
+
+    Examples
+    --------
+    >>> flm = FLM(basis='fourier', sampling_freq='1min', max_order=3)
+    >>> flm.fit(activity)
+    >>> daily_curve = flm.evaluate()
+
+    >>> daily_smoothed = flm.smooth_daily_profile(activity)
+    >>> ts_smoothed = flm.smooth_timeseries(activity)
+    """
 
     def __init__(self, basis, sampling_freq, max_order=None):
 
