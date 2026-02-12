@@ -4,47 +4,6 @@ import statsmodels.api as sm
 from ..metrics import daily_profile
 
 
-def _A(data):
-    norm_factor = 1.349
-    IQR = (np.percentile(data, 75) - np.percentile(data, 25))/norm_factor
-    return np.minimum(data.std(ddof=1), IQR)
-
-
-def _bandwith_factor(data):
-    return _A(data)*np.power(data.size, -0.2)
-
-
-def _get_kernel_size(data, method):
-
-    # Calculate optimal kernel bandwith (i.e sigma)
-    bw = _bandwith_factor(data)
-
-    methods = ('scott', 'silverman')
-    if isinstance(method, str):
-        if method not in methods:
-            raise ValueError(
-                '`method` must be "{}". You passed: "{}’"'.format(
-                    '" or "'.join(methods),
-                    method
-                )
-            )
-        elif method == 'scott':
-            kernel_size = 1.059*bw
-        elif method == 'silverman':
-            kernel_size = 0.9*bw
-    elif np.isscalar(method):
-        kernel_size = method
-    else:
-        raise ValueError(
-            '`method` must be "{}". You passed: "{}’"'.format(
-                '" or "'.join(methods+['a scalar.']),
-                method
-            )
-        )
-
-    return kernel_size
-
-
 class FLM:
     """ Class for Functional Linear Modelling"""
 
@@ -57,27 +16,116 @@ class FLM:
                 ('" or "'.join(bases), basis)
             )
 
-        self.__basis = basis
-        self.__sampling_freq = sampling_freq
-        self.__nsamples = None
-        self.__max_order = max_order
-        self.__basis_functions = None
-        self.__beta = {}
+        self.basis = basis
+        self.sampling_freq = sampling_freq
+        self.nsamples = None
+        self.max_order = max_order
+        self.basis_functions = None
+        self.beta = {}
 
-    def __create_basis_functions(self, T):
+    @staticmethod
+    def _spread(data: np.ndarray) -> float:
+        """
+        Estimate the variability in the data in a way that is robust to outliers.
 
-        phi = []
-        # Construct the fourier functions (cosine and sine)
-        if self.__basis == 'fourier':
-            # T = int(pd.Timedelta('24H')/pd.Timedelta(self.sampling_freq))
-            omega = 2*np.pi / T
-            t = np.linspace(0, T, T, endpoint=False)
-            phi.append(np.cos(0 * t))
-            for n in np.arange(1, self.max_order+1):
-                phi.append(np.cos(n * omega * t))
-                phi.append(np.sin(n * omega * t))
+        Actigraphy signals often contain spikes or artifacts (e.g., non-wear). If
+        variability is estimated using standard deviation alone, a few extreme values
+        can make the signal appear more variable than it truly is.
 
-        self.basis_functions = phi
+        standard deviation alone, a few extreme values can make the data look more variable
+        than it really is.
+
+        This function computes two dispersion metrics:
+        * Standard deviation (sensitive to outliers)
+        * Interquartile range (IQR), rescaled so it behaves like a standard deviation when
+        the data are approximately normal.
+
+        The smaller of the two values is returned. This provides a conservative, robust estimate
+        of the signal's variability.
+
+        Parameters
+        ----------
+        data: np.ndarray
+            Data to estimate variability for.
+
+        Returns
+        -------
+        float
+            Robust estimate of data's variability (either standard deviation or interquartile range).
+        """
+        # Convert IQR to a standard-deviation-like scale for normally distributed data
+        normalization_factor = 1.349
+
+        # Compute standard deviation using the middle 50% of data (less sensitive to outliers)
+        iqr = (np.percentile(data, 75) - np.percentile(data, 25)) / normalization_factor
+
+        # Return the smaller of standard deviation and scaled iqr
+        return np.minimum(data.std(ddof=1), iqr)
+
+
+    def _bandwidth_factor(self, data):
+        """
+        Compute a bandwidth factor given a data array.
+
+        The amount of smoothing increases when the signal is more variable
+        and decreases when more data points are available.
+
+        Parameters
+        ----------
+        data : np.ndarray
+            Data to compute bandwidth factor.
+
+        Returns
+        -------
+        float
+            Bandwidth factor used to determine Gaussian kernel width.
+
+        """
+        return self._spread(data) * np.power(data.size, -0.2)
+
+
+    def _get_kernel_size(self, data, method):
+        """
+        Compute Gaussian kernel width (sigma)
+
+        The kernel width controls how strongly the signal is smoothed:
+            - Larger values -> stronger smoothing
+            - Smaller values -> less smoothing
+
+        The width can be selected automatically using common rules
+        ('scott' or 'silverman'), or set manually by providing a number.
+
+        Parameters
+        ----------
+        data : np.ndarray
+            Data to be smoothed.
+
+        method : {'scott', 'silverman'} or float
+            Strategy for selecting the kernel width. If a float is provided,
+            it is used directly as the smoothing parameter.
+
+        Returns
+        -------
+        float
+            Gaussian kernel width (sigma)
+        """
+        # Calculate optimal kernel bandwidth (i.e., sigma)
+        bw = self._bandwidth_factor(data)
+
+        match method:
+            case 'scott':
+                # Standard rule-of-thumb smoothing (more smoothing)
+                return 1.059 * bw
+            case 'silverman':
+                # Slightly more conservative smoothing rule (less smoothing)
+                return 0.9 * bw
+            case _:
+                # If the user provides a numeric value, use it directly
+                if np.isscalar(method):
+                    return method
+                else:
+                    # Raise ValueError in all other scenarios
+                    raise ValueError('Method must be "scott", "silverman" or a scalar')
 
     def fit(self, data, verbose=False):
         """Fit the actigraphy data using a basis function expansion.
@@ -100,10 +148,10 @@ class FLM:
         """
 
         daily_avg = daily_profile(data)
-        self.__nsamples = daily_avg.index.size
+        self.nsamples = daily_avg.index.size
 
         # Fourier
-        if self.__basis == 'fourier':
+        if self.basis == 'fourier':
 
             X = np.stack(self.basis_functions, axis=1)
             y = daily_avg.values
@@ -113,10 +161,10 @@ class FLM:
             if verbose:
                 print(results.summary())
 
-            self.__beta['beta'] = results.params
+            self.beta['beta'] = results.params
 
         # Spline
-        elif self.__basis == 'spline':
+        elif self.basis == 'spline':
 
             from scipy.interpolate import splrep
 
@@ -128,7 +176,7 @@ class FLM:
                 print('Finding the {}-degree B-spline representation of'
                       'the input data'.format(k))
 
-            self.__beta['beta'] = list(
+            self.beta['beta'] = list(
                 splrep(t, daily_avg.values, k=k)
             )
 
@@ -159,13 +207,13 @@ class FLM:
             )
 
         # Fourier
-        if self.__basis == 'fourier':
+        if self.basis == 'fourier':
             X = np.stack(self.basis_functions, axis=1)
             y_est = np.dot(X, self.beta['beta'])
             return y_est
 
         # Spline
-        elif self.__basis == 'spline':
+        elif self.basis == 'spline':
             from scipy.interpolate import BSpline
             T = self.nsamples
             t = np.linspace(0, T, r*T, endpoint=True)
@@ -202,7 +250,7 @@ class FLM:
         daily_avg = daily_profile(data)
 
         # Calculate optimal kernel size
-        bw = _get_kernel_size(daily_avg.values, method=method)
+        bw = self._get_kernel_size(daily_avg.values, method=method)
 
         if verbose:
             print('Kernel size used to smooth the data: {}'.format(bw))
@@ -212,42 +260,3 @@ class FLM:
             sigma=bw,
             mode='wrap'
         )
-
-    @property
-    def sampling_freq(self):
-        """The sampling frequency of the basis functions."""
-        return self.__sampling_freq
-
-    @sampling_freq.setter
-    def sampling_freq(self, value):
-        self.__sampling_freq = value
-
-    @property
-    def nsamples(self):
-        """The number of sample points for the basis functions."""
-        return self.__nsamples
-
-    @property
-    def max_order(self):
-        """The maximal number of basis functions."""
-        return self.__max_order
-
-    @property
-    def basis_functions(self):
-        """The basis functions."""
-        if self.__basis_functions is None:
-            print("Create first the basis functions: {}".format(
-                    self.__basis
-                )
-            )
-            self.__create_basis_functions(self.nsamples)
-        return self.__basis_functions
-
-    @basis_functions.setter
-    def basis_functions(self, value):
-        self.__basis_functions = value
-
-    @property
-    def beta(self):
-        """The scalar parameters of the basis function expansion."""
-        return self.__beta
