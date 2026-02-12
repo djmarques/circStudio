@@ -12,15 +12,15 @@ class FLM:
     This class smoothes noisy activity signals in order to capture the main
     24-hour structure. It supports two main workflows:
 
-    * Daily-template modeling
+    Daily-template modeling
         - `fit()` builds an average 24-hour profile and fits a smooth function using either
-            * Fourier basis (period waves; ideal for circadian rhythms).
-            * B-splines (flexible smooth curves)
+            - Fourier basis (period waves; ideal for circadian rhythms).
+            - B-splines (flexible smooth curves).
         - `evaluate()` reconstructs the fitted 24-hour cycle.
 
         Use this to characterize the typical daily rhythm (shape or phase comparisons).
 
-    * Full time-series smoothing
+    Full time-series smoothing
         - `smooth_timeseries()` denoises the entire recording while preserving the original
         timeline.
 
