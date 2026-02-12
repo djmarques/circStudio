@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
@@ -7,27 +8,117 @@ from matplotlib.lines import Line2D
 
 
 class Light:
-    def __init__(self, time_vector, light_vector):
-        """
-        Initialize a Light object with time and light intensity data.
-        :param time_vector (numpy array): Arrau of time points
-        :param light_vector: Corresponding light intensity values (in lux)
-        """
+    """
+    Create a synthetic light schedule.
+
+    Internal variables:
+    -------------------
+    light_vector : np.ndarray
+        Light intensity samples (lux).
+    time_vector : np.ndarray
+        Time in hours since start (float).
+
+    Time axis
+    ---------
+    index : pd.DatetimeIndex | None
+        If provided, this is the time axis that will be used.
+        If not provided, you can build it from start + sampling interval
+    """
+    def __init__(self, time_vector, light_vector, index=None):
         self.light_vector = light_vector
         self.time_vector = time_vector
+        self.index = index
+
+    @property
+    def synthetic_light(self) -> pd.Series:
+        """
+        Return the synthetic light schedule as a pandas Series.
+
+        The returned Series is indexed by the object's DatetimeIndex and
+        contains the light intensity values (in lux).
+
+        Returns
+        -------
+        pd.Series
+            Light intensity time series with a DatetimeIndex.
+
+        Raises
+        ------
+        ValueError
+            If no DatetimeIndex has been set. Call `create(..., start=...)`
+            or `with_datetime_index(...)` first.
+        """
+        if self.index is None:
+            raise ValueError("No DatetimeIndex set. Generate one with create()",
+                             "or with_datetime_index().")
+        return pd.Series(self.light_vector, index=self.index, name="synthetic_light")
+
+    def with_datetime_index(
+            self,
+            start: str | pd.Timestamp,
+            timezone : str | None = None,
+            name: str = "light"
+    ) -> pd.Series:
+        """
+        Create a DatetimeIndex using current sampling interval and then return a series.
+
+        Parameters
+        ----------
+        start : str | pd.Timestamp
+            Start timestamp for the light schedule.
+
+        timezone : str | None
+            Timezone of the light schedule.
+
+        name : str
+            Name of the light schedule. Default is "Light".
+
+        Returns
+        -------
+        pd.Series
+            Light schedule as a pandas Series with a Datetime index.
+        """
+        start = pd.Timestamp(start)
+
+        # Check if a timezone (tz) has been provided by the user
+        if timezone is not None:
+            # Case in which there is no tz information
+            if start.tzinfo is None:
+                # Use the user-specified tz to attach a timezone
+                start = start.tz_localize(timezone)
+            # Case in which there is some tz information
+            else:
+                # Convert to newly specified timezone
+                start = start.tz_convert(timezone)
+
+        # Calculate time step (assuming regularly spaced data)
+        dt_hours = float(self.time_vector[1] - self.time_vector[0])
+
+        # Convert time step to timedelta object, measured in hours
+        dt = pd.to_timedelta(dt_hours, unit="h")
+
+        self.index = pd.date_range(start=start, periods=len(self.light_vector), freq=dt)
+        return pd.Series(self.light_vector, index=self.index, name=name)
+
+    def _dt_minutes(self) -> float:
+        """Sampling interval in minutes (robust for fractional-hour time vectors)."""
+        dt_hours = float(self.time_vector[1] - self.time_vector[0])
+        return dt_hours * 60.0
 
     def create_mask(self, min_length_minutes, max_length_minutes):
         # Sampling interval calculation
-        sampling_interval = int(self.time_vector[1] - self.time_vector[0])
+        sampling_interval = self._dt_minutes()
+        if sampling_interval <= 0:
+            raise ValueError("Non-positive sampling interval detected.")
 
         # Convert minutes to number of indices based on sampling interval
-        min_length_indices = int(min_length_minutes / sampling_interval)
-        max_length_indices = int(max_length_minutes / sampling_interval)
+        min_length_indices = int(round(min_length_minutes / sampling_interval))
+        max_length_indices = int(round(max_length_minutes / sampling_interval))
 
         # Identify positions where the light vector is zero
         is_zero = self.light_vector == 0
 
-        # Detect changes from zero to non-zero and vice-versa
+        # Detect changes from zero to non-zero and vice versa
         changes = np.diff(is_zero.astype(int))
         starts = np.where(changes == 1)[0]
         ends = np.where(changes == -1)[0]
@@ -92,7 +183,11 @@ class Light:
         data is sampled at a specific interval (e.g., 1 minute, 1 hour). When you provide
         a downsampling interval, this method increases the time between each sampled point
         by a factor of the given interval.
-        :param factor (float): downsampling factor
+
+        Parameters
+        ----------
+        factor : float
+            Downsampling factor in hours.
         """
         # Calculate the downsampling factor based on the provided downsampling factor and time step
         downsampling_factor = factor // (self.time_vector[1] - self.time_vector[0])
@@ -120,54 +215,44 @@ class Light:
         schedule_starts_at=0,
         low=0,
         high=1000,
+        start: str | pd.Timestamp | None = None,
+        timezone : str | None = None,
     ):
         """
         Create a synthetic light schedule.
 
-        :param total_days (int): Number of days for the synthetic light schedule
-        :param light_on_hours (float): Number of hours per day with lights on
-        :param bins_per_hour (int): Time resolution in bins per hour
-        :param schedule_starts_at (float): Starting hour of the synthetic light schedule
-        :param low: Minimum light intensity during the light-on period (in lux)
-        :param high: Maximum light intensity during the light-on period (in lux)
+        Parameters
+        ----------
+        total_days : int
+            Total number of days to include in the synthetic light schedule.
+        light_on_hours : int
+            How many hours per day with light on.
+        bins_per_hour : int
+            Epoch resolution (e.g., 10 means 6-min bins).
+        schedule_starts_at : int
+            Hour-of-day when the light-on block starts.
+        low, high : float
+            Lux bounds for the light-on block (uniform random if low!=high).
+        start : str | pd.Timestamp | None
+            If provided, attach a DatetimeIndex beginning at this timestamp.
+        timezone : str | None
+            Optional timezone (e.g., "Europe/Lisbon").
 
-        :return Light: a new Light object containing the generated schedule
+        Returns
+        -------
+        Light
+            New synthetic light instance.
         """
+        # Check if the number of bins for the on/off period is valid
+        if not (0 <= light_on_hours <= 24):
+            raise ValueError("light_on_hours and light_off_hours must be between 0 and 24.")
+
         # Calculate the number of bins for light-on and light-off periods
         light_on_bins = int(light_on_hours * bins_per_hour)
         light_off_bins = int((24 - light_on_hours) * bins_per_hour)
 
-        # Instantiate a new generator
-        #rng = np.random.default_rng()
-
-        # Adjust light intensity bounds if they are identical
         if low == high:
-            #high += 1
-            # Instantiate a new generator
-            rng = np.random.default_rng()
-
-            # Generate random light intensity values for the light-on period
             light_on_variation = np.full(shape=(1,light_on_bins), fill_value=low)[0]
-
-            # Create a daily schedule with light-on and light-off periods
-            daily_schedule = np.concatenate([light_on_variation, np.zeros(light_off_bins)])
-
-            # Determine the start position for the light-on period
-            start_bin = schedule_starts_at * bins_per_hour
-
-            # Shift the schedule to the specified start time
-            shifted_schedule = np.roll(daily_schedule, start_bin)
-
-            # Repeat the daily schedule for the total number of days
-            light_vector = np.tile(shifted_schedule, total_days)
-
-            # Calculate the time step and generate the time vector
-            dt = 1 / bins_per_hour
-            time_vector = np.arange(0, len(light_vector) * dt, dt)
-
-            # Return the new Light instance
-            return cls(time_vector, light_vector)
-
         else:
             # Instantiate a new generator
             rng = np.random.default_rng()
@@ -175,37 +260,51 @@ class Light:
             # Generate random light intensity values for the light-on period
             light_on_variation = rng.uniform(low=low, high=high, size=light_on_bins)
 
-            # Create a daily schedule with light-on and light-off periods
-            daily_schedule = np.concatenate([light_on_variation, np.zeros(light_off_bins)])
+        # Create a daily schedule with light-on and light-off periods
+        daily_schedule = np.concatenate([light_on_variation, np.zeros(light_off_bins)])
 
-            # Determine the start position for the light-on period
-            start_bin = schedule_starts_at * bins_per_hour
+        # Determine the start position for the light-on period
+        start_bin = int(round(schedule_starts_at * bins_per_hour))
+        start_bin %= (24*bins_per_hour)
 
-            # Shift the schedule to the specified start time
-            shifted_schedule = np.roll(daily_schedule, start_bin)
+        # Shift the schedule to the specified start time
+        shifted_schedule = np.roll(daily_schedule, start_bin)
 
-            # Repeat the daily schedule for the total number of days
-            light_vector = np.tile(shifted_schedule, total_days)
+        # Repeat the daily schedule for the total number of days
+        light_vector = np.tile(shifted_schedule, total_days)
 
-            # Calculate the time step and generate the time vector
-            dt = 1 / bins_per_hour
-            time_vector = np.arange(0, len(light_vector) * dt, dt)
+        # Calculate the time step and generate the time vector
+        dt = 1 / bins_per_hour
+        time_vector = np.arange(len(light_vector)) * dt
 
-            # Return the new Light instance
-            return cls(time_vector, light_vector)
+        obj = cls(time_vector=time_vector, light_vector=light_vector, index=None)
+        if start is not None:
+            obj.with_datetime_index(start, timezone if timezone else None)
+
+        return obj
 
     def __add__(self, other, shift=0):
         """
         Add two light schedules, optionally with a time shift.
-        :param other (Light): Another Light instance for addition
-        :param shift (float): Time shift for the second schedule being added
-        :return Light: A new Light instance representing the combined schedule
+
+        Parameters
+        ----------
+        other : Light
+            Light schedule to add.
+        shift : int, optional
+            Time shift for the second schedule being added.
+
+        Returns
+        -------
+        Light
+            A new synthetic light instance representing the combined schedule
         """
         # Calculate bins per hour for the current schedule
         bins_per_hour = int(1 / (self.time_vector[1] - self.time_vector[0]))
 
         # Convert the time shift from hours to bins
         shift *= bins_per_hour
+        shift = int(round(shift))
 
         # Merge the time vectors of both schedules (set union)
         common_time_vector = np.union1d(self.time_vector, other.time_vector)
@@ -237,17 +336,26 @@ class Light:
 
     def __sub__(self, other, shift=0):
         """
-        Sibtract another light schedule, optionally with a time shift
+        Subtract a light schedule, optionally with a time shift
 
-        :param other (Light): Another Light instance to subtract
-        :param shift (float): Time shift for the other schedule
-        :return Light: A new Light instance representing the resulting schedule
+        Parameters
+        ----------
+        other : Light
+            Light schedule to add.
+        shift : int, optional
+            Time shift for the second schedule being added.
+
+        Returns
+        -------
+        Light
+            A new synthetic light instance representing the combined schedule
         """
         # Calculate bins per hour for the current schedule
         bins_per_hour = int(1 / (self.time_vector[1] - self.time_vector[0]))
 
         # Convert the time shift from hours to bins
         shift *= bins_per_hour
+        shift = int(round(shift))
 
         # Merge the time vectors of both schedules
         common_time_vector = np.union1d(self.time_vector, other.time_vector)
@@ -280,9 +388,17 @@ class Light:
 
     def __mul__(self, scalar):
         """
-        Scale the light schedule by a scalar factor.
-        :param scalar (float): Scaling factor
-        :return Light: A new Light instance with the scaled light intensities
+        Multiply light schedule by a scalar factor.
+
+        Parameters
+        ----------
+        scalar : float
+            Number that will be multiplied by the light intensities.
+
+        Returns
+        -------
+        Light
+            A new synthetic light instance representing the scaled schedule
         """
         return Light(self.time_vector, self.light_vector * scalar)
 
@@ -290,14 +406,21 @@ class Light:
         """
         Divide the light schedule by a scalar factor
 
-        :param scalar (float): Dividing factor
-        :return Light: A new Light instance with the scaled light intensities
+        Parameters
+        ----------
+        scalar : float
+            Number by which the light intensities will be divided.
+
+        Returns
+        -------
+        Light
+            A new synthetic light instance representing the divided schedule
         """
         return Light(self.time_vector, self.light_vector / scalar)
 
     def __str__(self):
         """
-        Obtain a string containing the light light intensity for each point in time
+        Obtain a string containing the light intensity for each point in time
         """
         # Unicode subscript characters for time digits
         subscript_digits = "₀₁₂₃₄₅₆₇₈₉"
