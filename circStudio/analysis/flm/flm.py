@@ -72,6 +72,20 @@ class FLM:
         self.basis_functions = None
         self.beta = {}
 
+    def _create_basis_functions(self, T):
+        phi = []
+        # Construct the fourier functions (cosine and sine)
+        if self.basis == 'fourier':
+            # T = int(pd.Timedelta('24H')/pd.Timedelta(self.sampling_freq))
+            omega = 2*np.pi / T
+            t = np.linspace(0, T, T, endpoint=False)
+            phi.append(np.cos(0 * t))
+            for n in np.arange(1, self.max_order+1):
+                phi.append(np.cos(n * omega * t))
+                phi.append(np.sin(n * omega * t))
+
+        self.basis_functions = phi
+
     @staticmethod
     def _spread(data: np.ndarray) -> float:
         """
@@ -212,7 +226,12 @@ class FLM:
 
         match self.basis:
             # Fourier
-            case 'Fourier':
+            case 'fourier':
+                if self.basis_functions is None:
+                    if self.max_order is None:
+                        raise ValueError('Basis function and/or max_order must be set.')
+                    self._create_basis_functions(self.nsamples)
+
                 # Build matrix containing the periodic basis functions
                 x = np.stack(self.basis_functions, axis=1)
 
@@ -282,20 +301,20 @@ class FLM:
 
         match self.basis:
             # Fourier
-            case 'Fourier':
+            case 'fourier':
                 # Stack the components that describe the daily rhythm (one per column)
                 x = np.stack(self.basis_functions, axis=1)
 
                 # Combine the components using their fitted weights to rebuild the signal
                 return np.dot(x, self.beta['beta'])
-            case 'B-spline':
+            case 'spline':
                 # Create a time axis covering one full 24-hour cycle
                 t = np.linspace(0, self.nsamples, r * self.nsamples, endpoint=True)
 
                 # Evaluate the smooth curve at those time points
                 return BSpline(*self.beta['beta'], extrapolate=False)(t)
             case _:
-                raise ValueError('self.basis must be "Fourier" or "B-spline"')
+                raise ValueError('self.basis must be "fourier" or "spline"')
 
 
     def smooth_daily_profile(self, data, method='scott', verbose=False):
