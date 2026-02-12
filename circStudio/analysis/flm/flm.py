@@ -201,6 +201,7 @@ class FLM:
                     splrep(t, daily_avg.values, k=k)
                 )
 
+
     def evaluate(self, r=10):
         """
         Reconstruct the smooth 24-hour activity curve from the fitted model.
@@ -249,7 +250,7 @@ class FLM:
                 raise ValueError('self.basis must be "Fourier" or "B-spline"')
 
 
-    def smooth(self, data, method='scott', verbose=False):
+    def smooth_daily_profile(self, data, method='scott', verbose=False):
         """
         Smooth the average 24-hour activity profile using a Gaussian filter.
 
@@ -265,13 +266,13 @@ class FLM:
         data : pd.Series or np.ndarray
             Actigraphy data to fit.
 
-        method: str, float.
+        method : str, float.
             Method to calculate the width of the gaussian kernel.
             Available methods are `scott`, `silverman`. A numeric
             value can also be provided to set the width.
             Default is `scott`.
 
-        verbose: bool.
+        verbose : bool.
             If True, print the kernel size used to smooth the data.
             Default is False.
 
@@ -291,3 +292,44 @@ class FLM:
 
         # Apply circular Gaussian smoothing so the 24-h cycle wraps around
         return gaussian_filter1d(daily_avg, sigma=bw, mode='wrap')
+
+
+    def smooth_timeseries(self, data, method='scott', verbose=False, mode='reflect'):
+        """
+        Smooth the full actigraphy time series using a Gaussian filter.
+
+        This reduces short-term fluctuations while keeping the original timeline.
+        Use this when you want a denoised version of the entire recording (e.g.,
+        using mathematical models of circadian rhythms).
+
+        Parameters
+        ----------
+        data : pd.Series or np.ndarray
+            Actigraphy data to fit.
+
+        method : str, float.
+            Method to calculate the width of the gaussian kernel.
+            Available methods are `scott`, `silverman`. A numeric
+            value can also be provided to set the width.
+            Default is `scott`.
+
+        verbose : bool.
+            If True, print the kernel size used to smooth the data.
+            Default is False.
+
+        mode : str, default='reflect'
+            Boundary handling for the filter.
+
+        Returns
+        -------
+        np.ndarray
+            Smoothed full time series (same length as the input data).
+        """
+        # Calculate the optimal kernel size
+        bw = self._get_kernel_size(data.values, method=method)
+
+        if verbose:
+            print(f'Kernel size used to smooth the data: {bw}')
+
+        # Smooth continuously without wrapping the end of the recording to the start
+        return gaussian_filter1d(np.asarray(data), sigma=bw, mode=mode)
