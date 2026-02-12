@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.ndimage import gaussian_filter1d
 import statsmodels.api as sm
+from scipy.interpolate import splrep, BSpline
 from ..metrics import daily_profile
 
 
@@ -127,136 +128,166 @@ class FLM:
                     # Raise ValueError in all other scenarios
                     raise ValueError('Method must be "scott", "silverman" or a scalar')
 
+
     def fit(self, data, verbose=False):
-        """Fit the actigraphy data using a basis function expansion.
+        """
+        Fit a smooth function representation of the actigraphy signal.
+
+        The input data are first converted into an average 24-hour profile.
+        This profile is then modeled using either:
+
+            - Fourier basis functions
+            - B-splines
+
+        The fitted model parameters are stored internally and can later be
+        evaluated using `evaluate()`.
 
         Parameters
         ----------
-        raw : instance of BaseRaw or its child classes
-            Raw measurements to be fitted.
-        binarize: bool.
-            If True, the data are binarized (i.e 0 or 1).
-            Default is False.
+        data : pd.Series or np.ndarray
+            Actigraphy data to fit.
+
         verbose : bool.
-            If True, print the fit summary.
+            If True, print information about fitting process.
             Default is False.
 
         Returns
         -------
-        y_est : ndarray
-            Returns the functional form of the actigraphy data.
+        None
+            The fitted parameters are stored in `self.beta`.
         """
-
+        # Convert the full signal into an average 24-hour pattern
         daily_avg = daily_profile(data)
+
+        # Store the number of time points in the daily profile
         self.nsamples = daily_avg.index.size
 
-        # Fourier
-        if self.basis == 'fourier':
+        match self.basis:
+            # Fourier
+            case 'Fourier':
+                # Build matrix containing the periodic basis functions
+                x = np.stack(self.basis_functions, axis=1)
 
-            X = np.stack(self.basis_functions, axis=1)
-            y = daily_avg.values
-            model = sm.OLS(y, X)
-            results = model.fit()
+                # Extract the observed 24-hour activity values
+                y = daily_avg.values
 
-            if verbose:
-                print(results.summary())
+                # Estimate how much each periodic component contributes to the signal
+                model = sm.OLS(y, x)
+                results = model.fit()
 
-            self.beta['beta'] = results.params
+                if verbose:
+                    print(results.summary())
 
-        # Spline
-        elif self.basis == 'spline':
+                # Store the fitted Fourier coefficients
+                self.beta['beta'] = results.params
 
-            from scipy.interpolate import splrep
+            # B-splines
+            case 'spline':
+                # Create s time vector spanning one 24-h cycle
+                t = np.linspace(
+                    0,
+                    self.nsamples,
+                    self.nsamples,
+                    endpoint=True)
 
-            T = self.nsamples
-            t = np.linspace(0, T, T, endpoint=True)
-            k = 3 if self.max_order is None else self.max_order
+                # Degrees of the spline (default: cubic spline)
+                k = 3 if self.max_order is None else self.max_order
 
-            if verbose:
-                print('Finding the {}-degree B-spline representation of'
-                      'the input data'.format(k))
+                if verbose:
+                    print(f'Finding the {k}-degree B-spline representation of the input data')
 
-            self.beta['beta'] = list(
-                splrep(t, daily_avg.values, k=k)
-            )
+                # Fit spline representation and store parameters
+                self.beta['beta'] = list(
+                    splrep(t, daily_avg.values, k=k)
+                )
 
     def evaluate(self, r=10):
-        """Evaluate the basis function expansion.
+        """
+        Reconstruct the smooth 24-hour activity curve from the fitted model.
+
+        This method uses the parameters estimated in `fit()` to generate
+        the modeled activity pattern across one 24-hour cycle.
+
+        For spline models, the curve can be evaluated at a higher resolution
+        than the original data by increasing `r
 
         Parameters
         ----------
-        raw : instance of BaseRaw or its child classes
-            Raw measurements used to create the basis functions.
-        r : int
+        r : int, default=10, optional
             Ratio between the number of points at which the basis functions are
             evaluated and the number of points at which the basis functions
-            were fitted.
+            were fitted. Only relevant for spline models.
             Default is 10.
-            N.B.: only valid for splines.
 
         Returns
         -------
-        y_est : ndarray
-            Returns the functional form of the actigraphy data.
+        ndarray
+            Smooth reconstructed 24-hour activity profile.
         """
-
+        # Make sure the model has been fitted before trying to reconstruct the curve
         if not self.beta:
             raise ValueError(
-                'The basis function expansion parameters are empty.\n'
+                'The basis function expansion parameters are empty. ',
                 'Please run the `self.fit` method first.'
             )
 
-        # Fourier
-        if self.basis == 'fourier':
-            X = np.stack(self.basis_functions, axis=1)
-            y_est = np.dot(X, self.beta['beta'])
-            return y_est
+        match self.basis:
+            # Fourier
+            case 'Fourier':
+                # Stack the components that describe the daily rhythm (one per column)
+                x = np.stack(self.basis_functions, axis=1)
 
-        # Spline
-        elif self.basis == 'spline':
-            from scipy.interpolate import BSpline
-            T = self.nsamples
-            t = np.linspace(0, T, r*T, endpoint=True)
-            y_est = BSpline(*self.beta['beta'], extrapolate=False)(t)
-            return y_est
+                # Combine the components using their fitted weights to rebuild the signal
+                return np.dot(x, self.beta['beta'])
+            case 'B-spline':
+                # Create a time axis covering one full 24-hour cycle
+                t = np.linspace(0, self.nsamples, r * self.nsamples, endpoint=True)
+
+                # Evaluate the smooth curve at those time points
+                return BSpline(*self.beta['beta'], extrapolate=False)(t)
+            case _:
+                raise ValueError('self.basis must be "Fourier" or "B-spline"')
+
 
     def smooth(self, data, method='scott', verbose=False):
-        """Smooth the actigraphy data using a gaussian kernel.
+        """
+        Smooth the average 24-hour activity profile using a Gaussian filter.
 
-        Wrapper for the scipy.ndimage.gaussian_filter1d function.
+        The actigraphy signal is first converted into an average daily pattern.
+        A Gaussian kernel is then applied to reduce short-term fluctuations
+        while preserving the overall circadian structure.
+
+        Because circadian data are cyclic (24h repeats), smoothing is performed
+        in a circular manner so that midnight connects smoothly to the next day.
 
         Parameters
         ----------
-        raw : instance of BaseRaw or its child classes
-            Raw measurements to be smoothed.
-        binarize: bool.
-            If True, the data are binarized (i.e 0 or 1).
-            Default is False.
+        data : pd.Series or np.ndarray
+            Actigraphy data to fit.
+
         method: str, float.
             Method to calculate the width of the gaussian kernel.
-            Available methods are `scott`, `silverman`. Method can be
-            a scalar value too.
+            Available methods are `scott`, `silverman`. A numeric
+            value can also be provided to set the width.
             Default is `scott`.
+
         verbose: bool.
             If True, print the kernel size used to smooth the data.
             Default is False.
 
         Returns
         -------
-        y_est : ndarray
-            Returns the smoothed form of the actigraphy data.
+        ndarray
+            Smoothed 24-hour activity profile.
         """
-
+        # Convert the full signal into an average 24-hour pattern
         daily_avg = daily_profile(data)
 
-        # Calculate optimal kernel size
+        # Calculate the optimal kernel size
         bw = self._get_kernel_size(daily_avg.values, method=method)
 
         if verbose:
-            print('Kernel size used to smooth the data: {}'.format(bw))
+            print(f'Kernel size used to smooth the data: {bw}')
 
-        return gaussian_filter1d(
-            daily_avg,
-            sigma=bw,
-            mode='wrap'
-        )
+        # Apply circular Gaussian smoothing so the 24-h cycle wraps around
+        return gaussian_filter1d(daily_avg, sigma=bw, mode='wrap')
