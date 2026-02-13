@@ -1911,7 +1911,7 @@ class Hilaire07(Model):
             - (256.0 / 105.0) * np.power(x, 7.0)
         )
 
-        taux_term = (np.power((24.0 / (0.99729 * self.taux)), 2.0) + self.k * bhat)
+        taux_term = np.power((24.0 / (0.99729 * self.taux)), 2.0) + self.k * bhat
 
         # Differential equation system
         dydt = np.zeros_like(state)
@@ -2062,23 +2062,23 @@ class Breslow13(Model):
         g=37.0,
         b=0.4,
         gamma=0.13,
-        kappa=12.0/np.pi,
+        kappa=12.0 / np.pi,
         tauc=24.1,
         f=0.99729,
         m=7.0,
         eta=0.04,
         xi=0.54,
-        beta_ip = 0.000783 * 3600.0,
-        beta_cp = 0.000335 * 3600.0,
-        beta_ap = 0.000162 * 3600.0,
-        a = 0.0010422 * 3600.0,
-        phi_on = 6.113 - 2 * np.pi,
-        phi_off = 4.352 - 2 * np.pi,
-        delta = 600.0,
-        mmax = 0.019513,
-        hstat = 861.0,
-        sigma = 50.0,
-        phi_ref = 0.97,
+        beta_ip=0.000783 * 3600.0,
+        beta_cp=0.000335 * 3600.0,
+        beta_ap=0.000162 * 3600.0,
+        a=0.0010422 * 3600.0,
+        phi_on=6.113 - 2 * np.pi,
+        phi_off=4.352 - 2 * np.pi,
+        delta=600.0,
+        mmax=0.019513,
+        hstat=861.0,
+        sigma=50.0,
+        phi_ref=0.97,
         cbt_to_dlmo=7.0,
         initial_condition=None,
     ):
@@ -2159,35 +2159,42 @@ class Breslow13(Model):
         x = state[0]
         xc = state[1]
         n = state[2]
-        h1 = state[3] # pineal melatonin
-        h2 = state[4] # plasma melatonin
-        h3 = state[5] # exogenous melatonin
+        h1 = state[3]  # pineal melatonin
+        h2 = state[4]  # plasma melatonin
+        h3 = state[5]  # exogenous melatonin
         light = input
 
-        alpha = self.alpha_0 * ((light / self.i0) ** self.p) * (light / (light + self.i1))
+        alpha = (
+            self.alpha_0 * ((light / self.i0) ** self.p) * (light / (light + self.i1))
+        )
         b = self.g * alpha * (1.0 - n) * (1.0 - self.b * x) * (1.0 - self.b * xc)
-        gamma_term = self.gamma * (x / 3.0 + 4.0 / 3.0 * x ** 3 - 256.0 / 105.0 * x ** 7)
+        gamma_term = self.gamma * (x / 3.0 + 4.0 / 3.0 * x**3 - 256.0 / 105.0 * x**7)
         tauc_term = pow(24.0 / (self.f * self.tauc), 2) + self.k * b
         m = self.melatonin_drive(h2)
         s_h1_b = self.avoid_negative_h1(h1, b)
 
-        phase = np.arctan2(x, xc)  # note this is the opposite to all other models (here xc is on the x-axis)
+        phase = np.arctan2(
+            x, xc
+        )  # note this is the opposite to all other models (here xc is on the x-axis)
         if self.phi_on > phase > self.phi_off:
-            activation = 1.0 - np.exp(-self.delta * np.mod(self.phi_on - phase, 2 * np.pi))
-            normalization = 1.0 - np.exp(-self.delta * np.mod(self.phi_on - self.phi_off, 2 * np.pi))
+            activation = 1.0 - np.exp(
+                -self.delta * np.mod(self.phi_on - phase, 2 * np.pi)
+            )
+            normalization = 1.0 - np.exp(
+                -self.delta * np.mod(self.phi_on - self.phi_off, 2 * np.pi)
+            )
             a = self.a * activation / normalization
         else:
             a = self.a * np.exp(-self.r * np.mod(self.phi_on - self.phi_off, 2 * np.pi))
-
 
         # Differential equation system
         dydt = np.zeros_like(state)
         dydt[0] = (1.0 / self.kappa) * (xc + gamma_term + b - self.eta * m)
         dydt[1] = (1.0 / self.kappa) * (b * xc / 3.0 - x * tauc_term - self.xi * m)
         dydt[2] = 60.0 * (alpha * (1 - n) - self.beta * n)  # typo on paper missing 60.0
-        dydt[3] = - self.beta_ip * h1 + a * (1.0 - self.m * b) * s_h1_b
+        dydt[3] = -self.beta_ip * h1 + a * (1.0 - self.m * b) * s_h1_b
         dydt[4] = self.beta_ip * h1 - self.beta_cp * h2 + self.beta_ap * h3
-        dydt[5] = - self.beta_ap * h3
+        dydt[5] = -self.beta_ap * h3
 
         return dydt
 
@@ -2261,7 +2268,7 @@ class Skeldon23:
         delta=1.0,
         ca=1.72,
         tauc=24.2,
-        f= 0.99669,
+        f=0.99669,
         g=19.9,
         p=0.6,
         k=0.55,
@@ -2270,14 +2277,14 @@ class Skeldon23:
         alpha_0=0.16,
         beta=0.013,
         i0=9500.0,
-        kappa=24.0/(2.0*np.pi),
+        kappa=24.0 / (2.0 * np.pi),
         c20=0.7896,
         alpha21=-0.3912,
-        alpha22 = 0.7583,
-        beta21 = -0.4442,
-        beta22 = 0.0250,
-        beta23 = -0.9647,
-        s0 = 0.0,
+        alpha22=0.7583,
+        beta21=-0.4442,
+        beta22=0.0250,
+        beta23=-0.9647,
+        s0=0.0,
         forced_wakeup_light_threshold=None,
         forced_wakeup_weekday_only=False,
         cbt_to_dlmo=7.0,
@@ -2286,7 +2293,7 @@ class Skeldon23:
         self.sleep_state = None
         self.received_light = None
         self.model_name = self.__class__.__name__
-        self.initial_conditions =initial_condition
+        self.initial_conditions = initial_condition
         self.model_states = None
         self.data = data
 
@@ -2345,8 +2352,8 @@ class Skeldon23:
         self.current_sleep_state = s0
 
         # Forced wake up
-        self.forced_wakeup_light_threshold=forced_wakeup_light_threshold
-        self.forced_wakeup_weekday_only=forced_wakeup_weekday_only
+        self.forced_wakeup_light_threshold = forced_wakeup_light_threshold
+        self.forced_wakeup_weekday_only = forced_wakeup_weekday_only
 
         self.cbt_to_dlmo = cbt_to_dlmo
 
@@ -2406,8 +2413,8 @@ class Skeldon23:
                 self.inputs = light_vector
 
                 # Run one full cycle simulation starting from current initial_conditions
-                time_hours, state_trajectory, sleep_state_trajectory = self.integrate_piecewise_odeint(
-                    initial_state=initial_condition
+                time_hours, state_trajectory, sleep_state_trajectory = (
+                    self.integrate_piecewise_odeint(initial_state=initial_condition)
                 )
 
                 self.model_states = state_trajectory
@@ -2445,7 +2452,9 @@ class Skeldon23:
         Circadian modulation term C(x,xc) used in the sleep switching threshold
         """
         linear_term = self.c20 + self.alpha21 * xc + self.alpha22 * x
-        quadratic_term = self.beta21 * xc * xc + self.beta22 * xc * x + self.beta23 * x * x
+        quadratic_term = (
+            self.beta21 * xc * xc + self.beta22 * xc * x + self.beta23 * x * x
+        )
         return linear_term + quadratic_term
 
     def _is_weekday(self, t_hours: float) -> bool:
@@ -2455,7 +2464,9 @@ class Skeldon23:
         """
         return ((t_hours / 24.0) % 7) < 5
 
-    def update_sleep_state(self, t: float, state: np.ndarray, light_input: float) -> float:
+    def update_sleep_state(
+        self, t: float, state: np.ndarray, light_input: float
+    ) -> float:
         """
         Authors' post-step sleep-state update rule.
 
@@ -2583,11 +2594,16 @@ class Skeldon23:
                     alpha = self.alpha_0 * (light / self.i0) ** self.p
 
                 # Photic input to the circadian system
-                b = self.g * (1.0 - n) * alpha * \
-                    (1.0 - self.b * x) * (1.0 - self.b * xc)
+                b = (
+                    self.g
+                    * (1.0 - n)
+                    * alpha
+                    * (1.0 - self.b * x)
+                    * (1.0 - self.b * xc)
+                )
 
                 # Oscillator dynamics
-                gamma_term = self.gamma * (xc - 4.0 / 3.0 * xc ** 3)
+                gamma_term = self.gamma * (xc - 4.0 / 3.0 * xc**3)
                 tauc_term = (24.0 / (self.f * self.tauc)) ** 2 + self.k * b
 
                 # Define derivatives
@@ -2670,6 +2686,7 @@ class Skeldon23:
         # if you want to know in clock time, just do cbtmin_times % 24
         return cbtmin_times
 
+
 def main():
     # Parameters for the light schedule
     total_days = 10  # Number of days
@@ -2698,10 +2715,11 @@ def main():
     # dt=1/10 # for 10 bins/h
     time = np.arange(0, len(light) * dt, dt)
 
-
     # SKELDON
     skeldon = Skeldon23(inputs=light, time=time)
-    initial = skeldon.get_initial_conditions(loop_number=10, light_vector=light, time_vector=time)
+    initial = skeldon.get_initial_conditions(
+        loop_number=10, light_vector=light, time_vector=time
+    )
 
     t, states, sleep = skeldon.integrate_piecewise_odeint(initial_state=initial)
 
