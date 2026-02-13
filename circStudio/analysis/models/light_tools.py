@@ -448,26 +448,39 @@ class Light:
 
     @staticmethod
     def train_activity_to_lux_model(
-            activity_data: pd.Series,
-            light_data: pd.Series
+            activity_data: pd.Series=None,
+            light_data: pd.Series=None,
+            mode: str = 'linear',
+            q: float = 0.95,
+            ref_lux: float  | None = None,
     ) -> tuple[float, float]:
         """
-        Train a linear regression model mapping activity to light intensity.
+        Train a mapping from activity counts to light intensity (lux).
 
-        This function fits the linear model
+        Modes
+        -----
+        linear:
+            Fits y = gradient*x + intercept using non-linear least squares (curve_fit).
 
-            light = gradient * activity + intercept
-
-        using paired samples from `activity_data` and `light_data`. The two
-        input series are aligned on their index and rows. Rows containing
-        missing values are removed before fitting.
+        quantile:
+            Calibrates a linear mapping using quantiles. By default, maps the activity
+            q-quantile to the light q-quantile (distribution-matching). If `ref_lux` is
+            provided, maps the activity q-quantile to `ref_lux` instead.
 
         Parameters
         ----------
         activity_data : pandas.Series
             Time-indexed activity signal.
-        light data : pandas.Series
+        light_data : pandas.Series
             Time-indexed light intensity signal in lux.
+        q : float, optional
+            Quantile in (0,1) used for quantile calibration. Default is 0.95.
+            Only relevant if `mode` is 'quantile'.
+        ref_lux : float or None, optional
+            Reference light intensity in lux. If provided and mode is 'quantile',
+            it maps qx(q) -> ref_lux. If None, it maps Qx(q) -> Qy(q).
+        mode : str, optional
+            Mode of linear regression model. Default is 'linear'.
 
         Returns
         -------
@@ -482,6 +495,9 @@ class Light:
         - The returned parameters can later be used to estimate light
         from new activity data.
         """
+        if activity_data is None or light_data is None:
+            raise ValueError("activity_data and light_data must be provided.")
+
         # Concatenate series to create a combined dataframe with missing values removed
         df = pd.concat(
             [activity_data.rename('activity'), light_data.rename('light')],
@@ -496,12 +512,43 @@ class Light:
         x = df['activity'].to_numpy(dtype=float)
         y = df['light'].to_numpy(dtype=float)
 
-        # Define linear function for the mapping
-        def _light(activity, delta, c):
-            return delta * activity + c
+        gradient, intercept = None, None
+        mode = mode.lower()
+        match mode:
+            case "linear":
+                # Define linear function for the mapping
+                def _light(activity, delta, c):
+                    return delta * activity + c
 
-        # Extract optimal gradient and intercept
-        (gradient, intercept), _ = curve_fit(_light, x, y)
+                # Extract optimal gradient and intercept
+                (gradient, intercept), _ = curve_fit(_light, x, y)
+
+            case "quantile":
+                if not (0 < q < 1):
+                    raise ValueError("q must be between 0 and 1 (exclusive).")
+
+                # Activity quantile (qx)
+                qx = float(np.nanquantile(x,q))
+
+                if not np.isfinite(qx) or qx <=0:
+                    raise ValueError(f"Activity quantile Qx({q}) is not > 0; cannot calibrate.")
+
+                # Light quantile (qy, our target)
+                if ref_lux is not None:
+                    # Set it to ref_lux if specified by the user
+                    qy = float(ref_lux)
+                else:
+                    # Calculate the quantile if no ref_lux is provided
+                    qy = np.nanquantile(y, q)
+
+                # Calculate the gradient based on quantile ratio
+                gradient = qy/qx
+
+                # Set intercept to zero
+                intercept = 0
+
+            case _:
+                raise ValueError("Unknown mode. Choose 'linear' or 'quantile'")
 
         # Return the output
         return float(gradient), float(intercept)
