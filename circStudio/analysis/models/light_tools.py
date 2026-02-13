@@ -26,10 +26,13 @@ class Light:
         If not provided, you can build it from start + sampling interval
     """
 
-    def __init__(self, time_vector, light_vector, index=None):
+    def __init__(self, time_vector=None, light_vector=None, index=None):
         self.light_vector = light_vector
         self.time_vector = time_vector
         self.index = index
+        self.light_series = None
+        self.gradient = None
+        self.intercept = None
 
     @property
     def synthetic_light(self) -> pd.Series:
@@ -102,7 +105,12 @@ class Light:
         dt = pd.to_timedelta(dt_hours, unit="h")
 
         self.index = pd.date_range(start=start, periods=len(self.light_vector), freq=dt)
-        return pd.Series(self.light_vector, index=self.index, name=name)
+
+        light_series = pd.Series(self.light_vector, index=self.index, name=name)
+
+        # Set attribute light_series and return it back to the user
+        self.light_series = light_series
+        return light_series
 
     def _dt_minutes(self) -> float:
         """Sampling interval in minutes (robust for fractional-hour time vectors)."""
@@ -446,8 +454,8 @@ class Light:
             ]
         )
 
-    @staticmethod
     def train_activity_to_lux_model(
+            self,
             activity_data: pd.Series=None,
             light_data: pd.Series=None,
             mode: str = 'linear',
@@ -521,7 +529,7 @@ class Light:
                     return delta * activity + c
 
                 # Extract optimal gradient and intercept
-                (gradient, intercept), _ = curve_fit(_light, x, y)
+                (gradient, intercept), _ = curve_fit(_light, x, y, bounds=([0, 0], [np.inf, np.inf]))
 
             case "quantile":
                 if not (0 < q < 1):
@@ -555,8 +563,25 @@ class Light:
             case _:
                 raise ValueError("Unknown mode. Choose 'linear' or 'quantile'")
 
+        # Set the gradient and intercept attributes
+        self.gradient = float(gradient)
+        self.intercept = float(intercept)
+
         # Return the output
         return float(gradient), float(intercept)
+
+    def convert_activity_to_lux(self, activity):
+        # Check if a gradient or intercept were previously calculated
+        if self.gradient is None or self.intercept is None:
+            raise ValueError("Parameters were not provided. Please run train_activity_to_lux_model.")
+
+        # Check if activity series was provided
+        if activity is None:
+            raise ValueError("Activity trace was not provided.")
+
+        # Compute linear model and return it
+        self.light_series = self.gradient * activity + self.intercept
+        return self.light_series
 
 
     def actogram(
@@ -698,7 +723,6 @@ def main():
     #   500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
     #  500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 500,500,500,0,0,0,0,0,0,0,0,0,500,500,500, 0,0,0,0,0,0,0,0,0,500
     # ])
-
     # Generate the time vector
     # time = np.arange(0, len(data) * 15, 15)
     # schedule = Light(time_vector=time, light_vector=data)
