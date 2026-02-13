@@ -530,6 +530,7 @@ class Light:
                 # Activity quantile (qx)
                 qx = float(np.nanquantile(x,q))
 
+                # Check if the obtained value for qx is finite and positive
                 if not np.isfinite(qx) or qx <=0:
                     raise ValueError(f"Activity quantile Qx({q}) is not > 0; cannot calibrate.")
 
@@ -540,6 +541,10 @@ class Light:
                 else:
                     # Calculate the quantile if no ref_lux is provided
                     qy = np.nanquantile(y, q)
+
+                # Check if the obtained value for qy is finite and positive
+                if not np.isfinite(qy) or qy < 0:
+                    raise ValueError("Light quantile is invalid.")
 
                 # Calculate the gradient based on quantile ratio
                 gradient = qy/qx
