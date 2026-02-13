@@ -1716,15 +1716,15 @@ class ModelComparer:
         # Obtain optimal parameters to fit exponential decay
         def optimal_params(crmse):
             return curve_fit(
-                exponential_decay, # function
-                self.time_vector, # xdata
-                crmse, # ydata
+                exponential_decay,  # function
+                self.time_vector,  # xdata
+                crmse,  # ydata
                 p0=[
                     crmse[0] - crmse[-1],  # Initial guess for the amplitude A
                     0.01,  # k: slow decay guess
                     crmse[-1],  # C: asymptotic RMSE value
-                ], # Initial guess for the parameters
-                maxfev=10000, # Iterations for curve fitting
+                ],  # Initial guess for the parameters
+                maxfev=10000,  # Iterations for curve fitting
             )[0]
 
         # Unpack optimal params for `x` and `xc`
@@ -1737,6 +1737,242 @@ class ModelComparer:
 
         # Return the half-life for `x` and `xc` prediction
         return half_life_x, half_life_xc
+
+
+class Hilaire07(Model):
+    """
+    Implements the mathematical model of human circadian rhythms developed by Forger, Jewett and Kronauer [1].
+    The formalism includes a representation of the biochemical conversion of the light signal into a drive on
+    the circadian pacemaker, which is modeled as a van der Pol oscillator. This cubic model is characterized
+    by three state variables: x, xc and n. While n can be interpreted as the proportion of activated photoreceptors,
+    at a given time, x and xc cannot directly be mapped to specific physiological mechanisms. Instead, x and xc are
+    used to predict biologically meaningful quantities, such as the core body temperature minimum (CBTmin).
+
+    Our implementation closely follows the approach of the `circadian`package by Arcascope [2]. However, we use the
+    more powerful LSODA integrator (via SciPy's `odeint`) for numerical integration, enabling the integration of the
+    system using more complex light trajectories.
+
+    Attributes
+    ----------
+    taux : float
+        Intrinsic period of the oscillator (hours).
+    mu : float
+        stiffness of the van der Pol oscillator.
+    g : float
+        Light sensitivity scaling parameter.
+    alpha_0 : float
+        Baseline forward rate constant governing the photon-driven activation
+        (or depletion) of photoreceptors. This parameter scales the rate at which
+        incident light converts available photoreceptors into an active or
+        “used” state.
+    beta : float
+        Backward rate constant governing photoreceptor recovery or regeneration.
+        This parameter controls the rate at which used photoreceptors return to
+        the available state, representing dark adaptation or biochemical
+        recovery processes.
+    p : float
+        Power-law exponent for light-dependent photoreceptor activation. This
+        parameter determines how sensitively the forward rate constant α scales
+        with light intensity.
+    i0 : float
+        Reference light intensity used to normalize the input light intensity vector I.
+    k : float
+        Coupling coefficient scaling the influence of the photic drive B on the
+        circadian pacemaker. It modulates the sensitivity of the oscillator to light.
+    cbt_to_dlmo : float
+        Time offset (in hours) from CBTmin to DLMO.
+    initial_conditions : numpy.ndarray
+        State vector at the start of simulation (default: [-0.0843259, -1.09607546, 0.45584306]).
+    model_states : numpy.ndarray
+        Integrated state trajectories of the model.
+    time : numpy.ndarray
+        Array of time points for simulation.
+    inputs : numpy.ndarray
+        Array of input values (e.g., light intensity and wake) over time.
+
+    Methods
+    -------
+    derivative(t, state, light)
+        Computes the derivatives of the state variables at a given time and light input.
+    amplitude()
+        Calculates the amplitude of the oscillator from integrated states.
+    phase()
+        Calculates the phase angle of the oscillator from integrated states.
+    cbt()
+        Identifies the timing of core body temperature minima from integrated states.
+
+    References
+    ----------
+    [1] Forger DB, Jewett ME, Kronauer RE. A Simpler Model of the Human Circadian Pacemaker.
+    Journal of Biological Rhythms. 1999;14(6):533-538. doi:10.1177/074873099129000867
+
+    [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
+    and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
+    """
+
+    def __init__(
+        self,
+        data=None,
+        inputs=None,
+        time=None,
+        taux=24.2,
+        g=37.0,
+        k=0.55,
+        mu=0.13,
+        beta=0.007,
+        q=1.0 / 3.0,
+        rho=0.032,
+        i0=9500.0,
+        p=0.5,
+        a0=0.1,
+        phi_xcx=-2.98,
+        phi_ref=0.97,
+        cbt_to_dlmo=7.0,
+        initial_condition=None,
+    ):
+        if inputs is None or time is None:
+            super().__init__(
+                data=data,
+                initial_conditions=np.array([-0.0480751, -1.22504441, 0.51854818]),
+            )
+        else:
+            super().__init__(
+                inputs=inputs,
+                time=time,
+                initial_conditions=np.array([-0.0480751, -1.22504441, 0.51854818]),
+            )
+        # Check for a scenario in which a initial condition is provided
+        if initial_condition is not None:
+            self.initial_conditions = initial_condition
+        self.model_name = self.__class__.__name__
+        self.taux = taux
+        self.g = g
+        self.k = k
+        self.mu = mu
+        self.beta = beta
+        self.q = q
+        self.rho = rho
+        self.i0 = i0
+        self.p = p
+        self.a0 = a0
+        self.phi_xcx = phi_xcx
+        self.phi_ref = phi_ref
+        self.cbt_to_dlmo = cbt_to_dlmo
+        self.initialize_model_states()
+
+    def derivative(self, t, state, input):
+        """
+        Computes the derivatives of the state variables at a given time and light input.
+
+        Parameters
+        ----------
+        t : float
+            Current simulation time (in hours).
+        state : numpy.ndarray
+            Current values of the state variables at time t.
+        input: tuple
+            Contains light intensity input (in lux) at time t and the corresponding wake state.
+
+        Returns
+        -------
+        numpy.ndarray
+            Derivatives at time t.
+        """
+        x = state[0]
+        xc = state[1]
+        n = state[2]
+        light = input[0]
+        wake = input[1]
+
+        # note this correction on the alpha term (important to test Forger's model
+        # better approximates Hannay's under the ModelComparer framework)
+        alpha = self.a0 * np.power(light / self.i0, self.p) * (light / (light + 100))
+        bhat = self.g * (1 - n) * alpha * (1 - (0.4 * x)) * (1 - 0.4 * xc)
+
+        # Sigma is set to one if rest/sleep
+        sigma = 1.0 if wake else 0.0
+
+        # Calculate psi_cx
+        c = t % 24
+        cbtmin = self.phi_xcx + self.phi_ref
+        cbtminlocal = (cbtmin * 24.0) / (2 * np.pi)
+        psi_cx = (c - cbtminlocal) % 24
+
+        # Calculate Ns
+        if 16.5 < psi_cx < 21.0:
+            nsh = self.rho * (1.0 / 3.0)
+        else:
+            nsh = self.rho * ((1.0 / 3.0) - sigma)
+        ns = nsh * (1 - np.tanh(10.0 * x))
+
+        mu_term = self.mu * (
+            (1.0 / 3.0) * x
+            + (4.0 / 3.0) * np.power(x, 3.0)
+            - (256.0 / 105.0) * np.power(x, 7.0)
+        )
+
+        taux_term = (np.power((24.0 / (0.99729 * self.taux)), 2.0) + self.k * bhat)
+
+        # Differential equation system
+        dydt = np.zeros_like(state)
+        dydt[0] = np.pi / 12.0 * (xc + mu_term + bhat + ns)
+        dydt[1] = np.pi / 12.0 * (self.q * bhat * xc - x * taux_term)
+        dydt[2] = 60.0 * (alpha * (1.0 - n) - self.beta * n)
+
+        return dydt
+
+    def amplitude(self):
+        """
+        Amplitude of the oscillator computed from the integrated state trajectory.
+
+        Returns
+        -------
+        numpy.ndarray
+            Amplitude at each time point: sqrt(x^2 + xc^2).
+        """
+        # Integrate model and extract amplitude
+        x = self.model_states[:, 0]
+        xc = self.model_states[:, 1]
+        return np.sqrt(x**2 + xc**2)
+
+    def phase(self):
+        """
+        Returns the phase angle of the oscillator computed from the integrated state trajectory.
+
+        Returns
+        -------
+        numpy.ndarray
+            Phase angle (radians) at each time point: arctangent(xc/x).
+        """
+        # Integrate model and extract phase
+        x = self.model_states[:, 0]
+        # Multiplying xc makes the phase move clockwise
+        xc = -1.0 * self.model_states[:, 1]
+        # Observe that np.angle(x + complex(0,1) * xc) == np.atan2(xc,x)
+        # The y (in this case, xc) appears first in the atan2 formula
+        return np.angle(x + complex(0, 1) * xc)
+        # return np.atan2(xc,x)
+
+    def cbt(self):
+        """
+        Time points corresponding to the predicted core bod temperature minima (CBTmin), derived from the
+        state variable x.
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of time points (in hours) where minima of x occur, corresponding to the CBTmin.
+        """
+        # Calculate time step (dt) between consecutive time points
+        dt = np.diff(self.time)[0]
+        # Invert cos(x) to turn the minima into maxima (peaks)
+        inverted_x = -1.0 * self.model_states[:, 0]
+        # Identify the indices where the minima occur
+        cbt_min_indices, _ = find_peaks(inverted_x, distance=np.ceil(13.0 / dt))
+        # Use the previous indices to find the cbtmin times
+        cbtmin_times = self.time[cbt_min_indices] + self.phi_ref
+        # if you want to know in clock time, just do cbtmin_times % 24
+        return cbtmin_times
 
 
 def main():
@@ -1778,9 +2014,9 @@ def main():
     # max_error_xc, min_error_xc, error_band_xc, magnitude_xc = comparison.error_stats()[1]
 
     # SECTION WITH GENERAL COMMANDS
-    # hannay = HannaySP(inputs=light_vector, time=time_vector)
+    # hannay = HannaySP(inputs=light, time=time)
     # forger = HannaySP(inputs=light, time=time)
-    # esri = ESRI(inputs=light_vector, time=time_vector)
+    # esri = ESRI(inputs=light, time=time)
     # esri.calculate()
 
     # start = time.time()
