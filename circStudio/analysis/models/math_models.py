@@ -2396,7 +2396,7 @@ class Skeldon23:
         # Identify the indices where the minima occur
         cbt_min_indices, _ = find_peaks(inverted_x, distance=np.ceil(13.0 / dt))
         # Use the previous indices to find the cbtmin times
-        cbtmin_times = self.time[cbt_min_indices] + self.phi_ref
+        cbtmin_times = self.time[cbt_min_indices]
         # if you want to know in clock time, just do cbtmin_times % 24
         return cbtmin_times
 
@@ -2427,6 +2427,25 @@ def main():
     # dt = 1
     # dt=1/10 # for 10 bins/h
     time = np.arange(0, len(light) * dt, dt)
+
+
+    # SKELDON
+    skeldon = Skeldon23(inputs=light, time=time)
+    initial = skeldon.get_initial_conditions(loop_number=10, light_vector=light, time_vector=time)
+
+    t, states, sleep = skeldon.integrate_piecewise_odeint(initial_state=initial)
+
+    x = states[:, 0]
+    xc = states[:, 1]
+    n = states[:, 2]
+    h = states[:, 3]
+
+    plt.figure(figsize=(15, 8))
+    plt.plot(t, x)
+    plt.ylabel("var")
+    plt.show()
+
+    return None
 
     # SECTION FOR COMPARING CIRCADIAN MODELS (FORGER AND HANNAY)
     comparison = ModelComparer(inputs=light, time=time, equilibrate=True)
