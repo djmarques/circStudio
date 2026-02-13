@@ -24,6 +24,7 @@ class Light:
         If provided, this is the time axis that will be used.
         If not provided, you can build it from start + sampling interval
     """
+
     def __init__(self, time_vector, light_vector, index=None):
         self.light_vector = light_vector
         self.time_vector = time_vector
@@ -49,15 +50,17 @@ class Light:
             or `with_datetime_index(...)` first.
         """
         if self.index is None:
-            raise ValueError("No DatetimeIndex set. Generate one with create()",
-                             "or with_datetime_index().")
+            raise ValueError(
+                "No DatetimeIndex set. Generate one with create()",
+                "or with_datetime_index().",
+            )
         return pd.Series(self.light_vector, index=self.index, name="synthetic_light")
 
     def with_datetime_index(
-            self,
-            start: str | pd.Timestamp,
-            timezone : str | None = None,
-            name: str = "light"
+        self,
+        start: str | pd.Timestamp,
+        timezone: str | None = None,
+        name: str = "light",
     ) -> pd.Series:
         """
         Create a DatetimeIndex using current sampling interval and then return a series.
@@ -175,7 +178,7 @@ class Light:
             interpolated_values = np.interp(fill_range, xp, fp)
 
             # Replace the original data in the missing region
-            self.light_vector[start + 1:end + 2] = interpolated_values
+            self.light_vector[start + 1 : end + 2] = interpolated_values
 
     def downsample(self, factor):
         """
@@ -216,7 +219,7 @@ class Light:
         low=0,
         high=1000,
         start: str | pd.Timestamp | None = None,
-        timezone : str | None = None,
+        timezone: str | None = None,
     ):
         """
         Create a synthetic light schedule.
@@ -245,14 +248,16 @@ class Light:
         """
         # Check if the number of bins for the on/off period is valid
         if not (0 <= light_on_hours <= 24):
-            raise ValueError("light_on_hours and light_off_hours must be between 0 and 24.")
+            raise ValueError(
+                "light_on_hours and light_off_hours must be between 0 and 24."
+            )
 
         # Calculate the number of bins for light-on and light-off periods
         light_on_bins = int(light_on_hours * bins_per_hour)
         light_off_bins = int((24 - light_on_hours) * bins_per_hour)
 
         if low == high:
-            light_on_variation = np.full(shape=(1,light_on_bins), fill_value=low)[0]
+            light_on_variation = np.full(shape=(1, light_on_bins), fill_value=low)[0]
         else:
             # Instantiate a new generator
             rng = np.random.default_rng()
@@ -265,7 +270,7 @@ class Light:
 
         # Determine the start position for the light-on period
         start_bin = int(round(schedule_starts_at * bins_per_hour))
-        start_bin %= (24*bins_per_hour)
+        start_bin %= 24 * bins_per_hour
 
         # Shift the schedule to the specified start time
         shifted_schedule = np.roll(daily_schedule, start_bin)
@@ -440,105 +445,191 @@ class Light:
             ]
         )
 
-    def actogram_binary(self,
-                        size=(12,6),
-                        title="Actogram",
-                        legend_loc="upper left",
-                        legend_fontsize=10,
-                        activity_color="#404040",
-                        inactivity_color="#DCDCDC",
-                        midline_color="red"):
+    def actogram(
+        self,
+        size=(12, 6),
+        title="Actogram",
+        legend_loc="upper left",
+        legend_fontsize=10,
+        activity_color="#404040",
+        inactivity_color="#DCDCDC",
+        midline_color="red",
+        show = False,
+    ):
+        """
+        Double-plotted actogram of the synthetic light schedule.
+
+        The light intensity values are reshaped into daily segments
+        and displayed as a heatmap, where darker colors indicate higher
+        light intensity (activity period) and lighter colors indicate
+        zero or low light intensity.
+
+        Parameters
+        ----------
+        size : tuple of float, optional
+            Figure size in inches (width, height). Defaults to (12, 6).
+
+        title : str, optional
+            Title of the plot. Defaults is "Actogram".
+
+        legend_loc : str, optional
+            Location of the legend in matplotlib format. Defaults to "upper left".
+
+        legend_fontsize : int, optional
+            Font size of the legend. Defaults to 10.
+
+        activity_color : str, optional
+            Color used to represent periods with light exposure
+            (non-zero light intensity). Default is "#404040".
+
+        inactivity_color : str, optional
+            Color used to represent periods without light exposure
+            (zero light intensity). Default is "#DCDCDC".
+
+        midline_color : str, optional
+            Color of the vertical dashed line separating the two 24-hour
+            segments in the double-plotted actogram. Default is "red".
+
+        show : bool, optional
+            Whether to show the plot. Defaults is False.
+
+        Notes
+        -----
+        - This method assumes regularly sampled time data.
+        - The sampling interval is inferred from `self.time_vector`.
+        - The total duration must correspond to an integer number of days.
+        - The function displays the figure using `plt
+
+        Returns
+        -------
+        fig, ax : matplotlib.figure.Figure, matplotlib.pyplot.Axes
+            The double-plotted actogram plot.
+
+        """
         # Determine the number of bins per day
         bins_per_day = int(24 / np.diff(self.time_vector)[0])
 
         # Determine the total number of days
-        total_time = self.time_vector[-1]  - self.time_vector[0]
+        total_time = self.time_vector[-1] - self.time_vector[0]
         num_days = int(np.ceil(total_time / 24))
 
         # Reshape the light vector for the actogram
-        light_matrix = self.light_vector.reshape(num_days,bins_per_day)
+        light_matrix = self.light_vector.reshape(num_days, bins_per_day)
 
         # Create double-plotted data
         double_plot_matrix = np.tile(light_matrix, 2)
 
         # Create figure to store the heatmap
-        plt.figure(figsize=size)
+        fig = plt.figure(figsize=size)
+
+        # Get current axes, the current axes object active in this figure
+        ax = plt.gca()
 
         # Create a custom color map
-        custom_cmap = LinearSegmentedColormap.from_list("pastel", [inactivity_color,activity_color])
+        custom_cmap = LinearSegmentedColormap.from_list(
+            "pastel", [inactivity_color, activity_color]
+        )
 
         # Create the heatmap
-        sns.heatmap(double_plot_matrix,cmap = custom_cmap, cbar=False, yticklabels=np.arange(1, light_matrix.shape[0] + 1))
+        sns.heatmap(
+            double_plot_matrix,
+            cmap=custom_cmap,
+            cbar=False,
+            yticklabels=np.arange(1, light_matrix.shape[0] + 1),
+            ax=ax
+        )
 
         # Add horizontal lines to separate rows (days)
-        for i in range(0, double_plot_matrix.shape[0]+1):
+        for i in range(0, double_plot_matrix.shape[0] + 1):
             plt.axhline(i, color=inactivity_color, linewidth=10)
 
         # Add vertical lines to separate duplicate plot
-        plt.axvline(bins_per_day, linewidth=2, linestyle='--', color=midline_color)
+        plt.axvline(bins_per_day, linewidth=2, linestyle="--", color=midline_color)
 
         # Configure xticks
         num_ticks = 24 * 2 + 1
-        plt.xticks(
-            rotation=0,
-            ticks=np.linspace(0, double_plot_matrix.shape[1], num_ticks),
-            labels=[f"{int(hour % 24)}" for hour in np.linspace(0, 2 * 24, num_ticks)]
+        ax.set_xticks(np.linspace(0, double_plot_matrix.shape[1], num_ticks))
+        ax.set_xticklabels([f"{int(hour % 24)}" for hour in np.linspace(0, 2 * 24, num_ticks)],
+                           rotation=0
         )
 
         # Configure yticks
-        plt.yticks(rotation=0)
+        ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
 
         # Add custom legend for activity and inactivity
         legend_elements = [
-            Line2D([0], [0], color=activity_color, lw=4, label='Activity Period'),
-            Line2D([0], [0], color=inactivity_color, lw=4, label='Inactivity Period'),
-            Line2D([0], [0], color=midline_color, lw=4, label='Double-plot Line')
+            Line2D([0], [0], color=activity_color, lw=4, label="Activity Period"),
+            Line2D([0], [0], color=inactivity_color, lw=4, label="Inactivity Period"),
+            Line2D([0], [0], color=midline_color, lw=4, label="Double-plot Line"),
         ]
-        plt.legend(handles=legend_elements, loc=legend_loc, fontsize=legend_fontsize)
+        ax.legend(handles=legend_elements, loc=legend_loc, fontsize=legend_fontsize)
 
         # Label the plot and axis
-        plt.title(title)
-        plt.xlabel("Time (hours)")
-        plt.ylabel("Day")
-        plt.show()
+        ax.set_title(title)
+        ax.set_xlabel("Time (hours)")
+        ax.set_ylabel("Day")
+
+        # Display the plot
+        if show:
+            plt.show()
+
+        # Return figure and axes
+        return fig, ax
 
 
 def main():
-    #data = np.array([1, 2, 5, 4, 2, 3, 6, 1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5])
-    #time = np.arange(0, len(data) * 15, 15)
-    #data = np.array([
-     #   500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
-      #  500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 500,500,500,0,0,0,0,0,0,0,0,0,500,500,500, 0,0,0,0,0,0,0,0,0,500
-    #])
+    # data = np.array([1, 2, 5, 4, 2, 3, 6, 1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5])
+    # time = np.arange(0, len(data) * 15, 15)
+    # data = np.array([
+    #   500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+    #  500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 500,500,500,0,0,0,0,0,0,0,0,0,500,500,500, 0,0,0,0,0,0,0,0,0,500
+    # ])
 
     # Generate the time vector
-    #time = np.arange(0, len(data) * 15, 15)
-    #schedule = Light(time_vector=time, light_vector=data)
-    #print(schedule.light_vector)
-    #mask_1 = schedule.create_mask(120, 360)
+    # time = np.arange(0, len(data) * 15, 15)
+    # schedule = Light(time_vector=time, light_vector=data)
+    # print(schedule.light_vector)
+    # mask_1 = schedule.create_mask(120, 360)
 
-    #schedule.interpolate_mask(mask_1)
-    #print(schedule.light_vector)
-    #schedule = Light.create(total_days=10,light_on_hours=16, bins_per_hour = 10,schedule_starts_at=8,low=500,high=500)
+    # schedule.interpolate_mask(mask_1)
+    # print(schedule.light_vector)
+    # schedule = Light.create(total_days=10,light_on_hours=16, bins_per_hour = 10,schedule_starts_at=8,low=500,high=500)
     # Social jet lag schedule
-    schedule_base = Light.create(total_days=7, light_on_hours=16, bins_per_hour=10, schedule_starts_at=8, low=100,
-                                 high=100)
-    schedule_end = Light.create(total_days=2, light_on_hours=3, bins_per_hour=10, schedule_starts_at=8, low=100,
-                                high=100)
-    schedule_add = Light.create(total_days=2, light_on_hours=3, bins_per_hour=10, schedule_starts_at=0, low=100,
-                                high=100)
+    schedule_base = Light.create(
+        total_days=7,
+        light_on_hours=16,
+        bins_per_hour=10,
+        schedule_starts_at=8,
+        low=100,
+        high=100,
+    )
+    schedule_end = Light.create(
+        total_days=2,
+        light_on_hours=3,
+        bins_per_hour=10,
+        schedule_starts_at=8,
+        low=100,
+        high=100,
+    )
+    schedule_add = Light.create(
+        total_days=2,
+        light_on_hours=3,
+        bins_per_hour=10,
+        schedule_starts_at=0,
+        low=100,
+        high=100,
+    )
     # a = schedule_base - schedule_end
     schedule = schedule_base.__sub__(schedule_end, shift=5 * 24)
-    schedule = schedule.__add__(schedule_add, shift=5*24)
-    schedule.actogram_binary()
+    schedule = schedule.__add__(schedule_add, shift=5 * 24)
+    schedule.actogram()
 
-
-    #plt.plot(schedule.light_vector)
-    #plt.xlabel("Time (hours)")
-    #plt.ylabel("Light (lux)")
-    #plt.title("Synthetic light schedule")
-    #plt.grid()
-    #plt.show()
+    # plt.plot(schedule.light_vector)
+    # plt.xlabel("Time (hours)")
+    # plt.ylabel("Light (lux)")
+    # plt.title("Synthetic light schedule")
+    # plt.grid()
+    # plt.show()
 
 
 if __name__ == "__main__":
