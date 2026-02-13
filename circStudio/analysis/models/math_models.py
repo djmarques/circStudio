@@ -2013,10 +2013,16 @@ class Skeldon23:
         cbt_to_dlmo=7.0,
         initial_condition=np.array([0.23995682, -1.1547196, 0.50529415, 12.83846474]),
     ):
+        self.sleep_state = None
+        self.received_light = None
         self.model_name = self.__class__.__name__
         self.initial_conditions =initial_condition
         self.model_states = None
         self.data = data
+
+        # -------------------------------------
+        # Input handling logic (time and light)
+        # -------------------------------------
 
         # Extract time from data index
         if time is None or inputs is None:
@@ -2032,6 +2038,10 @@ class Skeldon23:
         else:
             self.time = time
             self.inputs = inputs
+
+        # ----------------
+        # Model parameters
+        # ----------------
 
         # Sleep/wake regulation parameters
         self.mu = mu
@@ -2070,41 +2080,141 @@ class Skeldon23:
 
         self.cbt_to_dlmo = cbt_to_dlmo
 
+    def dlmos(self):
+        """
+        Calculates the predicted Dim Light Melatonin Onset (DLMO) time points using a fixed,
+        pre-specified offset (default: seven hours).
+
+        Returns
+        -------
+        numpy.ndarray:
+            Array of time points (in hours) at which DLMO is expected to occur.
+        """
+        return self.cbt() - self.cbt_to_dlmo
+
+    def get_initial_conditions(
+        self, loop_number, data=None, light_vector=None, time_vector=None
+    ):
+        """
+        Attempts to equilibrate the model's initial conditions by repeated simulation.
+
+        Works with the piecewise odeint integrator that returns:
+        (time_hours, state_trajectory, sleep_state_trajectory)
+
+        Returns
+        -------
+        np.ndarray
+            Final continuous state [x, xc, n, h] after entrainment attempt.
+        """
+        # Extract time from light index
+        if time_vector is None or light_vector is None:
+            if data is not None:
+                time_vector = np.asarray(
+                    (data.index - data.index.min()).total_seconds() / 3600
+                )
+                light_vector = np.asarray(data.values)
+            else:
+                raise ValueError("Must provide either light series or input and time.")
+        else:
+            time_vector = np.asarray(time_vector, dtype=float)
+            light_vector = np.asarray(light_vector, dtype=float)
+
+        # Save existing inputs/time to prevent being permanently overwritten
+        old_time = getattr(self, "time", None)
+        old_inputs = getattr(self, "inputs", None)
+
+        # Initialize with default initial conditions
+        initial_condition = np.asarray(self.initial_conditions, dtype=float)
+
+        # List to collect dlmos
+        dlmos = []
+
+        try:
+            for i in range(loop_number):
+                # Calculate the solution for the models
+                self.time = time_vector
+                self.inputs = light_vector
+
+                # Run one full cycle simulation starting from current initial_conditions
+                time_hours, state_trajectory, sleep_state_trajectory = self.integrate_piecewise_odeint(
+                    initial_state=initial_condition
+                )
+
+                self.model_states = state_trajectory
+
+                # Compute dlmos from the solution
+                dlmos.append(self.dlmos())
+
+                # Update initial_condition for the next iteration
+                initial_condition = state_trajectory[-1]
+
+                # Exit early if entrainment is detected
+                if i > 1 and np.isclose(dlmos[-1][-1], dlmos[-2][-1], atol=1e-3):
+                    # Print number of loops required for entrainment
+                    # print(f"The model entrained after {i} loops.")
+                    # Update model initial conditions to entrained state
+                    self.initial_conditions = state_trajectory[-1]
+
+                    # Return entrained model solution
+                    return state_trajectory[-1]
+
+            # Return unentrained model solution
+            self.initial_conditions = state_trajectory[-1]
+            return state_trajectory[-1]
+        finally:
+            # Restore whatever was previously on the model
+            self.time = old_time
+            self.inputs = old_inputs
+
+    # ---------------------------------------------------
+    # Switching between awake and asleep (discrete steps)
+    # ---------------------------------------------------
+
     def _circadian_modulation_C(self, x, xc):
+        """
+        Circadian modulation term C(x,xc) used in the sleep switching threshold
+        """
         linear_term = self.c20 + self.alpha21 * xc + self.alpha22 * x
         quadratic_term = self.beta21 * xc * xc + self.beta22 * xc * x + self.beta23 * x * x
         return linear_term + quadratic_term
 
     def _is_weekday(self, t_hours: float) -> bool:
-        # authors: (t / 24.0) % 7 < 5
+        """
+        Author's weekday rule: treat t=0 as start of a 7-day cycle;
+        weekday if (t/24) % 7 < 5 (5 is Saturday)
+        """
         return ((t_hours / 24.0) % 7) < 5
 
     def update_sleep_state(self, t: float, state: np.ndarray, light_input: float) -> float:
         """
-        Update self.current_sleep_state using the authors' post-step rule.
-        Called ONCE per outer time step (piecewise integration).
+        Authors' post-step sleep-state update rule.
+
+        This method should be called exactly once per external time step, after
+        integrating the continuous ODE across that step.
+
         """
         x = state[0]
         xc = state[1]
-        H = state[3]
+        h = state[3]
 
-        S = float(self.current_sleep_state)
-        if S not in (0.0, 1.0):
+        s = float(self.current_sleep_state)
+
+        if s not in (0.0, 1.0):
             raise ValueError("current_sleep_state must be 0 or 1")
 
-        C = self._circadian_modulation_C(x, xc)
+        c = self._circadian_modulation_C(x, xc)
 
-        new_S = S
-        if S == 0.0:
+        new_s = s
+        if s == 0.0:
             # wake -> sleep
-            H_plus = self.h0 + 0.5 * self.delta + self.ca * C
-            if H >= H_plus:
-                new_S = 1.0
+            h_plus = self.h0 + 0.5 * self.delta + self.ca * c
+            if h >= h_plus:
+                new_s = 1.0
         else:
             # sleep -> wake
-            H_minus = self.h0 - 0.5 * self.delta + self.ca * C
-            if H <= H_minus:
-                new_S = 0.0
+            h_minus = self.h0 - 0.5 * self.delta + self.ca * c
+            if h <= h_minus:
+                new_s = 0.0
 
         # Forced wake-up by light (mirror authors' behavior)
         if self.forced_wakeup_light_threshold is not None:
@@ -2113,92 +2223,129 @@ class Skeldon23:
                 weekday_ok = self._is_weekday(t)
 
             if weekday_ok and (light_input > self.forced_wakeup_light_threshold):
-                new_S = 0.0
+                new_s = 0.0
 
-        self.current_sleep_state = new_S
-        return new_S
+        self.current_sleep_state = new_s
+        return new_s
 
-    def integrate_piecewise_odeint(self, y0=None):
+    # -----------------------------
+    # Integration step using odeint
+    # -----------------------------
+
+    def integrate_piecewise_odeint(self, initial_state=None):
         """
-        Piecewise integration using odeint.
-        Sleep state is updated once per time step (authors' semantics).
+        Integrate the Skeldon23 sleep/circadian model over time.
+
+        This model contains:
+          - Continuous variables (circadian + sleep pressure)
+          - A discrete sleep state (awake=0, asleep=1)
+
+        Because sleep state is discrete, we:
+          1) Keep sleep state fixed within each time interval
+          2) Integrate the continuous equations across that interval
+          3) Update sleep state at the end of the interval
+
+        Returns
+        -------
+        time_hours : np.ndarray
+            Time values in hours.
+        state_trajectory : np.ndarray
+            Continuous state history [x, xc, n, h].
+        sleep_state_history : np.ndarray
+            Sleep/wake state over time (0=wake, 1=sleep).
         """
+        # Convert time and light input to numpy arrays
+        time_hours = np.asarray(self.time, dtype=float)
+        light_input = np.asarray(self.inputs)
 
-        if self.time is None or self.inputs is None:
-            raise ValueError("time and inputs must be provided.")
-
-        t = np.asarray(self.time)
-        u = np.asarray(self.inputs)
-
-        if y0 is None:
-            y0 = np.asarray(self.initial_conditions, dtype=float)
+        # Initial continuous state
+        if initial_state is None:
+            current_state = np.asarray(self.initial_conditions, dtype=float)
         else:
-            y0 = np.asarray(y0, dtype=float)
+            current_state = np.asarray(initial_state, dtype=float)
 
-        if len(y0) != 4:
-            raise ValueError("Skeldon23 requires 4 state variables (x, xc, n, h).")
+        # Number of timepoints in the total state trajectory
+        n_timepoints = len(time_hours)
 
-        N = len(t)
+        # Store full trajectory of state variables
+        state_trajectory = np.zeros((n_timepoints, 4), dtype=float)
 
-        Y = np.zeros((N, 4))
-        S_arr = np.zeros(N)
-        RL_arr = np.zeros(N)
+        # Store full trajectory of sleep states (0=wake,1=sleep)
+        sleep_state_trajectory = np.zeros(n_timepoints, dtype=float)
 
-        Y[0] = y0
-        S_arr[0] = self.current_sleep_state
-        RL_arr[0] = (1.0 - S_arr[0]) * u[0]
+        # Set initial values
+        state_trajectory[0] = current_state
+        sleep_state_trajectory[0] = self.current_sleep_state
 
-        self.sleep_state = np.array([S_arr[0]])
-        self.received_light = np.array([RL_arr[0]])
+        # Loop over each time interval
+        for i in range(n_timepoints - 1):
+            # Define start and end times
+            start_time = float(time_hours[i])
+            end_time = float(time_hours[i + 1])
 
-        for i in range(N - 1):
-            t_interval = [t[i], t[i + 1]]
-            ui = float(u[i])
+            # Assume that light is constant within this interval
+            interval_light = float(light_input[i])
 
-            # Freeze sleep state for this interval
-            S_fixed = float(self.current_sleep_state)
+            # Freeze sleep state during this interval
+            sleep_state_fixed = float(self.current_sleep_state)
 
-            def rhs(state, tt):
-                # IMPORTANT: do not modify self.current_sleep_state here
-                x, xc, n, h = state
-                light = (1.0 - S_fixed) * ui
+            def derivative(state, tt):
+                """
+                Model master equations.
+                """
+                # Model state equations (no direct physiological interpretation)
+                x = state[0]
+                xc = state[1]
 
-                alpha = (
-                    self.alpha_0 * (light / self.i0) ** self.p
-                    if light > 0 else 0.0
-                )
+                # Photic drive
+                n = state[2]
 
-                B = self.g * (1.0 - n) * alpha * \
+                # Sleep pressure
+                h = state[3]
+
+                # Assume that light only affects the system when awake
+                light = (1.0 - sleep_state_fixed) * interval_light
+
+                # Convert light into biological drive
+                if light <= 0:
+                    alpha = 0.0
+                else:
+                    alpha = self.alpha_0 * (light / self.i0) ** self.p
+
+                # Photic input to the circadian system
+                b = self.g * (1.0 - n) * alpha * \
                     (1.0 - self.b * x) * (1.0 - self.b * xc)
 
+                # Oscillator dynamics
                 gamma_term = self.gamma * (xc - 4.0 / 3.0 * xc ** 3)
-                tauc_term = (24.0 / (self.f * self.tauc)) ** 2 + self.k * B
+                tauc_term = (24.0 / (self.f * self.tauc)) ** 2 + self.k * b
 
+                # Define derivatives
                 dydt = np.zeros_like(state)
-                dydt[0] = (1.0 / self.kappa) * (xc + B)
+                dydt[0] = (1.0 / self.kappa) * (xc + b)
                 dydt[1] = (1.0 / self.kappa) * (gamma_term - x * tauc_term)
                 dydt[2] = 60.0 * (alpha * (1.0 - n) - self.beta * n)
-                dydt[3] = (1.0 / self.chi) * (-h + (1.0 - S_fixed) * self.mu)
+
+                # Sleep pressure increases when awake, decreases when asleep
+                dydt[3] = (1.0 / self.chi) * (-h + (1.0 - sleep_state_fixed) * self.mu)
 
                 return dydt
 
-            sol = odeint(rhs, Y[i], t_interval)
+            # Integrate system across interval
+            t_interval = [start_time, end_time]
+            solution = odeint(derivative, state_trajectory[i], t_interval)
 
-            y_end = sol[-1]
-            Y[i + 1] = y_end
-
-            # Store received light (matches authors: based on S during step)
-            received_light = (1.0 - S_fixed) * ui
-            self.received_light = np.append(self.received_light, received_light)
+            new_state = solution[-1]
+            state_trajectory[i + 1] = new_state
 
             # Update sleep state AFTER integration
-            new_S = self.update_sleep_state(t[i + 1], y_end, ui)
+            new_sleep_state = self.update_sleep_state(
+                end_time, new_state, interval_light
+            )
 
-            self.sleep_state = np.append(self.sleep_state, new_S)
-            S_arr[i + 1] = new_S
-            RL_arr[i + 1] = received_light
+            sleep_state_trajectory[i + 1] = new_sleep_state
 
-        return t, Y, S_arr, RL_arr
+        return time_hours, state_trajectory, sleep_state_trajectory
 
     def amplitude(self):
         """
