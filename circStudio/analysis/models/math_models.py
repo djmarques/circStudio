@@ -1975,6 +1975,284 @@ class Hilaire07(Model):
         return cbtmin_times
 
 
+class Skeldon23:
+    """
+    Under construction
+    """
+
+    def __init__(
+        self,
+        data=None,
+        inputs=None,
+        time=None,
+        mu=17.78,
+        chi=45.0,
+        h0=13.0,
+        delta=1.0,
+        ca=1.72,
+        tauc=24.2,
+        f= 0.99669,
+        g=19.9,
+        p=0.6,
+        k=0.55,
+        b=0.4,
+        gamma=0.23,
+        alpha_0=0.16,
+        beta=0.013,
+        i0=9500.0,
+        kappa=24.0/(2.0*np.pi),
+        c20=0.7896,
+        alpha21=-0.3912,
+        alpha22 = 0.7583,
+        beta21 = -0.4442,
+        beta22 = 0.0250,
+        beta23 = -0.9647,
+        s0 = 0.0,
+        forced_wakeup_light_threshold=None,
+        forced_wakeup_weekday_only=False,
+        cbt_to_dlmo=7.0,
+        initial_condition=np.array([0.23995682, -1.1547196, 0.50529415, 12.83846474]),
+    ):
+        self.model_name = self.__class__.__name__
+        self.initial_conditions =initial_condition
+        self.model_states = None
+        self.data = data
+
+        # Extract time from data index
+        if time is None or inputs is None:
+            if data is not None:
+                self.time = np.asarray(
+                    (data.index - data.index.min()).total_seconds() / 3600
+                )
+                self.inputs = np.asarray(data.values)
+            else:
+                raise ValueError(
+                    "Must provide either light time series (data) or input and time."
+                )
+        else:
+            self.time = time
+            self.inputs = inputs
+
+        # Sleep/wake regulation parameters
+        self.mu = mu
+        self.chi = chi
+        self.h0 = h0
+        self.delta = delta
+        self.ca = ca
+
+        # Light/circadian parameters
+        self.tauc = tauc
+        self.f = f
+        self.g = g
+        self.p = p
+        self.k = k
+        self.b = b
+        self.gamma = gamma
+        self.alpha_0 = alpha_0
+        self.beta = beta
+        self.i0 = i0
+        self.kappa = kappa
+
+        # Parameters that perform circadian modulatation of wakefulness
+        self.c20 = c20
+        self.alpha21 = alpha21
+        self.alpha22 = alpha22
+        self.beta21 = beta21
+        self.beta22 = beta22
+        self.beta23 = beta23
+
+        # Sleep state (0 for wake, 1 for sleep) - first sleep state given by user
+        self.current_sleep_state = s0
+
+        # Forced wake up
+        self.forced_wakeup_light_threshold=forced_wakeup_light_threshold
+        self.forced_wakeup_weekday_only=forced_wakeup_weekday_only
+
+        self.cbt_to_dlmo = cbt_to_dlmo
+
+    def _circadian_modulation_C(self, x, xc):
+        linear_term = self.c20 + self.alpha21 * xc + self.alpha22 * x
+        quadratic_term = self.beta21 * xc * xc + self.beta22 * xc * x + self.beta23 * x * x
+        return linear_term + quadratic_term
+
+    def _is_weekday(self, t_hours: float) -> bool:
+        # authors: (t / 24.0) % 7 < 5
+        return ((t_hours / 24.0) % 7) < 5
+
+    def update_sleep_state(self, t: float, state: np.ndarray, light_input: float) -> float:
+        """
+        Update self.current_sleep_state using the authors' post-step rule.
+        Called ONCE per outer time step (piecewise integration).
+        """
+        x = state[0]
+        xc = state[1]
+        H = state[3]
+
+        S = float(self.current_sleep_state)
+        if S not in (0.0, 1.0):
+            raise ValueError("current_sleep_state must be 0 or 1")
+
+        C = self._circadian_modulation_C(x, xc)
+
+        new_S = S
+        if S == 0.0:
+            # wake -> sleep
+            H_plus = self.h0 + 0.5 * self.delta + self.ca * C
+            if H >= H_plus:
+                new_S = 1.0
+        else:
+            # sleep -> wake
+            H_minus = self.h0 - 0.5 * self.delta + self.ca * C
+            if H <= H_minus:
+                new_S = 0.0
+
+        # Forced wake-up by light (mirror authors' behavior)
+        if self.forced_wakeup_light_threshold is not None:
+            weekday_ok = True
+            if self.forced_wakeup_weekday_only:
+                weekday_ok = self._is_weekday(t)
+
+            if weekday_ok and (light_input > self.forced_wakeup_light_threshold):
+                new_S = 0.0
+
+        self.current_sleep_state = new_S
+        return new_S
+
+    def integrate_piecewise_odeint(self, y0=None):
+        """
+        Piecewise integration using odeint.
+        Sleep state is updated once per time step (authors' semantics).
+        """
+
+        if self.time is None or self.inputs is None:
+            raise ValueError("time and inputs must be provided.")
+
+        t = np.asarray(self.time)
+        u = np.asarray(self.inputs)
+
+        if y0 is None:
+            y0 = np.asarray(self.initial_conditions, dtype=float)
+        else:
+            y0 = np.asarray(y0, dtype=float)
+
+        if len(y0) != 4:
+            raise ValueError("Skeldon23 requires 4 state variables (x, xc, n, h).")
+
+        N = len(t)
+
+        Y = np.zeros((N, 4))
+        S_arr = np.zeros(N)
+        RL_arr = np.zeros(N)
+
+        Y[0] = y0
+        S_arr[0] = self.current_sleep_state
+        RL_arr[0] = (1.0 - S_arr[0]) * u[0]
+
+        self.sleep_state = np.array([S_arr[0]])
+        self.received_light = np.array([RL_arr[0]])
+
+        for i in range(N - 1):
+            t_interval = [t[i], t[i + 1]]
+            ui = float(u[i])
+
+            # Freeze sleep state for this interval
+            S_fixed = float(self.current_sleep_state)
+
+            def rhs(state, tt):
+                # IMPORTANT: do not modify self.current_sleep_state here
+                x, xc, n, h = state
+                light = (1.0 - S_fixed) * ui
+
+                alpha = (
+                    self.alpha_0 * (light / self.i0) ** self.p
+                    if light > 0 else 0.0
+                )
+
+                B = self.g * (1.0 - n) * alpha * \
+                    (1.0 - self.b * x) * (1.0 - self.b * xc)
+
+                gamma_term = self.gamma * (xc - 4.0 / 3.0 * xc ** 3)
+                tauc_term = (24.0 / (self.f * self.tauc)) ** 2 + self.k * B
+
+                dydt = np.zeros_like(state)
+                dydt[0] = (1.0 / self.kappa) * (xc + B)
+                dydt[1] = (1.0 / self.kappa) * (gamma_term - x * tauc_term)
+                dydt[2] = 60.0 * (alpha * (1.0 - n) - self.beta * n)
+                dydt[3] = (1.0 / self.chi) * (-h + (1.0 - S_fixed) * self.mu)
+
+                return dydt
+
+            sol = odeint(rhs, Y[i], t_interval)
+
+            y_end = sol[-1]
+            Y[i + 1] = y_end
+
+            # Store received light (matches authors: based on S during step)
+            received_light = (1.0 - S_fixed) * ui
+            self.received_light = np.append(self.received_light, received_light)
+
+            # Update sleep state AFTER integration
+            new_S = self.update_sleep_state(t[i + 1], y_end, ui)
+
+            self.sleep_state = np.append(self.sleep_state, new_S)
+            S_arr[i + 1] = new_S
+            RL_arr[i + 1] = received_light
+
+        return t, Y, S_arr, RL_arr
+
+    def amplitude(self):
+        """
+        Amplitude of the oscillator computed from the integrated state trajectory.
+
+        Returns
+        -------
+        numpy.ndarray
+            Amplitude at each time point: sqrt(x^2 + xc^2).
+        """
+        # Integrate model and extract amplitude
+        x = self.model_states[:, 0]
+        xc = self.model_states[:, 1]
+        return np.sqrt(x**2 + xc**2)
+
+    def phase(self):
+        """
+        Returns the phase angle of the oscillator computed from the integrated state trajectory.
+
+        Returns
+        -------
+        numpy.ndarray
+            Phase angle (radians) at each time point: arctangent(xc/x).
+        """
+        # Integrate model and extract phase
+        x = self.model_states[:, 0]
+        # Multiplying xc makes the phase move clockwise
+        xc = -1.0 * self.model_states[:, 1]
+        # Observe that np.angle(x + complex(0,1) * xc) == np.atan2(xc,x)
+        # The y (in this case, xc) appears first in the atan2 formula
+        return np.angle(x + complex(0, 1) * xc)
+        # return np.atan2(xc,x)
+
+    def cbt(self):
+        """
+        Time points corresponding to the predicted core bod temperature minima (CBTmin), derived from the
+        state variable x.
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of time points (in hours) where minima of x occur, corresponding to the CBTmin.
+        """
+        # Calculate time step (dt) between consecutive time points
+        dt = np.diff(self.time)[0]
+        # Invert cos(x) to turn the minima into maxima (peaks)
+        inverted_x = -1.0 * self.model_states[:, 0]
+        # Identify the indices where the minima occur
+        cbt_min_indices, _ = find_peaks(inverted_x, distance=np.ceil(13.0 / dt))
+        # Use the previous indices to find the cbtmin times
+        cbtmin_times = self.time[cbt_min_indices] + self.phi_ref
+        # if you want to know in clock time, just do cbtmin_times % 24
+        return cbtmin_times
+
 def main():
     # Parameters for the light schedule
     total_days = 10  # Number of days
