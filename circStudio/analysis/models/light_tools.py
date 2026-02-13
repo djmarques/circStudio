@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.lines import Line2D
+from scipy.optimize import curve_fit
 
 
 class Light:
@@ -445,6 +446,67 @@ class Light:
             ]
         )
 
+    @staticmethod
+    def train_activity_to_lux_model(
+            activity_data: pd.Series,
+            light_data: pd.Series
+    ) -> tuple[float, float]:
+        """
+        Train a linear regression model mapping activity to light intensity.
+
+        This function fits the linear model
+
+            light = gradient * activity + intercept
+
+        using paired samples from `activity_data` and `light_data`. The two
+        input series are aligned on their index and rows. Rows containing
+        missing values are removed before fitting.
+
+        Parameters
+        ----------
+        activity_data : pandas.Series
+            Time-indexed activity signal.
+        light data : pandas.Series
+            Time-indexed light intensity signal in lux.
+
+        Returns
+        -------
+        tuple[float, float]
+            (gradient, intercept) parameters of the fitted linear model.
+
+        Notes
+        -----
+        - The model assumes a linear relationship between activity and light.
+        - Both series should be aligned in time (same sampling resolution).
+        - Missing values are automatically removed prior to fitting.
+        - The returned parameters can later be used to estimate light
+        from new activity data.
+        """
+        # Concatenate series to create a combined dataframe with missing values removed
+        df = pd.concat(
+            [activity_data.rename('activity'), light_data.rename('light')],
+            axis=1
+        ).dropna()
+
+        # Raise error in case of complete misalignment between activity and light series
+        if df.empty:
+            raise ValueError("No overlap between activity data and light data")
+
+        # Convert to numpy arrays
+        x = df['activity'].to_numpy(dtype=float)
+        y = df['light'].to_numpy(dtype=float)
+
+        # Define linear function for the mapping
+        def _light(activity, delta, c):
+            return delta * activity + c
+
+        # Extract optimal gradient and intercept
+        (gradient, intercept), _ = curve_fit(_light, x, y)
+
+        # Return the output
+        return float(gradient), float(intercept)
+
+
     def actogram(
         self,
         size=(12, 6),
@@ -622,7 +684,11 @@ def main():
     # a = schedule_base - schedule_end
     schedule = schedule_base.__sub__(schedule_end, shift=5 * 24)
     schedule = schedule.__add__(schedule_add, shift=5 * 24)
-    schedule.actogram()
+    figure, axes = schedule.actogram(show=False)
+    # figure.savefig("actogram.png")
+    # figure
+
+
 
     # plt.plot(schedule.light_vector)
     # plt.xlabel("Time (hours)")
