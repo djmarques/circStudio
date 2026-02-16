@@ -2332,6 +2332,15 @@ class Breslow13(Model):
 
 class Skeldon23:
     """
+    Skeldon et al. (2023) model. It simulates circadian phase and sleep/wake patterns from a light time series.
+
+    This model takes a light exposure (lux over time) and simulates:
+        - A circadian rhythm signal (internal clock dynamics)
+        - A sleep-pressure signal (builds up during wake, dissipates during sleep)
+        - A predicted sleep/wake state (wake=0, sleep=1).
+
+    The user does not need to provide a sleep series. The model generates sleep/wake internally by applying a switching
+    rule based on sleep pressure and circadian timing.
 
     Our implementation closely follows the approach of the `circadian`package by Arcascope [2]. However, we use the
     more powerful LSODA integrator (via SciPy's `odeint`) for numerical integration, enabling the integration of the
@@ -2339,14 +2348,40 @@ class Skeldon23:
 
     Attributes
     ----------
+    data : pandas.Series, optional
+        Time-indexed light intensity series (lux) with a DatetimeIndex.
+
+    forced_wakeup_weekday_only : bool, optional
+        If True, apply forced wake-up only on weekdays according to the author's rule.
+
+    forced_wakeup_light_threshold : float or None, optional
+        If provided, forces wake (s=0) whenever light exceeds this threshold.
+
+    mu, chi, h0, delta, ca : float
+        Sleep homeostasis and switching parameters.
+
+    tauc, f, g, p, k, b, gamma, alpha_0, beta, i0, kappa : float
+        Circadian oscillator and phototransduction parameters.
+        Light is transformed into a photic drive via alpha(light), then b(t).
+
+    c20, alpha21, alpha22, beta21, beta22, beta23 : float
+        Parameters for circadian modulation term C(x, x_c) that shifts sleep thresholds.
+
+    s0: float, optional
+        Initial sleep state (0 = wake, 1 = sleep). Default is 0.
+
     cbt_to_dlmo : float
         Time offset (in hours) from CBTmin to DLMO.
+
     initial_conditions : numpy.ndarray
-        State vector at the start of simulation (default: [-0.0843259, -1.09607546, 0.45584306]).
+        State vector at the start of simulation (default: [0.23995682, -1.1547196, 0.50529415, 12.83846474]).
+
     model_states : numpy.ndarray
         Integrated state trajectories of the model.
+
     time : numpy.ndarray
         Array of time points for simulation.
+
     inputs : numpy.ndarray
         Array of input values (e.g., light intensity) over time.
 
@@ -2354,17 +2389,22 @@ class Skeldon23:
     -------
     derivative(t, state, light)
         Computes the derivatives of the state variables at a given time and light input.
+
     amplitude()
         Calculates the amplitude of the oscillator from integrated states.
+
     phase()
         Calculates the phase angle of the oscillator from integrated states.
+
     cbt()
         Identifies the timing of core body temperature minima from integrated states.
 
     References
     ----------
-    [1] Forger DB, Jewett ME, Kronauer RE. A Simpler Model of the Human Circadian Pacemaker.
-    Journal of Biological Rhythms. 1999;14(6):533-538. doi:10.1177/074873099129000867
+    [1] Skeldon, A. C., Garcia, T. R., Cleator, S. F., Monica, C. della, Ravindran, K. K. G., Revell,
+    V. L., & Dijk, D.-J. (2023). Method to determine whether sleep phenotypes are driven by endogenous
+    circadian rhythms or environmental light by combining longitudinal data and personalised mathematical
+    models. PLOS Computational Biology, 19(12), e1011743. https://doi.org/10.1371/journal.pcbi.1011743
 
     [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
     and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
