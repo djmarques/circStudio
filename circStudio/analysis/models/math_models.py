@@ -1936,7 +1936,7 @@ class Hilaire07(Model):
 
     def derivative(self, t, state, input):
         """
-        Computes the derivatives of the state variables at a given time and light input.
+        Computes the derivatives of the state variables at a given time, sleep and light input.
 
         Parameters
         ----------
@@ -1956,7 +1956,7 @@ class Hilaire07(Model):
         xc = state[1]
         n = state[2]
         light = input
-        wake = self.sleep_vector()
+        wake = self.sleep
 
         # note this correction on the alpha term (important to test Forger's model
         # better approximates Hannay's under the ModelComparer framework)
