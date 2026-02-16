@@ -34,15 +34,12 @@ sine_wave = generate_series(
 )
 
 raw_sinewave = circStudio.io.Raw(
-    name='raw_sinewave',
-    uuid='XXXXXXXX',
-    format='CUSTOM',
-    axial_mode=None,
     start_time=pd.to_datetime(start_time),
     period=period,
     frequency=frequency,
-    data=sine_wave,
-    light=None
+    activity=sine_wave,
+    light=None,
+    df=sine_wave,
 )
 
 fit_params = Parameters()
@@ -78,7 +75,7 @@ def test_cosinor_set_params():
 def test_cosinor_fit():
 
     # From sinus (data) to cosinus (fit function): Add - Pi/2 to initial phase
-    results = cosinor.fit(raw_sinewave.data)
+    results = cosinor.fit(raw_sinewave.activity)
     assert (
         (results.params['Acrophase'].value == approx(-np.pi/2, abs=0.05))
         & (results.params['Amplitude'].value == approx(100.0, rel=0.05))
