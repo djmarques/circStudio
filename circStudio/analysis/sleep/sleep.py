@@ -117,7 +117,7 @@ def Cole_Kripke(data, settings=None, threshold=1.0, rescoring=True):
     Returns
     -------
     ck: pandas.core.Series
-        Time series containing the `D` scores (0: sleep, 1: wake) for each
+        Time series containing the `D` scores (1: sleep, 0: wake) for each
         epoch.
 
     References
@@ -373,7 +373,7 @@ def Scripps(data, scale=0.204, window=None, threshold=1.0):
     Returns
     -------
     scripps: pandas.core.Series
-        Time series containing the `D` scores (0: sleep, 1: wake) for each
+        Time series containing the `D` scores (1: sleep, 0: wake) for each
         epoch.
 
     References

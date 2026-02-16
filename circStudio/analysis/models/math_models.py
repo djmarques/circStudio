@@ -5,6 +5,7 @@ from scipy.integrate import odeint
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
+from ..sleep.sleep import Roenneberg, Oakley, Crespo, Scripps, Sadeh, Cole_Kripke
 
 
 class Model:
@@ -1741,12 +1742,6 @@ class ModelComparer:
 
 class Hilaire07(Model):
     """
-    Implements the mathematical model of human circadian rhythms developed by Forger, Jewett and Kronauer [1].
-    The formalism includes a representation of the biochemical conversion of the light signal into a drive on
-    the circadian pacemaker, which is modeled as a van der Pol oscillator. This cubic model is characterized
-    by three state variables: x, xc and n. While n can be interpreted as the proportion of activated photoreceptors,
-    at a given time, x and xc cannot directly be mapped to specific physiological mechanisms. Instead, x and xc are
-    used to predict biologically meaningful quantities, such as the core body temperature minimum (CBTmin).
 
     Our implementation closely follows the approach of the `circadian`package by Arcascope [2]. However, we use the
     more powerful LSODA integrator (via SciPy's `odeint`) for numerical integration, enabling the integration of the
@@ -1754,41 +1749,6 @@ class Hilaire07(Model):
 
     Attributes
     ----------
-    taux : float
-        Intrinsic period of the oscillator (hours).
-    mu : float
-        stiffness of the van der Pol oscillator.
-    g : float
-        Light sensitivity scaling parameter.
-    alpha_0 : float
-        Baseline forward rate constant governing the photon-driven activation
-        (or depletion) of photoreceptors. This parameter scales the rate at which
-        incident light converts available photoreceptors into an active or
-        “used” state.
-    beta : float
-        Backward rate constant governing photoreceptor recovery or regeneration.
-        This parameter controls the rate at which used photoreceptors return to
-        the available state, representing dark adaptation or biochemical
-        recovery processes.
-    p : float
-        Power-law exponent for light-dependent photoreceptor activation. This
-        parameter determines how sensitively the forward rate constant α scales
-        with light intensity.
-    i0 : float
-        Reference light intensity used to normalize the input light intensity vector I.
-    k : float
-        Coupling coefficient scaling the influence of the photic drive B on the
-        circadian pacemaker. It modulates the sensitivity of the oscillator to light.
-    cbt_to_dlmo : float
-        Time offset (in hours) from CBTmin to DLMO.
-    initial_conditions : numpy.ndarray
-        State vector at the start of simulation (default: [-0.0843259, -1.09607546, 0.45584306]).
-    model_states : numpy.ndarray
-        Integrated state trajectories of the model.
-    time : numpy.ndarray
-        Array of time points for simulation.
-    inputs : numpy.ndarray
-        Array of input values (e.g., light intensity and wake) over time.
 
     Methods
     -------
@@ -1803,8 +1763,6 @@ class Hilaire07(Model):
 
     References
     ----------
-    [1] Forger DB, Jewett ME, Kronauer RE. A Simpler Model of the Human Circadian Pacemaker.
-    Journal of Biological Rhythms. 1999;14(6):533-538. doi:10.1177/074873099129000867
 
     [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
     and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
@@ -1813,6 +1771,7 @@ class Hilaire07(Model):
     def __init__(
         self,
         data=None,
+        sleep_algo='Roenneberg',
         inputs=None,
         time=None,
         taux=24.2,
@@ -1859,6 +1818,35 @@ class Hilaire07(Model):
         self.phi_ref = phi_ref
         self.cbt_to_dlmo = cbt_to_dlmo
         self.initialize_model_states()
+        self.sleep = self.sleep_vector(algo=sleep_algo)
+
+    def sleep_vector(self, algo='Roenneberg', **kwargs):
+        # Estimate sampling interval (minutes)
+        dt = self.data.index.to_series().diff().dropna().median()
+        freq_minutes = dt.total_seconds() / 60
+
+        match algo:
+            case 'Roenneberg':
+                return Roenneberg(data=self.data, plot=False, **kwargs)
+            case 'Crespo':
+                return Crespo(
+                    data=self.data,
+                    frequency=freq_minutes,
+                    plot=False,
+                    **kwargs
+                )
+            case 'Oakley':
+                return Oakley(data=self.data, **kwargs)
+            case 'Scripps':
+                scripps = Scripps(data=self.data, **kwargs)
+                return scripps
+                #return 1 - scripps
+            case 'Sadeh':
+                return Sadeh(data=self.data, **kwargs)
+            case 'Cole_Kripke':
+                return Cole_Kripke(data=self.data, **kwargs)
+            case _:
+                return algo
 
     def derivative(self, t, state, input):
         """
@@ -1881,8 +1869,8 @@ class Hilaire07(Model):
         x = state[0]
         xc = state[1]
         n = state[2]
-        light = input[0]
-        wake = input[1]
+        light = input
+        wake = self.sleep_vector()
 
         # note this correction on the alpha term (important to test Forger's model
         # better approximates Hannay's under the ModelComparer framework)
