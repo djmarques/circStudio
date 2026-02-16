@@ -2051,52 +2051,56 @@ class Hilaire07(Model):
 
 class Breslow13(Model):
     """
-    Implements the mathematical model of human circadian rhythms developed by Forger, Jewett and Kronauer [1].
-    The formalism includes a representation of the biochemical conversion of the light signal into a drive on
-    the circadian pacemaker, which is modeled as a van der Pol oscillator. This cubic model is characterized
-    by three state variables: x, xc and n. While n can be interpreted as the proportion of activated photoreceptors,
-    at a given time, x and xc cannot directly be mapped to specific physiological mechanisms. Instead, x and xc are
-    used to predict biologically meaningful quantities, such as the core body temperature minimum (CBTmin).
+    Breslow et al. (2013) circadian model with explicit melatonin dynamics.
+
+    This model extends classical light-driven limit-cycle oscillator models
+    of the human circadian pacemaker by incorporating a multi-compartment
+    melatonin system. In addition to the core state variables (x, x_c, n),
+    it models pineal, plasma, and exogenous melatonin concentrations.
 
     Our implementation closely follows the approach of the `circadian`package by Arcascope [2]. However, we use the
     more powerful LSODA integrator (via SciPy's `odeint`) for numerical integration, enabling the integration of the
     system using more complex light trajectories.
 
+    State variables
+    ---------------
+        x   : Core oscillator state variable
+        x_c : Complementary oscillator variable (quadrature component)
+        n   : Phototransduction state
+        h1  : Pineal melatonin concentration
+        h2  : Plasma melatonin concentration
+        h3  : Exogenous melatonin compartment
+
     Attributes
     ----------
-    taux : float
-        Intrinsic period of the oscillator (hours).
-    mu : float
-        stiffness of the van der Pol oscillator.
-    g : float
-        Light sensitivity scaling parameter.
-    alpha_0 : float
-        Baseline forward rate constant governing the photon-driven activation
-        (or depletion) of photoreceptors. This parameter scales the rate at which
-        incident light converts available photoreceptors into an active or
-        “used” state.
-    beta : float
-        Backward rate constant governing photoreceptor recovery or regeneration.
-        This parameter controls the rate at which used photoreceptors return to
-        the available state, representing dark adaptation or biochemical
-        recovery processes.
-    p : float
-        Power-law exponent for light-dependent photoreceptor activation. This
-        parameter determines how sensitively the forward rate constant α scales
-        with light intensity.
-    i0 : float
-        Reference light intensity used to normalize the input light intensity vector I.
-    k : float
-        Coupling coefficient scaling the influence of the photic drive B on the
-        circadian pacemaker. It modulates the sensitivity of the oscillator to light.
+    h1_threshold : float
+        Lower bound used to prevent negative pineal melatonin production.
+
+    tauc : float
+        Intrinsic circadian period (hours).
+
+    phi_on : float
+        Phase angle (radians) at which melatonin synthesis is activated.
+
+    phi_off : float
+        Phase angle (radians) at which melatonin synthesis is deactivated.
+
+    phi_ref : float
+        Phase offset (radians) used when converting internal oscillator
+        phase to clock time (e.g., CBTmin timing).
+
     cbt_to_dlmo : float
         Time offset (in hours) from CBTmin to DLMO.
+
     initial_conditions : numpy.ndarray
-        State vector at the start of simulation (default: [-0.0843259, -1.09607546, 0.45584306]).
+        State vector at the start of simulation (default: [-0.219, -1.22, 0.519, 0.0, 0.0, 0.0]).
+
     model_states : numpy.ndarray
         Integrated state trajectories of the model.
+
     time : numpy.ndarray
         Array of time points for simulation.
+
     inputs : numpy.ndarray
         Array of input values (e.g., light intensity and wake) over time.
 
@@ -2113,9 +2117,6 @@ class Breslow13(Model):
 
     References
     ----------
-    [1] Forger DB, Jewett ME, Kronauer RE. A Simpler Model of the Human Circadian Pacemaker.
-    Journal of Biological Rhythms. 1999;14(6):533-538. doi:10.1177/074873099129000867
-
     [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
     and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
     """
