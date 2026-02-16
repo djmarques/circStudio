@@ -1742,23 +1742,62 @@ class ModelComparer:
 
 class Hilaire07(Model):
     """
+    St. Hilaire et al. (2007) human circadian pacemaker model.
+
+    This model extends earlier light-driven circadian oscillator models (e.g.,
+    Kronauer / Forger formulations) by including a non-photic component representing
+    behavioral modulation (sleep/wake state).
+
     Our implementation closely follows the approach of the `circadian`package by Arcascope [2]. However, we use the
     more powerful LSODA integrator (via SciPy's `odeint`) for numerical integration, enabling the integration of the
     system using more complex light trajectories.
 
-    Attributes
-    ----------
+    Model inputs
+    ------------
+    The system is driven by:
+    - Light intensity (lux)
+    - Sleep/rest stat (binary; 1=sleep/rest, 0=wake)
+
+    Sleep state may be computed automatically from actigraphy data using
+    one of the supported sleep scoring algorithms available in circStudio
+    (e.g., Cole-Kripke, Roenneberg), or supplied directly by the user.
 
     Methods
     -------
     derivative(t, state, light)
-        Computes the derivatives of the state variables at a given time and light input.
+        Differential equation system of the oscillator.
     amplitude()
         Calculates the amplitude of the oscillator from integrated states.
     phase()
         Calculates the phase angle of the oscillator from integrated states.
     cbt()
         Identifies the timing of core body temperature minima from integrated states.
+
+    Parameters
+    ----------
+    data : pandas.Series, optional
+        Time-indexed light data. Required if `inputs` and `time` are not explicitly provided.
+    sleep_algo : str or pandas.Series, optional
+        Sleep scoring algorithm to use (default: "Roenneberg").
+        Alternatively, a precomputed binary sleep series may be supplied.
+    inputs : array-like, optional
+        Light input.
+    time : array-like, optional
+        Time input.
+    taux : float
+        Intrinsic circadian period (hours).
+    g, k, mu, beta, q, rho, i0, p, a0 : float
+        Model parameters governing light response, non-photic drive,
+        and oscillator dynamics.
+    phi_xcx : float
+        Polar phase angle (radians) between the state variables x and x_c.
+    phi_ref : float
+        Fixed phase offset (radians) used to convert internal oscillator phase
+        to clock time.
+    cbt_to_dlmo : float
+        Phase relationship between CBT minimum and DLMO (hours).
+    initial_condition : array-like, optional
+        Initial state vector [-0.0480751, -1.22504441, 0.51854818].
 
     References
     ----------
