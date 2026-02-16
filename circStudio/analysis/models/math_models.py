@@ -1742,7 +1742,6 @@ class ModelComparer:
 
 class Hilaire07(Model):
     """
-
     Our implementation closely follows the approach of the `circadian`package by Arcascope [2]. However, we use the
     more powerful LSODA integrator (via SciPy's `odeint`) for numerical integration, enabling the integration of the
     system using more complex light trajectories.
@@ -1763,6 +1762,9 @@ class Hilaire07(Model):
 
     References
     ----------
+    [1] St. Hilaire, M. A., Klerman, E. B., Khalsa, S. B. S., Wright, K. P., Czeisler, C. A., & Kronauer, R. E. (2007).
+     Addition of a non-photic component to a light-based mathematical model of the human circadian pacemaker.
+     Journal of Theoretical Biology, 247(4), 583–599. https://doi.org/10.1016/j.jtbi.2007.04.001
 
     [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
     and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
@@ -1821,6 +1823,50 @@ class Hilaire07(Model):
         self.sleep = self.sleep_vector(algo=sleep_algo)
 
     def sleep_vector(self, algo='Roenneberg', **kwargs):
+        """
+        Return a binary sleep/rest series align to self.data.
+
+        This method either:
+            * Runs one of circStudio's supported sleep-detection algorithms
+            on self.data or
+            * Returns a user-supplied sleep series directly.
+
+        The output is always a pandas Series indexed by the same DatetimeIndex
+        as the input data (or by the inex of the user-supplied series).
+
+        Parameters
+        ----------
+        algo : str or pandas.Series, optional
+            Sleep scoring method to use or pandas Series to use as sleep vector
+            - If a string, must be one of:
+                {"Roenneberg", "Crespo", "Oakley", "Scripps", "Sadeh", "Cole_Kripke"}.
+
+            - If a pandas Series, it is assumed to already represent a sleep/rest
+              vector (binary) and is returned unchanged. This is useful when the
+              user has computed sleep elsewhere or wants full control
+        kwargs
+            Additional keyword arguments passed through the selected algorithm.
+            For example, you can override algorithm default parameters such as
+            thresholds, windows, or rescoring options.
+
+        Returns
+        -------
+        pandas.Series
+            Binary sleep/rest classification time series.
+
+            Convention: values are expected to encode sleep/rest as 1 and wake as 0.
+            If an external algorithm uses the opposite convention, convert it before
+            passing it here.
+
+        Raises
+        ------
+        ValueError
+            If self.data is not indexed by a DatetimeIndex (needed to infer the sampling
+            interval), or if algo is an unknown algorithm.
+        """
+        if not isinstance(self.data.index, pd.DatetimeIndex):
+            raise ValueError("Data must have a DatetimeIndex.")
+
         # Estimate sampling interval (minutes)
         dt = self.data.index.to_series().diff().dropna().median()
         freq_minutes = dt.total_seconds() / 60
@@ -1840,13 +1886,14 @@ class Hilaire07(Model):
             case 'Scripps':
                 scripps = Scripps(data=self.data, **kwargs)
                 return scripps
-                #return 1 - scripps
             case 'Sadeh':
                 return Sadeh(data=self.data, **kwargs)
             case 'Cole_Kripke':
                 return Cole_Kripke(data=self.data, **kwargs)
             case _:
-                return algo
+                if isinstance(algo, pd.Series):
+                    return algo
+                raise ValueError(f'Unknown algo {algo}')
 
     def derivative(self, t, state, input):
         """
