@@ -2053,9 +2053,8 @@ class Breslow13(Model):
     """
     Breslow et al. (2013) circadian model with explicit melatonin dynamics.
 
-    This model extends classical light-driven limit-cycle oscillator models
-    of the human circadian pacemaker by incorporating a multi-compartment
-    melatonin system. In addition to the core state variables (x, x_c, n),
+    This model extends classical light-driven limit-cycle oscillator models of the human circadian pacemaker by
+    incorporating a multi-compartment melatonin system. In addition to the core state variables (x, x_c, n),
     it models pineal, plasma, and exogenous melatonin concentrations.
 
     Our implementation closely follows the approach of the `circadian`package by Arcascope [2]. However, we use the
@@ -2117,6 +2116,10 @@ class Breslow13(Model):
 
     References
     ----------
+    [1] Breslow ER, Phillips AJ, Huang JM, St Hilaire MA, Klerman EB. A mathematical model of the circadian
+    phase-shifting effects of exogenous melatonin. J Biol Rhythms. 2013 Feb;28(1):79-89.
+    doi: 10.1177/0748730412468081. PMID: 23382594; PMCID: PMC3733227.
+
     [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
     and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
     """
@@ -2329,7 +2332,42 @@ class Breslow13(Model):
 
 class Skeldon23:
     """
-    Under construction
+
+    Our implementation closely follows the approach of the `circadian`package by Arcascope [2]. However, we use the
+    more powerful LSODA integrator (via SciPy's `odeint`) for numerical integration, enabling the integration of the
+    system using more complex light trajectories.
+
+    Attributes
+    ----------
+    cbt_to_dlmo : float
+        Time offset (in hours) from CBTmin to DLMO.
+    initial_conditions : numpy.ndarray
+        State vector at the start of simulation (default: [-0.0843259, -1.09607546, 0.45584306]).
+    model_states : numpy.ndarray
+        Integrated state trajectories of the model.
+    time : numpy.ndarray
+        Array of time points for simulation.
+    inputs : numpy.ndarray
+        Array of input values (e.g., light intensity) over time.
+
+    Methods
+    -------
+    derivative(t, state, light)
+        Computes the derivatives of the state variables at a given time and light input.
+    amplitude()
+        Calculates the amplitude of the oscillator from integrated states.
+    phase()
+        Calculates the phase angle of the oscillator from integrated states.
+    cbt()
+        Identifies the timing of core body temperature minima from integrated states.
+
+    References
+    ----------
+    [1] Forger DB, Jewett ME, Kronauer RE. A Simpler Model of the Human Circadian Pacemaker.
+    Journal of Biological Rhythms. 1999;14(6):533-538. doi:10.1177/074873099129000867
+
+    [2] Tavella, F., Hannay, K., & Walch, O. (2023). Arcascope/circadian: Refactoring of readers
+    and metrics modules, Zenodo, v1.0.2. https://doi.org/10.5281/zenodo.8206871
     """
 
     def __init__(
