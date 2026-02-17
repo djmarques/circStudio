@@ -64,5 +64,10 @@ io = [
 Homepage = "https://github.com/djmarques/circStudio"
 Issues = "https://github.com/djmarques/circStudio/issues"
 
-[tool.uv]
-include = ["circStudio/data/**"]
+[tool.uv.build-backend]
+source-include = ["circStudio/data/**"]
+
+[tool.uv.workspace]
+members = [
+    "circStudio",
+]
