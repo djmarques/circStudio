@@ -9,3 +9,4 @@ from .ssa import SSA
 from .fractal import Fractal
 from .flm import FLM
 from .lids import LIDS
+from .sleep import SleepDiary

@@ -1,6 +1,6 @@
 import os.path as op
 
-import circStudio
+from src import circstudio
 import inspect
 import pandas as pd
 
@@ -10,12 +10,12 @@ data_dir = op.join(op.dirname(op.abspath(FILE)), 'data')
 atr_path = op.join(data_dir, 'test_sample_atr.txt')
 
 # read AWD with default parameters
-rawATR = circStudio.io.read_atr(atr_path)
+rawATR = circstudio.io.read_atr(atr_path)
 
 
 def test_instance_atr():
 
-    assert isinstance(rawATR, circStudio.io.atr.ATR)
+    assert isinstance(rawATR, circstudio.io.atr.ATR)
 
 def test_read_raw_atr_start_time():
 

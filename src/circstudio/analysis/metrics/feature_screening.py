@@ -1,9 +1,9 @@
-from circStudio.analysis.metrics import *
-from circStudio.analysis.sleep import *
-import circStudio
+from ..metrics import *
 from ..models.light_tools import *
 from ..models.math_models import *
-from ..models.tools import *
+from ..cosinor import *
+from ..sleep.sleep import SleepRegularityIndex, SleepMidPoint
+from ...io.atr import read_atr
 import pandas as pd
 import numpy as np
 import os
@@ -45,7 +45,7 @@ class FeatureScreening:
                     # ----------------------------------
                     # Load & preprocess recording
                     # ----------------------------------
-                    raw = circStudio.io.read_atr(fpath)
+                    raw = read_atr(fpath)
                     raw.inactivity_length = None
                     label = os.path.splitext(os.path.basename(fpath))[0]
 
@@ -57,7 +57,7 @@ class FeatureScreening:
                     # Cosinor analysis
                     # ----------------------------------
                     # 1. Initiate a cosinor object
-                    cosinor = circStudio.Cosinor()
+                    cosinor = Cosinor()
 
                     # 2. Disable inactivity mask (since Cosinor does not tolerate NaN values)
                     raw.mask_inactivity = False

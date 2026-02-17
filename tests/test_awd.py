@@ -1,6 +1,6 @@
 import os.path as op
 
-import circStudio
+from src import circstudio
 import inspect
 import pandas as pd
 
@@ -18,7 +18,7 @@ aws_path = op.join(data_dir, 'test_sample_aws.AWD')
 awt_path = op.join(data_dir, 'test_sample_awt.AWD')
 
 # read AWD with default parameters
-rawAWD = circStudio.io.read_awd(awd_path)
+rawAWD = circstudio.io.read_awd(awd_path)
 
 def test_read_raw_awd_frequency():
 
@@ -38,7 +38,7 @@ def test_read_raw_awd_data():
 def test_read_raw_aw4():
 
     # read AW4 with default parameters
-    rawAW4 = circStudio.io.read_awd(aw4_path)
+    rawAW4 = circstudio.io.read_awd(aw4_path)
     assert (
         (rawAW4.frequency == pd.Timedelta('1min'))
         & (rawAW4.light is None)
@@ -48,7 +48,7 @@ def test_read_raw_aw4():
 def test_read_raw_aw4_engine():
 
     # read AW4 with default parameters
-    rawAW4 = circStudio.io.read_awd(aw4_path, engine='c')
+    rawAW4 = circstudio.io.read_awd(aw4_path, engine='c')
     assert (
         (rawAW4.frequency == pd.Timedelta('1min'))
         & (rawAW4.light is None)

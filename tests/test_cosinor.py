@@ -6,8 +6,8 @@ from generate_dataset import generate_sinewave
 import numpy as np
 from lmfit import Parameters
 import pandas as pd
-import circStudio
-from circStudio.analysis import Cosinor
+from src import circstudio
+from src.circstudio.analysis import Cosinor
 from pytest import approx
 
 sampling_period = 60
@@ -33,7 +33,7 @@ sine_wave = generate_series(
     sampling_period=sampling_period
 )
 
-raw_sinewave = circStudio.io.Raw(
+raw_sinewave = circstudio.io.Raw(
     start_time=pd.to_datetime(start_time),
     period=period,
     frequency=frequency,

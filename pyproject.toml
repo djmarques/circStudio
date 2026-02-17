@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "circStudio"
-version = "1.0.0"
+version = "1.0.7"
 authors = [
     { name="Daniel Marques", email="daniel.marques@gimm.pt" },
     { name="Nuno Morais", email="nuno.morais@nms.unl.pt" },
@@ -39,25 +39,20 @@ keywords = [
     "functional modeling"
 ]
 
-license = { file = "LICENSE" }
-readme = "README.md"
+license = { file = "LICENSE.md" }
+readme = "README.rst"
 
 dependencies = [
     'lmfit>=1.3.4,<2',
     'pandas>=2.3.3,<3',
     'numpy>=2.4.1,<3',
     'scipy>=1.17.0,<2',
-    'statsmodels>=0.14.6,<1'
-]
-
-[project.optional-dependencies]
-viz = [
+    'statsmodels>=0.14.6,<1',
     'plotly>=6.5.2,<7',
     'seaborn>=0.13.2,<1',
-    'matplotlib>=3.10.8,<4'
-]
-io = [
+    'matplotlib>=3.10.8,<4',
     'pyexcel>=0.7.4,<1',
+    'pingouin'
 ]
 
 [project.urls]
@@ -65,9 +60,4 @@ Homepage = "https://github.com/djmarques/circStudio"
 Issues = "https://github.com/djmarques/circStudio/issues"
 
 [tool.uv.build-backend]
-source-include = ["circStudio/data/**"]
-
-[tool.uv.workspace]
-members = [
-    "circStudio",
-]
+source-include = ["src/circstudio/data/**"]

@@ -1,6 +1,5 @@
-from circStudio.analysis.sleep import SleepDiary
+from ..analysis.sleep import SleepDiary
 from .mask import Mask
-from ..analysis.tools import _data_processor
 import numpy as np
 import plotly.graph_objs as go
 

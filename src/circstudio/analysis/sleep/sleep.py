@@ -1,12 +1,7 @@
 import numpy as np
 import pandas as pd
-import re
-import warnings
-from .scoring import csm, roenneberg, sleep_midpoint, sri
-from .scoring.utils import rescore
-from scipy.ndimage import binary_closing, binary_opening
-from circStudio.analysis.tools import *
-from circStudio.analysis.sleep.sleep_tools import *
+from ..tools import *
+from ..sleep.sleep_tools import *
 import plotly.graph_objs as go
 
 

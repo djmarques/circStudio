@@ -1,9 +1,5 @@
 import pandas as pd
-import numpy as np
-from scipy.fft import fft, fftfreq
-import re
-from circStudio.analysis.tools import *
-from circStudio.analysis.sleep import *
+from ..tools import *
 import plotly.graph_objects as go
 
 

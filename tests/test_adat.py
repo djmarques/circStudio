@@ -3,8 +3,8 @@
 
 # import numpy as np
 import pandas as pd
-import circStudio
-from circStudio import adat
+from src import circstudio
+from src.circstudio import adat
 # import pytest
 
 frequency = pd.Timedelta('60s')
@@ -12,7 +12,7 @@ start_time = '2020-01-01 00:00:00'
 period = pd.Timedelta('7D')
 
 # Uniform data over 7 days
-raw_uniform = circStudio.io.Raw(
+raw_uniform = circstudio.io.Raw(
     start_time=pd.to_datetime(start_time),
     period=period,
     frequency=frequency,
@@ -28,7 +28,7 @@ raw_uniform = circStudio.io.Raw(
 
 # Uniform data over 7 days, corrupted (i.e set activity counts to zeros)
 # during the first and last days
-raw_uniform_corrupted = circStudio.io.Raw(
+raw_uniform_corrupted = circstudio.io.Raw(
     start_time=pd.to_datetime(start_time),
     period=period,
     frequency=frequency,
