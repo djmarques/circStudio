@@ -2,7 +2,11 @@ import numpy as np
 import pandas as pd
 from ..tools import *
 from ..sleep.sleep_tools import *
+import re
+import warnings
+from .scoring import *
 import plotly.graph_objs as go
+from scipy.ndimage import binary_closing, binary_opening
 
 
 def AonT(data, whs=12):
