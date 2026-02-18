@@ -5,7 +5,7 @@
 enables users to read activity, light and temperature recordings collected by a wide range of actigraphy
 devices, and provides conversion modules for commonly used systems (e.g., ActTrust, Actiwatch).
 
-In adition to signal processing and common actigraphy-derived metrics, **circStudio** incorporates
+In addition to signal processing and common actigraphy-derived metrics, **circStudio** incorporates
 mathematical models of circadian rhythms and algorithms for automatic sleep detection. This enables
 users not only to characterize rest-activity patterns, but also to simulate circadian phase dynamics,
 predicting sleep timing, and link actigraphy-derived signals to underlying physiological processes.

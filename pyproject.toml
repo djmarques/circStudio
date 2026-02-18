@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "circStudio"
-version = "1.0.7"
+version = "1.0.8"
 authors = [
     { name="Daniel Marques", email="daniel.marques@gimm.pt" },
     { name="Nuno Morais", email="nuno.morais@nms.unl.pt" },
@@ -52,6 +52,7 @@ dependencies = [
     'seaborn>=0.13.2,<1',
     'matplotlib>=3.10.8,<4',
     'pyexcel>=0.7.4,<1',
+    'pyexcel-ods',
     'pingouin'
 ]
 
