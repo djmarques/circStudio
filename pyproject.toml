@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "circStudio"
-version = "1.0.9"
+version = "1.1.0"
 authors = [
     { name="Daniel Marques", email="daniel.marques@gimm.pt" },
     { name="Nuno Morais", email="nuno.morais@nms.unl.pt" },
