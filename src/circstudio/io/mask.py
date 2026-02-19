@@ -2,24 +2,52 @@ import pandas as pd
 import numpy as np
 import os
 import warnings
+import pyexcel as pxl
 from pandas.tseries.frequencies import to_offset
 
 from ..analysis.tools import *
 
 
 class BaseLog:
-    """Base class for log files containing time stamps.
+    """
+    Read and store time intervals (start/stop times) from a "log file".
+
+    In circadian/actigraphy analysis workflows, you often keep a separate log
+    describing periods to exclude or flag, e.g.:
+    - Naps or bedtimes recorded manually
+    - Mask periods suspected of being spurious inactivity (e.g., non-wear)
+
+    This class reads a table with three columns:
+    - An identifier (e.g., "Mask", "Nap", "Event") used as the row index.
+    - Start time (datetime)
+    - Stop time (datetime)
+
+    After reading, the log is stored as a pandas DataFrame with an additional
+    column: Duration = Stop_time - Start_Time
+
+    Supported file formats
+    ----------------------
+    - CSV: .csv
+    - Spreadsheet-like: .xlsx, .xls, .ods (via pyexcel)
 
     Parameters
     ----------
-    fname: str
-        Absolute filepath of the input log file.
-    log: pandas.DataFrame
-        Dataframe containing the data found in the log file.
+    input_fname : str
+        Path to the input log file (relative or absolute).
+    log : pandas.DataFrame
+        A DataFrame containing at least:
+        - Start_time (datetime64)
+        - Stop_time (datetime64)
+
+    Attributes
+    ----------
+    fname : str
+        Absolute path to the log file used.
+    log : pandas.DataFrame
+        Cleaned log table with columns ``Start_time``, ``Stop_time``, and ``Duration``.
     """
 
     def __init__(self, input_fname, log):
-
         # get absolute file path
         self.__fname = os.path.abspath(input_fname)
 
@@ -174,6 +202,69 @@ class BaseLog:
 
 
 class Mask:
+    """
+    Mixin that adds masking + preprocessing for actigraphy/light time series.
+
+    This class is designed to be *mixed into* a higher-level recording object that
+    already provides:
+
+    Required attributes on the host class
+    -------------------------------------
+    - ``activity`` : pandas.Series or None
+        Activity counts indexed by time (DatetimeIndex).
+    - ``light`` : pandas.Series or None
+        Light intensity (e.g., lux) indexed by time (DatetimeIndex).
+    - ``frequency`` : pandas.Timedelta
+        Sampling epoch (e.g., 30 seconds, 1 minute).
+    - ``start_time`` : pandas.Timestamp
+        Beginning of the analysis window.
+    - ``period`` : pandas.Timedelta
+        Duration of the analysis window.
+
+    What a “mask” means
+    -------------------
+    A mask is a time series aligned to the data index (same timestamps), typically:
+    - 1 = keep the data point
+    - 0 = exclude the data point (e.g., non-wear, sensor failure)
+
+    Masking is commonly used to remove long stretches of zero activity that likely
+    represent *device removal*, not true sleep/inactivity.
+
+    Key features
+    ------------
+    - Auto-create an inactivity mask: flag sustained “zero-activity” stretches.
+    - Manually add mask intervals using start/stop times.
+    - Apply preprocessing filters:
+        - resampling to a new epoch
+        - binarization (thresholding)
+        - optional missing-data imputation
+        - mask-based exclusion
+
+    Parameters
+    ----------
+    exclude_if_mask : bool
+        If True, masked samples are excluded downstream (e.g., set to NaN or removed,
+        depending on the processing function).
+    mask_inactivity : bool
+        If True, apply the inactivity mask when filtering.
+    binarize : bool
+        If True, binarize the signal using ``threshold``.
+    threshold : float
+        Threshold used when ``binarize=True``.
+    inactivity_length : int or None
+        Minimum number of consecutive zero-activity epochs to be considered “inactivity”
+        (potential non-wear). If None, no inactivity mask is created automatically.
+    mask : pandas.Series or None
+        A precomputed mask series aligned to the data index (1=keep, 0=exclude).
+
+    Attributes
+    ----------
+    mask : pandas.Series
+        Mask aligned to the current analysis window. If no mask exists but
+        ``inactivity_length`` is set, it is created automatically on first access.
+    inactivity_length : int or None
+        Minimum consecutive zero epochs defining an inactivity segment.
+    """
     def __init__(self, exclude_if_mask, mask_inactivity, binarize, threshold, inactivity_length, mask):
         self.exclude_if_mask = exclude_if_mask
         self._inactivity_length = inactivity_length
@@ -221,6 +312,32 @@ class Mask:
                       impute_nan=False,
                       exclude_if_mask=False,
                       imputation_method='mean'):
+        """
+        Apply preprocessing to activity and/or light time series.
+
+        This method optionally:
+        - Resamples the data to a new epoch length (e.g., 30s to 1 min).
+        - Binarizes using a threshold
+        - Applies masking (exclude masked samples)
+        - Impute missing values
+
+        Parameters
+        ----------
+        new_freq : str or pandas offset, optional
+            New epoch length (e.g., "1min", "30s"). If None, keep current frequency.
+        binarize : bool
+            If True, binarize values using ``threshold``.
+        threshold : float
+            Threshold for binarization.
+        apply_mask : bool
+            If True, apply the current mask (and create inactivity mask if configured).
+        impute_nan : bool
+            If True, fill NaNs using ``imputation_method``.
+        exclude_if_mask : bool
+            If True, masked values are excluded (implementation depends on the processing backend).
+        imputation_method : {"mean", "median", ...}
+            Strategy for filling missing values.
+        """
         # Reset filters before applying new ones
         self.reset_filters()
         if apply_mask:
@@ -291,7 +408,7 @@ class Mask:
         """Create a mask for inactivity (count equal to zero) periods.
 
         This mask has the same length as its underlying data and can be used
-        to offuscate inactive periods where the actimeter has most likely been
+        to obfuscate inactive periods where the actimeter has most likely been
         removed.
         Warning: use a sufficiently long duration in order not to mask sleep
         periods.
