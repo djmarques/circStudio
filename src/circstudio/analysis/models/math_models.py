@@ -1858,8 +1858,8 @@ class Hilaire07(Model):
         self.phi_xcx = phi_xcx
         self.phi_ref = phi_ref
         self.cbt_to_dlmo = cbt_to_dlmo
-        self.initialize_model_states()
         self.sleep = self.sleep_vector(algo=sleep_algo)
+        self.initialize_model_states() if self.sleep is not None else None
 
     def sleep_vector(self, algo='Roenneberg', **kwargs):
         """
