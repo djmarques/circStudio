@@ -199,19 +199,33 @@ class Model:
         if states:
             # Calculate number of states available
             states = self.model_states.shape[1]
+            match self.model_name:
+                case "Forger":
+                    labels = ["x", "xc", "Light drive"]
+                case "Jewett":
+                    labels = ["x", "xc", "Light drive"]
+                case "HannaySP":
+                    labels = ["Amplitude", "Phase", "Light drive"]
+                case "HannayTP":
+                    labels = ["Ventral Amplitude",
+                              "Dorsal Amplitude",
+                              "Ventral Phase",
+                              "Dorsal Phase",
+                              "Light Drive"
+                              ]
+                case "Hilaire07":
+                    labels = ["x", "xc", "Light drive"]
+                case "Skeldon23":
+                    labels = ["x", "xc", "Light drive", "Sleep pressure"]
+                case "Breslow13":
+                    labels = ["x",
+                              "xc",
+                              "Light Drive",
+                              "Pineal melatonin",
+                              "Plasma melatonin",
+                              "Exogenous melatonin"
+                              ]
 
-            if self.model_name == "Forger" or self.model_name == "Jewett":
-                labels = ["x", "xc", "Light Drive"]
-            elif self.model_name == "HannaySP":
-                labels = ["Amplitude", "Phase", "Light Drive"]
-            else:
-                labels = [
-                    "Ventral Amplitude",
-                    "Dorsal Amplitude",
-                    "Ventral Phase",
-                    "Dorsal Phase",
-                    "Light Drive",
-                ]
             # Iterate over states and plot them
             for i in range(states):
                 fig.add_trace(
@@ -1956,7 +1970,7 @@ class Hilaire07(Model):
         xc = state[1]
         n = state[2]
         light = input
-        wake = self.sleep
+        #wake = self.sleep
 
         # note this correction on the alpha term (important to test Forger's model
         # better approximates Hannay's under the ModelComparer framework)
@@ -1964,6 +1978,9 @@ class Hilaire07(Model):
         bhat = self.g * (1 - n) * alpha * (1 - (0.4 * x)) * (1 - 0.4 * xc)
 
         # Sigma is set to one if rest/sleep
+        idx = np.searchsorted(self.time, t, side="right") - 1
+        idx = max(0, min(idx, len(self.time) - 1))
+        wake = bool(self.sleep.iloc[idx] if hasattr(self.sleep, "iloc") else self.sleep[idx])
         sigma = 1.0 if wake else 0.0
 
         # Calculate psi_cx
