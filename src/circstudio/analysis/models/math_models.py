@@ -2856,6 +2856,73 @@ class Skeldon23:
         # if you want to know in clock time, just do cbtmin_times % 24
         return cbtmin_times
 
+    def plot(self, states=False, dlmo=False, cbtmin=False):
+        # Create a new plotly figure
+        fig = go.Figure()
+
+        if states:
+            # Calculate number of states available
+            states = self.model_states.shape[1]
+
+            labels = ["x", "xc", "Light drive", "Sleep pressure"]
+
+
+            # Iterate over states and plot them
+            for i in range(states):
+                fig.add_trace(
+                    go.Scatter(
+                        x=self.data.index.astype(str),
+                        y=self.model_states[:, i],
+                        name=f"{labels[i]}",
+                    )
+                )
+                fig.update_layout(
+                    title="Model States",
+                    xaxis=dict(title="Time"),
+                    yaxis=dict(title="Model States"),
+                )
+            return fig
+
+        if dlmo:
+            # Plot daily predicted DLMO
+            fig.add_trace(
+                go.Scatter(
+                    x=pd.Series(self.data.index.date.astype(str)).unique(),
+                    y=self.dlmos() % 24,
+                    name="Predicted DLMO",
+                )
+            )
+            fig.update_layout(
+                title="Predicted DLMO",
+                xaxis=dict(title="Day"),
+                yaxis=dict(title="DLMO time"),
+            )
+            return fig
+
+        if cbtmin:
+            # Plot daily predicted DLMO
+            fig.add_trace(
+                go.Scatter(
+                    x=pd.Series(self.data.index.date.astype(str)).unique(),
+                    y=self.cbt() % 24,
+                    name="Predicted CBTmin",
+                )
+            )
+            fig.update_layout(
+                title="Predicted CBTmin",
+                xaxis=dict(title="Day"),
+                yaxis=dict(title="CBTmin time"),
+            )
+            return fig
+
+    def run(self, initial_state=None):
+        t, states, sleep = self.integrate_piecewise_odeint(initial_state=initial_state)
+        self.model_states = states
+        self.sleep_state = sleep
+        self.received_light = self.inputs
+        return t, states, sleep
+
+
 
 def main():
     # Parameters for the light schedule
