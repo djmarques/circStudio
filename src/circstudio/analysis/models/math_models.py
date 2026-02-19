@@ -325,6 +325,8 @@ class Forger(Model):
         Array of time points for simulation.
     inputs : numpy.ndarray
         Array of input values (e.g., light intensity) over time.
+    hilaire_correction : bool
+        Whether to use Hilaire's formula to compute alpha. Default is False.
 
     Methods
     -------
@@ -391,8 +393,8 @@ class Forger(Model):
         self.k = k
         self.cbt_to_dlmo = cbt_to_dlmo
         # self.model_states = self.integrate()
-        self.initialize_model_states()
         self.hilaire_correction = hilaire_correction
+        self.initialize_model_states()
 
     def derivative(self, t, state, light):
         """
