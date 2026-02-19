@@ -420,7 +420,7 @@ class Forger(Model):
         if self.hilaire_correction:
             # note this correction on the alpha term (important to test Forger's model
             # better approximates Hannay's under the ModelComparer framework)
-            alpha = self.a0 * np.power(light / self.i0, self.p) * (light / (light + 100))
+            alpha = self.alpha_0 * np.power(light / self.i0, self.p) * (light / (light + 100))
         else:
             alpha = self.alpha_0 * pow((light / self.i0), self.p)
         Bhat = self.g * (1.0 - n) * alpha * (1 - 0.4 * x) * (1 - 0.4 * xc)
