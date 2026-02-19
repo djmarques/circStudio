@@ -361,6 +361,7 @@ class Forger(Model):
         k=0.55,
         cbt_to_dlmo=7.0,
         initial_condition=None,
+        hilaire_correction=False,
     ):
         if inputs is None or time is None:
             super().__init__(
@@ -391,6 +392,7 @@ class Forger(Model):
         self.cbt_to_dlmo = cbt_to_dlmo
         # self.model_states = self.integrate()
         self.initialize_model_states()
+        self.hilaire_correction = hilaire_correction
 
     def derivative(self, t, state, light):
         """
@@ -413,8 +415,12 @@ class Forger(Model):
         x = state[0]
         xc = state[1]
         n = state[2]
-
-        alpha = self.alpha_0 * pow((light / self.i0), self.p)
+        if self.hilaire_correction:
+            # note this correction on the alpha term (important to test Forger's model
+            # better approximates Hannay's under the ModelComparer framework)
+            alpha = self.a0 * np.power(light / self.i0, self.p) * (light / (light + 100))
+        else:
+            alpha = self.alpha_0 * pow((light / self.i0), self.p)
         Bhat = self.g * (1.0 - n) * alpha * (1 - 0.4 * x) * (1 - 0.4 * xc)
         mu_term = self.mu * (xc - 4.0 / 3.0 * pow(xc, 3.0))
         taux_term = pow(24.0 / (0.99669 * self.taux), 2.0) + self.k * Bhat
@@ -1403,7 +1409,7 @@ class ModelComparer:
     physiologically grounded understanding of the Forger model states by expressing
     them as functions of the circadian phase predicted by the HannaySP model.
 
-        Parameters
+    Parameters
     ----------
     data : pandas.Series or pandas.DataFrame, optional
         Time-indexed light exposure data. If provided, the time vector is
@@ -1453,6 +1459,7 @@ class ModelComparer:
         time=None,
         equilibrate=False,
         loop_number=10,
+        hilaire_correction=True,
         a1=1.0,
         a2=1.0,
         p1=1.0,
@@ -1484,7 +1491,12 @@ class ModelComparer:
             self.light_vector = inputs
 
         # Instantiate forger model
-        self.forger = Forger(inputs=self.light_vector, time=self.time_vector)
+        self.forger = Forger(
+            inputs=self.light_vector,
+            time=self.time_vector,
+            hilaire_correction=hilaire_correction
+        )
+
         if equilibrate:
             # First, calculate initial conditions based on the light and time vector
             ics = self.forger.get_initial_conditions(
