@@ -137,7 +137,7 @@ class Fractal:
             2D array where each row is one segment of the signal.
         """
         # Compute consecutive windows, shifted by one element
-        windows = cls.__class__._rolling_window(x, n)
+        windows = cls._rolling_window(x, n)
 
         # Compute distance between the center of two consecutive windows
         stride = n // 2 if overlap else n
