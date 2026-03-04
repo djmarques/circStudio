@@ -13,6 +13,8 @@ predicting sleep timing, and link actigraphy-derived signals to underlying physi
 Core functionalities
 --------------------
 
+The full **circStudio** documentation can be found `here <https://djmarques.github.io/circStudio/>`_.
+
 Cleaning and preprocessing raw actigraphy data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
