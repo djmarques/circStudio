@@ -1,0 +1,675 @@
+/* ============================================================
+   circStudio – custom theme
+   Target: Shiny for Python (Bootstrap 5)
+   Replaces: shinyswatch.theme.flatly
+   ============================================================ */
+
+/* ------------------------------------------------------------------
+   1. DESIGN TOKENS  (light mode defaults)
+   ------------------------------------------------------------------ */
+:root {
+  /* Palette */
+  --cs-bg:            #FAFAFA;
+  --cs-surface:       #FFFFFF;
+  --cs-surface-alt:   #F3F4F8;
+  --cs-border:        rgba(0, 0, 0, 0.07);
+  --cs-border-strong: rgba(0, 0, 0, 0.13);
+
+  --cs-text:          #2D2D2D;
+  --cs-text-muted:    #6B7280;
+
+  /* Pastel accents */
+  --cs-lavender:      #D5C9F0;
+  --cs-lavender-deep: #B8A8E8;
+  --cs-sage:          #C8DFC8;
+  --cs-sage-deep:     #A8C8A8;
+  --cs-sky:           #BFD7ED;
+  --cs-sky-deep:      #9DC0E0;
+
+  /* Primary action = soft lavender */
+  --cs-primary:       #D5C9F0;
+  --cs-primary-hover: #C4B5E8;
+  --cs-primary-text:  #2D2D2D;
+
+  /* Frosted glass */
+  --cs-glass-bg:      rgba(255, 255, 255, 0.60);
+  --cs-glass-border:  rgba(255, 255, 255, 0.45);
+
+  /* Radii & shadows */
+  --cs-radius:        8px;
+  --cs-radius-lg:     12px;
+  --cs-shadow-sm:     0 1px 4px rgba(0, 0, 0, 0.06);
+  --cs-shadow:        0 4px 16px rgba(0, 0, 0, 0.08);
+
+  /* Transition */
+  --cs-transition:    all 0.15s ease;
+
+  /* Typography */
+  --cs-font:          -apple-system, BlinkMacSystemFont, "Segoe UI",
+                      Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ------------------------------------------------------------------
+   3. GLOBAL RESET / BASE
+   ------------------------------------------------------------------ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  font-family: var(--cs-font);
+  font-size: 14px;
+  background-color: var(--cs-bg) !important;
+  color: var(--cs-text) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Override Bootstrap's body background */
+body {
+  background-color: var(--cs-bg) !important;
+}
+
+/* ------------------------------------------------------------------
+   4. NAVBAR  (frosted glass)
+   ------------------------------------------------------------------ */
+.navbar {
+  background: var(--cs-glass-bg) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid var(--cs-glass-border) !important;
+  box-shadow: var(--cs-shadow-sm) !important;
+  padding: 0.5rem 1.25rem !important;
+}
+
+.navbar-brand {
+  font-family: var(--cs-font);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--cs-text) !important;
+  letter-spacing: -0.01em;
+}
+
+/* Nav tab links inside the top navbar — page_navbar uses .nav-underline */
+.navbar .nav-link {
+  font-weight: 500;
+  color: var(--cs-text) !important;
+  padding: 0.55rem 0.85rem !important;
+  border-radius: var(--cs-radius) !important;
+  transition: var(--cs-transition) !important;
+  /* Remove Bootstrap's underline decoration from nav-underline */
+  border-bottom: none !important;
+  text-decoration: none !important;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus {
+  background: var(--cs-lavender) !important;
+  color: var(--cs-text) !important;
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
+
+.navbar .nav-link.active,
+.navbar .nav-underline .nav-link.active {
+  background: var(--cs-lavender) !important;
+  color: var(--cs-text) !important;
+  font-weight: 600 !important;
+  border-bottom: none !important;
+  border-bottom-color: transparent !important;
+}
+
+/* ------------------------------------------------------------------
+   6. MAIN CONTENT AREA
+   page_navbar wraps its panes in .container-fluid > .tab-content > .tab-pane
+   ------------------------------------------------------------------ */
+.tab-content > .tab-pane {
+  background-color: var(--cs-bg);
+  color: var(--cs-text);
+}
+
+/* Top-level page content container */
+body.bslib-page-navbar > .container-fluid {
+  background-color: var(--cs-bg);
+  padding-top: 0.5rem;
+}
+
+/* ------------------------------------------------------------------
+   7. SIDEBAR  (frosted glass panel)
+   ------------------------------------------------------------------ */
+/* Shiny for Python wraps sidebar content in .bslib-sidebar-layout
+   with a child .sidebar and .main panels */
+.bslib-sidebar-layout > .sidebar {
+  background: var(--cs-glass-bg) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-right: 1px solid var(--cs-border) !important;
+  padding: 1.1rem !important;
+  min-height: 100%;
+}
+
+.bslib-sidebar-layout > .main {
+  background: var(--cs-bg) !important;
+  padding: 1.25rem !important;
+}
+
+/* Inner content wrapper inside the sidebar */
+.bslib-sidebar-layout > .sidebar > .sidebar-content {
+  background: transparent !important;
+}
+
+/* Collapse toggle button */
+.bslib-sidebar-layout > .collapse-toggle {
+  background: var(--cs-glass-bg) !important;
+  border: 1px solid var(--cs-border) !important;
+  border-radius: 50% !important;
+  color: var(--cs-text) !important;
+  transition: var(--cs-transition) !important;
+}
+
+.bslib-sidebar-layout > .collapse-toggle:hover {
+  background: var(--cs-lavender) !important;
+}
+
+/* Sidebar headings */
+.bslib-sidebar-layout > .sidebar h5,
+.bslib-sidebar-layout > .sidebar h6 {
+  font-weight: 600;
+  color: var(--cs-text);
+  margin-top: 0.85rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cs-text-muted);
+}
+
+/* Horizontal rules in sidebar */
+.bslib-sidebar-layout > .sidebar hr {
+  border-color: var(--cs-border-strong);
+  margin: 0.75rem 0;
+}
+
+/* ------------------------------------------------------------------
+   8. CARDS  (ui.card / .card)
+   ------------------------------------------------------------------ */
+.card {
+  background-color: var(--cs-surface) !important;
+  border: 1px solid var(--cs-border) !important;
+  border-radius: var(--cs-radius-lg) !important;
+  box-shadow: var(--cs-shadow-sm) !important;
+  color: var(--cs-text) !important;
+  transition: var(--cs-transition) !important;
+}
+
+.card:hover {
+  box-shadow: var(--cs-shadow) !important;
+}
+
+.card-header {
+  background-color: var(--cs-surface-alt) !important;
+  border-bottom: 1px solid var(--cs-border) !important;
+  font-weight: 600;
+  color: var(--cs-text) !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: var(--cs-radius-lg) var(--cs-radius-lg) 0 0 !important;
+}
+
+.card-body {
+  padding: 1rem !important;
+  background-color: var(--cs-surface) !important;
+}
+
+/* ------------------------------------------------------------------
+   9. VALUE BOXES  (ui.value_box)
+   ------------------------------------------------------------------ */
+.bslib-value-box {
+  border: 1px solid var(--cs-border) !important;
+  border-radius: var(--cs-radius-lg) !important;
+  background: var(--cs-surface) !important;
+  box-shadow: var(--cs-shadow-sm) !important;
+  transition: var(--cs-transition) !important;
+}
+
+.bslib-value-box .value-box-showcase {
+  background: var(--cs-lavender) !important;
+  border-radius: var(--cs-radius-lg) 0 0 var(--cs-radius-lg) !important;
+}
+
+.bslib-value-box .value-box-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cs-text-muted) !important;
+}
+
+.bslib-value-box .value-box-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--cs-text) !important;
+}
+
+/* ------------------------------------------------------------------
+   10. NAVSET TABS  (ui.navset_tab / inner tabs)
+   ------------------------------------------------------------------ */
+.nav-tabs {
+  border-bottom: 1px solid var(--cs-border-strong) !important;
+  gap: 2px;
+}
+
+.nav-tabs .nav-link {
+  font-weight: 500;
+  color: var(--cs-text-muted) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--cs-radius) var(--cs-radius) 0 0 !important;
+  padding: 0.45rem 0.85rem !important;
+  transition: var(--cs-transition) !important;
+  background: transparent !important;
+}
+
+.nav-tabs .nav-link:hover {
+  color: var(--cs-text) !important;
+  border-color: var(--cs-border) var(--cs-border) transparent !important;
+  background: var(--cs-surface-alt) !important;
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--cs-text) !important;
+  font-weight: 600 !important;
+  background: var(--cs-surface) !important;
+  border-color: var(--cs-border-strong) var(--cs-border-strong) var(--cs-surface) !important;
+}
+
+/* Only scope the bordered box to inner navset_tab — the page_navbar
+   .tab-content is inside .container-fluid and has no .nav-tabs sibling. */
+.nav-tabs + .tab-content {
+  background: var(--cs-surface);
+  border: 1px solid var(--cs-border-strong);
+  border-top: none;
+  border-radius: 0 0 var(--cs-radius) var(--cs-radius);
+  padding: 1rem;
+  color: var(--cs-text);
+}
+
+/* ------------------------------------------------------------------
+   11. FORM CONTROLS — INPUTS, SELECTS, SLIDERS
+   ------------------------------------------------------------------ */
+.form-control,
+.form-select {
+  background-color: var(--cs-surface) !important;
+  border: 1px solid var(--cs-border-strong) !important;
+  border-radius: var(--cs-radius) !important;
+  color: var(--cs-text) !important;
+  font-size: 0.875rem !important;
+  transition: var(--cs-transition) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--cs-surface) !important;
+  border-color: var(--cs-lavender-deep) !important;
+  box-shadow: 0 0 0 3px rgba(213, 201, 240, 0.30) !important;
+  color: var(--cs-text) !important;
+  outline: none !important;
+}
+
+.form-label,
+.control-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--cs-text) !important;
+  margin-bottom: 0.3rem;
+}
+
+/* Placeholder text */
+.form-control::placeholder {
+  color: var(--cs-text-muted) !important;
+  opacity: 0.7;
+}
+
+/* File input */
+.form-control[type="file"] {
+  padding: 0.3rem 0.6rem !important;
+}
+
+/* Number inputs */
+input[type="number"].form-control {
+  -moz-appearance: textfield;
+}
+
+/* Checkbox / radio */
+.form-check-input {
+  background-color: var(--cs-surface) !important;
+  border-color: var(--cs-border-strong) !important;
+  transition: var(--cs-transition) !important;
+}
+
+.form-check-input:checked {
+  background-color: var(--cs-lavender-deep) !important;
+  border-color: var(--cs-lavender-deep) !important;
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 3px rgba(213, 201, 240, 0.30) !important;
+}
+
+.form-check-label {
+  color: var(--cs-text) !important;
+  font-size: 0.875rem;
+}
+
+/* Switch */
+.form-switch .form-check-input:checked {
+  background-color: var(--cs-lavender-deep) !important;
+  border-color: var(--cs-lavender-deep) !important;
+}
+
+/* Range slider (Shiny uses .irs) */
+.irs--shiny .irs-bar,
+.irs--shiny .irs-bar--single {
+  background: var(--cs-lavender-deep) !important;
+  border-top-color: var(--cs-lavender-deep) !important;
+  border-bottom-color: var(--cs-lavender-deep) !important;
+}
+
+.irs--shiny .irs-handle > i:first-child {
+  background-color: var(--cs-lavender-deep) !important;
+  border-color: var(--cs-lavender-deep) !important;
+}
+
+.irs--shiny .irs-from,
+.irs--shiny .irs-to,
+.irs--shiny .irs-single {
+  background-color: var(--cs-lavender-deep) !important;
+  color: var(--cs-primary-text) !important;
+}
+
+.irs--shiny .irs-line {
+  background: var(--cs-border-strong) !important;
+}
+
+.irs--shiny .irs-min,
+.irs--shiny .irs-max {
+  background: var(--cs-surface-alt) !important;
+  color: var(--cs-text-muted) !important;
+}
+
+/* ------------------------------------------------------------------
+   12. BUTTONS
+   ------------------------------------------------------------------ */
+/* Default / secondary button */
+.btn {
+  border-radius: var(--cs-radius) !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  transition: var(--cs-transition) !important;
+  letter-spacing: 0.01em;
+}
+
+/* Primary action button (class_="btn-primary") */
+.btn-primary,
+.btn.btn-primary {
+  background-color: var(--cs-lavender) !important;
+  border-color: var(--cs-lavender-deep) !important;
+  color: var(--cs-primary-text) !important;
+  box-shadow: none !important;
+}
+
+.btn-primary:hover,
+.btn.btn-primary:hover {
+  background-color: var(--cs-lavender-deep) !important;
+  border-color: var(--cs-lavender-deep) !important;
+  color: var(--cs-primary-text) !important;
+}
+
+.btn-primary:focus,
+.btn.btn-primary:focus {
+  box-shadow: 0 0 0 3px rgba(213, 201, 240, 0.45) !important;
+  background-color: var(--cs-lavender-deep) !important;
+}
+
+/* Secondary / default button */
+.btn-default,
+.btn-secondary,
+.btn-outline-primary {
+  background-color: var(--cs-surface) !important;
+  border: 1px solid var(--cs-border-strong) !important;
+  color: var(--cs-text) !important;
+}
+
+.btn-default:hover,
+.btn-secondary:hover,
+.btn-outline-primary:hover {
+  background-color: var(--cs-surface-alt) !important;
+  border-color: var(--cs-lavender-deep) !important;
+}
+
+/* Small modifier (btn-sm) */
+.btn-sm {
+  padding: 0.3rem 0.7rem !important;
+  font-size: 0.8rem !important;
+}
+
+/* Action button disable state */
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+}
+
+/* ------------------------------------------------------------------
+   13. ACCORDION  (ui.accordion)
+   ------------------------------------------------------------------ */
+.accordion-item {
+  background-color: var(--cs-surface) !important;
+  border: 1px solid var(--cs-border) !important;
+  border-radius: var(--cs-radius) !important;
+  margin-bottom: 4px;
+  overflow: hidden;
+}
+
+.accordion-button {
+  background-color: var(--cs-surface-alt) !important;
+  color: var(--cs-text) !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  border-radius: var(--cs-radius) !important;
+  box-shadow: none !important;
+  transition: var(--cs-transition) !important;
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: var(--cs-lavender) !important;
+  color: var(--cs-text) !important;
+  box-shadow: none !important;
+}
+
+.accordion-button::after {
+  filter: none !important;
+}
+
+.accordion-body {
+  background-color: var(--cs-surface) !important;
+  color: var(--cs-text) !important;
+  padding: 0.75rem 1rem !important;
+}
+
+/* ------------------------------------------------------------------
+   14. MODAL DIALOGS  (frosted glass)
+   ------------------------------------------------------------------ */
+.modal-content {
+  background: var(--cs-glass-bg) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--cs-glass-border) !important;
+  border-radius: var(--cs-radius-lg) !important;
+  color: var(--cs-text) !important;
+  box-shadow: var(--cs-shadow) !important;
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--cs-border) !important;
+  background: transparent !important;
+  font-weight: 600;
+}
+
+.modal-footer {
+  border-top: 1px solid var(--cs-border) !important;
+  background: transparent !important;
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
+}
+
+/* ------------------------------------------------------------------
+   15. DATA TABLES  (ui.output_data_frame / gt / DT)
+   ------------------------------------------------------------------ */
+/* Shiny DataGrid */
+.shiny-data-grid-container,
+.shiny-data-grid {
+  background: var(--cs-surface) !important;
+  color: var(--cs-text) !important;
+  border-radius: var(--cs-radius) !important;
+  border: 1px solid var(--cs-border) !important;
+  overflow: hidden;
+}
+
+.shiny-data-grid table,
+.shiny-data-grid-container table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.shiny-data-grid thead th,
+.shiny-data-grid-container thead th {
+  background-color: var(--cs-surface-alt) !important;
+  color: var(--cs-text-muted) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--cs-border-strong) !important;
+  padding: 0.55rem 0.75rem !important;
+}
+
+.shiny-data-grid tbody tr {
+  transition: var(--cs-transition) !important;
+}
+
+.shiny-data-grid tbody tr:hover td,
+.shiny-data-grid-container tbody tr:hover td {
+  background-color: var(--cs-surface-alt) !important;
+}
+
+.shiny-data-grid tbody td,
+.shiny-data-grid-container tbody td {
+  border-bottom: 1px solid var(--cs-border) !important;
+  padding: 0.45rem 0.75rem !important;
+  color: var(--cs-text) !important;
+  background-color: var(--cs-surface) !important;
+}
+
+/* ------------------------------------------------------------------
+   16. NOTIFICATION TOAST
+   ------------------------------------------------------------------ */
+.shiny-notification {
+  background: var(--cs-glass-bg) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid var(--cs-glass-border) !important;
+  border-radius: var(--cs-radius) !important;
+  color: var(--cs-text) !important;
+  box-shadow: var(--cs-shadow) !important;
+}
+
+.shiny-notification-message {
+  color: var(--cs-text) !important;
+}
+
+.shiny-notification-warning {
+  border-left: 4px solid #F59E0B !important;
+}
+
+.shiny-notification-error {
+  border-left: 4px solid #EF4444 !important;
+}
+
+/* ------------------------------------------------------------------
+   17. MISCELLANEOUS
+   ------------------------------------------------------------------ */
+/* Headings */
+h4, h5, h6 {
+  font-weight: 600;
+  color: var(--cs-text);
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Horizontal rules */
+hr {
+  border: none;
+  border-top: 1px solid var(--cs-border-strong);
+  margin: 1rem 0;
+}
+
+/* Text utilities */
+.text-muted {
+  color: var(--cs-text-muted) !important;
+}
+
+/* Shiny busy spinner */
+#shiny-disconnected-overlay {
+  background: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* Scrollbar (Webkit) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cs-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cs-border-strong);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cs-lavender-deep);
+}
+
+/* ------------------------------------------------------------------
+   18. LAYOUT COLUMNS  (ui.layout_columns)
+   ------------------------------------------------------------------ */
+.bslib-grid {
+  gap: 1rem !important;
+}
+
+/* ------------------------------------------------------------------
+   19. PANEL CONDITIONAL + OUTPUT_UI wrappers
+   ------------------------------------------------------------------ */
+.shiny-html-output p,
+.shiny-html-output div {
+  color: var(--cs-text);
+}
+
+/* Loading spinner placeholder */
+.shiny-plot-output.recalculating,
+.shiny-table-output.recalculating {
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+/* ------------------------------------------------------------------
+   20. PLOTLY CONTAINER  — untouched
+   ------------------------------------------------------------------ */
+/* We intentionally do NOT apply any CSS to .plotly, .js-plotly-plot,
+   or .svg-container, preserving existing figure styles exactly. */
