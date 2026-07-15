@@ -403,7 +403,11 @@ def sleep_server(
         if not st:
             return pd.DataFrame({"info": ["Run scoring first."]})
         try:
-            df, _mean = main_sleep_bouts(st["sleep"], report="major")
+            # Pass RAW activity: main_sleep_bouts runs Roenneberg internally,
+            # which expects raw counts. Passing the pre-scored 0/1 series
+            # (st["sleep"]) double-scores and inverts sleep/wake, yielding the
+            # active period instead of the main sleep bout.
+            df, _mean = main_sleep_bouts(st["act"], report="major")
             out = df.copy()
             out["duration_min"] = (out["duration"] / pd.Timedelta("1min")).round(1)
             out["is_major"] = True
