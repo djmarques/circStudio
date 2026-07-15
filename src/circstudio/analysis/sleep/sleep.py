@@ -1801,16 +1801,42 @@ def main_sleep_bouts(data, report='major'):
     # Compute the activity onset and off using the Roenneberg algorithm
     activity_onset, activity_offset = Roenneberg_AoT(data)
 
-    # Create empty dataframe to store all the sleep events
-    sleep_events = pd.DataFrame()
+    events = []
+    # For each sleep onset, find the next awakening and calculate the duration of the sleep episode
+    for sleep_onset in activity_offset:
+        # Find the next awakening after the sleep onset
+        following_awakening = activity_onset[activity_onset > sleep_onset]
+        
+        # If there is no awakening after the sleep onset, skip this sleep episode
+        if len(following_awakening) == 0:
+            continue
 
+        # Append the sleep episode to the events list
+        events.append((sleep_onset, following_awakening[0], following_awakening[0] - sleep_onset))
+    
+    # Create a DataFrame from the events list with columns for start_time, stop_time, and duration
+    sleep_events = pd.DataFrame(events, columns=['start_time', 'stop_time', 'duration'])
+
+    # Date each episode is assigned to
+    sleep_events['date'] = sleep_events['start_time'].dt.date
+
+    # --- Deprecated (buggy) implementation, kept for reference ---
+    # Paired the two event arrays by position: activity_offset[i] as the sleep
+    # onset and activity_onset[i] as the matching wake. This assumes onset i
+    # always lines up with wake i, which fails in two ways:
+    #   * If the recording starts or ends mid-sleep, activity_offset and
+    #     activity_onset differ in length, and assigning them as DataFrame
+    #     columns raises "Length of values (N) does not match length of
+    #     index (M)".
+    #   * Even at equal lengths, an onset can be paired with a wake that comes
+    #     before it, producing negative or otherwise incorrect durations.    # starts with a sleep episode (i.e. activity_offset < activity_onset)
     # sleep_onset = activity_offset; sleep_offset = activity_onset
-    sleep_events['date'] = activity_onset.date
-    sleep_events['start_time'] = activity_offset
-    sleep_events['stop_time'] = activity_onset
+    #sleep_events['date'] = activity_onset.date
+    #sleep_events['start_time'] = activity_offset
+    #sleep_events['stop_time'] = activity_onset
 
     # Sleep/rest episode duration
-    sleep_events['duration'] = sleep_events['stop_time'] - sleep_events['start_time']
+    #sleep_events['duration'] = sleep_events['stop_time'] - sleep_events['start_time']
 
     # Identify main sleep episode
     main_sleep = sleep_events.loc[sleep_events.groupby('date')['duration'].idxmax()]
