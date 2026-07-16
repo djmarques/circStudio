@@ -1105,17 +1105,24 @@ def preprocessing_server(
 
         # Return an empty container when no batch controls can be constructed
         return ui.div()
-
-    # ---- status message ----------------------------------------------------
+    # ------------------------------------------------------------------------
+    # Status message
+    # ------------------------------------------------------------------------
+    # Render the latest preprocessing outcome as a Bootstrap alert
     @render.ui
     def status_msg():
+        """Display the most recent success or error message to the user"""
+        # Read the current status message
         msg = _status()
 
+        # Return an empty container when no message is available
         if not msg:
             return ui.div()
 
+        # Show errors in and successful operations in green
         colour = "danger" if msg.startswith("Error") else "success"
 
+        # Wrap the message in a Bootstrap alert with compact spacing
         return ui.div(
             ui.tags.div(
                 msg,
@@ -1124,135 +1131,262 @@ def preprocessing_server(
             ),
             class_="mb-2",
         )
-
-    # ---- automatic non-wear detection -------------------------------------
+    # ------------------------------------------------------------------------
+    # Automatic non-wear detection
+    # ------------------------------------------------------------------------
+    # Run this effect only when the user clicks the Detect Non-Wear button
     @reactive.effect
     @reactive.event(input.btn_detect)
     def _on_detect():
+        """Detect non-wear periods and add them to the current local mask"""
+        # Access the editable local copy of the active recording
         raw = _raw_local()
 
+        # Stop if no recording has been loaded into the preprocessing tab
         if raw is None:
-            _status.set("Error: No recording loaded. Please upload a file first.")
-            return
+            _status.set(
+                "Error: No recording loaded. Please upload a file first."
+                )
+            return None
 
+        # Read the selected non-wear detection algorithm
         method = input.nw_method()
-        min_length = (input.nw_min_length() or "90min").strip()
-        spike_tol = int(input.nw_spike_tolerance())
-        spike_max = int(input.nw_spike_max_counts())
 
-        kwargs = {}
+        # Read the minimum non-wear duration (90 minutes by default) and remove any leading/trailing whitespace
+        min_length = (
+            input.nw_min_length()
+            or "90min"
+        ).strip()
+
+        # Convert the permitted number of isolated spikes to an integer
+        spike_tol = int(
+            input.nw_spike_tolerance()
+            )
+        
+        # Convert the maximum permitted spike count to an integer
+        spike_max = int(
+            input.nw_spike_max_counts()
+            )
+
+        # Start with no optional arguments for an algorithm
+        detection_options = {}
+
+        # The Choi algorithm requires a neighbourhood window size to examine 
+        # before and after a spike
         if method == "choi":
-            kwargs["window_size"] = (input.nw_window_size() or "30min").strip()
+            detection_options["window_size"] = (
+                input.nw_window_size()
+                or "30min"
+            ).strip()
 
         try:
-            # Preserve manually-added mask periods before detection, so that
-            # automatic and manual periods are always additive.
-            existing_mask = raw._mask.copy() if raw._mask is not None else None
+            # Preserve the existing mask periods before automatic detection
+            if raw._mask is not None:
+                existing_mask = raw._mask.copy()
+            else:
+                existing_mask = None
 
+            # Detect non-wear using the algorithm and parameters selected by the user
             raw.detect_nonwear(
                 method=method,
                 min_length=min_length,
                 spike_tolerance=spike_tol,
                 spike_max_counts=spike_max,
-                **kwargs,
+                **detection_options,
             )
 
-            # Merge: union of non-wear periods. Since mask uses 0 = non-wear
-            # and 1 = wear, taking the minimum makes non-wear "win".
+            # Combine automatic detection with any previously defined mask periods
             if existing_mask is not None and raw._mask is not None:
-                aligned = existing_mask.reindex(raw._mask.index, fill_value=1)
-                raw._mask = raw._mask.combine(aligned, min)
+                # Align the previous mask with the epochs in the newly detected mask
+                aligned_mask = existing_mask.reindex(
+                    raw._mask.index,
+                    fill_value=1
+                )
 
-            m = raw.mask
-            n_nonwear = int((m == 0).sum()) if m is not None else 0
+                # Use the minimum because 0 means non-wear and must take priority
+                raw._mask = raw._mask.combine(
+                    aligned_mask,
+                    min
+                )
 
-            if hasattr(raw.frequency, "total_seconds"):
-                epoch_sec = raw.frequency.total_seconds()
+            # Access the combined mask through the public Raw interface
+            mask = raw.mask
+
+            # Count all epochs classified as non-wear (mask value == 0)
+            if mask is not None:
+                nw_epochs = int(
+                    (mask == 0).sum()
+                )
             else:
-                epoch_sec = 60
+                nw_epochs = 0
+            
+            # Use the recording epoch duration when it supports time conversion
+            if hasattr(raw.frequency, "total_seconds"):
+                epoch_seconds = raw.frequency.total_seconds()
+            else:
+                epoch_seconds = 60
 
-            nonwear_hours = round(n_nonwear * epoch_sec / 3600, 1)
+            # Convert the number of non-wear epochs into hours for reporting
+            nonwear_hours = round(
+                nw_epochs * epoch_seconds / 3600,
+                1
+            )
 
-            # Count distinct non-wear runs.
-            n_runs = 0
-            if m is not None and n_nonwear > 0:
-                n_runs = int((m.diff().fillna(m.iloc[0] - 1) < 0).sum())
+            # Assume no distinct non-wear intervals were detected
+            nonwear_periods = 0
 
-            # Deep copy so Shiny sees a new object reference and re-renders.
+            # Count transitions from wear (1) to nonwear (0) as interval starts
+            if mask is not None and nw_epochs > 0:
+                interval_starts = (
+                    mask.diff()
+                    .fillna(mask.iloc[0] - 1)
+                    < 0
+                )
+                nonwear_periods = int(
+                    interval_starts.sum()
+                )
+
+            # Store a new object reference so dependent Shiny outputs re-render
+            # and reflect the updated mask
             _raw_local.set(copy.deepcopy(raw))
 
+            # Update the status message to summarize the detection results
             _status.set(
                 f"Non-wear detection complete ({method.capitalize()}). "
-                f"Flagged {n_nonwear} epochs ({nonwear_hours} h) "
-                f"across {n_runs} separate period(s). "
+                f"Flagged {nw_epochs} epochs ({nonwear_hours} h) "
+                f"across {nonwear_periods} separate period(s). "
                 f"Zoom in on the plot to inspect individual periods."
             )
-
+        
+        # Convert any detection failure into a user-visible error message
         except Exception as exc:  # noqa: BLE001
-            _status.set(f"Error during detection: {exc}")
-
-    # ---- manual add mask period -------------------------------------------
+            _status.set(
+                f"Error during detection: {exc}"
+            )
+    # -------------------------------------------------------------------------
+    #  manual add mask period
+    # -------------------------------------------------------------------------
+    # Run this effect only when the user clicks the Add Period button
     @reactive.effect
     @reactive.event(input.btn_add_period)
     def _on_add_period():
+        """Add a nonwear interval, specified by the user, to the local mask"""
+        # Access the editable local copy of the active recording
         raw = _raw_local()
 
+        # Stop if no recording has been loaded
         if raw is None:
             _status.set("Error: No recording loaded.")
-            return
+            return None
 
-        start = (input.mask_start() or "").strip()
-        stop = (input.mask_stop() or "").strip()
+        # Read and clean the manually entered start datetime
+        start = (
+            input.mask_start() 
+            or ""
+        ).strip()
 
+        # Read and clean the manually entered stop date
+        stop = (
+            input.mask_stop()
+            or ""
+        ).strip()
+        
+        # Require both boundaries before creating a mask interval
         if not start or not stop:
             _status.set("Error: Please enter both a start and a stop time.")
-            return
+            return None
 
         try:
-            raw.add_mask_period(start, stop)
+            # Add the requested interval to the Raw object's mask
+            raw.add_mask_period(
+                start,
+                stop
+            )
+
+            # Store a deep copy so Shiny recognizes that the recording changed
             _raw_local.set(copy.deepcopy(raw))
-            _status.set(f"Mask period added: {start} → {stop}.")
 
+            # Confirm which interval was added
+            _status.set(
+                f"Mask period added: {start} → {stop}."
+            )
+        
+        # Report invalid dates or mask-update failures without stopping the app
         except Exception as exc:  # noqa: BLE001
-            _status.set(f"Error adding mask period: {exc}")
+            _status.set(
+                f"Error adding mask period: {exc}"
+            )
 
-    # ---- drawn rectangle → populate Start/Stop text inputs -----------------
+    # -------------------------------------------------------------------------
+    # Rectangle selection from the activity plot
+    # -------------------------------------------------------------------------
+    # Run this effect when JavaScript sends a newly drawn Plotly rectangle
     @reactive.effect
     @reactive.event(input.selected_range)
     def _on_drawn_rect():
-        data = input.selected_range()
+        """Copy a drawn plot interval into the manual start and stop fields"""
+        # Read the x-axis limits captured by the Plottly rectangle
+        selected_range = input.selected_range()
 
-        if not data:
-            return
+        # Ignore empty selection events
+        if not selected_range:
+            return None
 
-        x0 = str(data.get("x0", "")).strip()
-        x1 = str(data.get("x1", "")).strip()
+        # Convert the first rectangle boundaery to a string and remove any
+        # leading/trailing whitespace
+        x0 = str(
+            selected_range.get("x0", "")
+        ).strip()
 
+        # Convert the second rectangle boundary to a string and remove any
+        # leading/trailing whitespace
+        x1 = str(
+            selected_range.get("x1", "")
+        ).strip()
+        
+        # Ignore incomplete rectangle events
         if not x0 or not x1:
-            return
+            return None
 
         try:
+            # Parse both boundaries as pandas timestamps
             start = pd.to_datetime(x0)
             stop = pd.to_datetime(x1)
 
+            # Restore chronological order when the rectangle was drawn
+            # right-to-left 
             if start > stop:
                 start, stop = stop, start
 
-            start_s = start.strftime("%Y-%m-%d %H:%M:%S")
-            stop_s = stop.strftime("%Y-%m-%d %H:%M:%S")
+            # Format the start timestamp for the manual-entry control
+            start_string = start.strftime("%Y-%m-%d %H:%M:%S")
+            stop_string = stop.strftime("%Y-%m-%d %H:%M:%S")
 
+        # Preserve unusual Plotly date strings when pandas cannot parse them
         except Exception:
-            # Fallback for unusual date formats emitted by Plotly.
-            start_s, stop_s = sorted([x0, x1])
-
-        ui.update_text("mask_start", value=start_s)
-        ui.update_text("mask_stop", value=stop_s)
-
-        _status.set(
-            f"Selection: {start_s} → {stop_s}. Click 'Add Period' to confirm."
+            start_string, stop_string = sorted([x0, x1])
+        
+        # Populate the manual mask start field with the selected start time
+        ui.update_text(
+            "mask_start",
+            value=start_string
         )
 
-    # ---- import mask from file --------------------------------------------
+        # Populate the manual mask stop field with the selected stop time
+        ui.update_text(
+            "mask_stop",
+            value=stop_string
+        )
+
+        # Tell the user that the interval still requires explicit confirmation
+        _status.set(
+            f"Selection: {start_string} → {stop_string}. Click 'Add Period' to confirm."
+        )
+
+    # -------------------------------------------------------------------------
+    # Mask import from file
+    # -------------------------------------------------------------------------
+    # Run this effect only when the user clicks the Import Mask button
     @reactive.effect
     @reactive.event(input.btn_import_mask)
     def _on_import_mask():
@@ -1263,68 +1397,107 @@ def preprocessing_server(
         original extension. The current local recording then imports the mask
         periods from that copied file.
         """
-        # Access the editable local recording.
+        # Access the editable local recording
         raw = _raw_local()
 
+        # Stop if no recording has been loaded
         if raw is None:
             _status.set(
                 "Error: No recording loaded."
             )
-            return
+            return None
 
         # Read the file metadata returned by the Shiny upload control.
-        finfo = input.mask_file()
+        uploaded_files = input.mask_file()
 
-        if not finfo:
+        # Require the user to select a mask log before importing
+        if not uploaded_files:
             _status.set(
                 "Error: Please select a mask log file first."
             )
-            return
+            return None
 
-        # Only one file is permitted by the UI.
-        src = finfo[0]
+        # Only one file is permitted by the UI
+        src = uploaded_files[0]
 
-        # Copy the upload while preserving its original filename and extension.
+        # Copy the upload while preserving its original filename and extension
         tmp = _copy_uploaded_file(src)
 
         try:
-            # Add all mask periods contained in the uploaded file.
+            # Add all mask periods contained in the uploaded file
             raw.add_mask_periods(
                 str(tmp)
             )
 
-            # Store a new object reference so dependent outputs re-render.
+            # Store a new object reference so dependent outputs re-render
             _raw_local.set(
                 copy.deepcopy(raw)
             )
-
+            
+            # Confirm the source filename used for the import
             _status.set(
                 f"Mask imported from '{src['name']}'."
             )
-
+        # Report file format, parsing, or mask-update errors to the user
         except Exception as exc:  # noqa: BLE001
             _status.set(
                 f"Error importing mask: {exc}"
             )
-
-    # ---- apply filters -----------------------------------------------------
+    # -------------------------------------------------------------------------
+    # Preprocessing filters
+    # -------------------------------------------------------------------------
+    # Run this effect only when the user clicks the Apply button
     @reactive.effect
     @reactive.event(input.btn_apply)
     def _on_apply():
+        """Apply the selected filters to the editable local recording"""
+        # Access the editable local copy of the active recording
         raw = _raw_local()
 
+        # Stop when no recording has been loaded
         if raw is None:
             _status.set("Error: No recording loaded.")
-            return
+            return None
 
-        new_freq = (input.filt_resample() or "").strip() or None
-        binarize = bool(input.filt_binarize())
-        threshold = float(input.filt_threshold()) if binarize else 0
-        impute = bool(input.filt_impute())
-        imp_method = input.filt_impute_method() if impute else "mean"
+        # --- Resampling ----------------------------------------------------------
+        # Read the request frequency; None preserves the current frequency
+        new_freq = (
+            input.filt_resample()
+            or ""
+        ).strip() or None
+
+        # --- Binarization -------------------------------------------------------
+        # Record whether activity counts should be binarized
+        binarize = bool(
+            input.filt_binarize()
+        )
+
+        # Use the user-specified threshold when binarization is enabled
+        if binarize:
+            threshold = float(
+                input.filt_threshold()
+            )
+        else:
+            threshold = 0
+        
+        # --- Imputation ----------------------------------------------------------
+        # Record whether missing values should be imputed        
+        impute = bool(
+            input.filt_impute()
+        )
+        
+        # Use the selected imputation method only when imputation is enabled
+        if impute:
+            imp_method = input.filt_impute_method()
+        else:
+            imp_method = "mean"
+        
+        # --- Apply filters -------------------------------------------------------
+        # Apply the mask only when the recording currently contains one
         has_mask = raw._mask is not None
 
         try:
+            # Run all selected preprocessing operations in the Raw pipeline
             raw.apply_filters(
                 new_freq=new_freq,
                 binarize=binarize,
@@ -1334,55 +1507,92 @@ def preprocessing_server(
                 imputation_method=imp_method,
             )
 
+            # Store a deep copy so reactive plots update the filtered data
             _raw_local.set(copy.deepcopy(raw))
+
+            # Confirm that the preprocessing pipeline completed
             _status.set("Filters applied.")
 
+        # Report invalid parameters/processing failures to the user
         except Exception as exc:  # noqa: BLE001
-            _status.set(f"Error applying filters: {exc}")
+            _status.set(
+                f"Error applying filters: {exc}"
+            )
 
-    # ---- reset -------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # Reset local preprocessing
+    # -------------------------------------------------------------------------
+    # Run this effect only when the user clicks the Reset button
     @reactive.effect
     @reactive.event(input.btn_reset)
     def _on_reset():
-        raw = get_active(input, rv_mode, rv_single, rv_batch)
+        """Restore the local copy of the unprocessed active recording"""
+        # Retrieve the original recording from the shared application state
+        original_raw = get_active(input, rv_mode, rv_single, rv_batch)
 
-        if raw is not None:
-            _raw_local.set(copy.deepcopy(raw))
+        # Replace the edited copy only when an active recording exists
+        if original_raw is not None:
+            _raw_local.set(copy.deepcopy(original_raw))
 
+        # Confirm the local preprocessing changes were discarded
         _status.set("Reset to original recording.")
-
-    # ---- activity plot: mask overlay + post-filter state -------------------
+    # -------------------------------------------------------------------------
+    # Interactive activity plot
+    # -------------------------------------------------------------------------
+    # Render the activity plot whenever its reactive inputs change
     @render_widget
     def plot_main():
+        """Plot activity with overlays for non-wear and missing-value periods"""
+        # Access the current editable recording
         raw = _raw_local()
 
+        # Display message when no recording has been loaded
         if raw is None:
-            return empty_fig("Upload a file on the 'Data Upload' tab first.")
+            return empty_fig(
+                "Upload a file on the 'Data Upload' tab first."
+            )
 
-        act = activity_series(raw)
+        # Extract the activity time series from the Raw object
+        activity = activity_series(raw)
 
-        if act is None:
-            return empty_fig("No activity data available.")
+        # Informative placeholder when activity data are unavailable
+        if activity is None:
+            return empty_fig(
+                "No activity data available."
+            )
 
+        # Create an empty Plotly figure to receive the trace and interval bounds
         fig = go.Figure()
 
-        # Prepare the numeric x-axis and its corresponding timestamp labels.
+        # Prepare numeric x positions, hover labels, and readable axis ticks
         (
             x_pos,
             time_labels,
             tick_vals,
             tick_text,
-        ) = _time_axis_details(act)
+        ) = _time_axis_details(
+            activity
+        )
 
         # Convert activity to plain numeric values. This avoids silent rendering
         # problems when the Series uses pandas nullable/object dtypes.
-        y_plot = pd.to_numeric(act, errors="coerce").to_numpy(dtype=float)
-
-        color = ("#2ca02c"
-        if np.isnan(y_plot).any()
-        else "#1f77b4"
+        y_plot = pd.to_numeric(
+            activity,
+            errors="coerce"
+        ).to_numpy(
+            dtype=float
         )
 
+        # Check if recording contains missing/nowear periods
+        contains_missing_values = np.isnan(
+            y_plot
+        ).any()
+
+        # Use green after NaNs appear; use the standard blue trace otherwise
+        color = ("#2ca02c" if contains_missing_values else "#1f77b4")
+
+        # Add the continuous activity-count trace to the figure
+        # The hover template shows the date/time and activity counts for each point
         fig.add_trace(
             go.Scatter(
                 x=x_pos,
@@ -1397,16 +1607,20 @@ def preprocessing_server(
                 ),
             )
         )
-
-        # --- non-wear mask: one rectangle per contiguous period --------------
+        # Access the current mask without allowing mask errors to break the plot
         mask = _safe_mask(raw)
 
+        # Add red bands when a mask is available
         if mask is not None:
-            # Align the mask with the displayed activity epochs.
-            aligned = mask.reindex(act.index)
+            # Align the mask with the activity epochs currently being displayed
+            aligned_mask = mask.reindex(
+                activity.index
+            )
 
-            # The Raw mask convention uses 0 to identify non-wear.
-            is_nw = (aligned == 0).values
+            # Mark epochs whose mask value of 0 identifies nonwear
+            is_nw = (
+                aligned_mask == 0
+            ).values
 
             # Draw a red band for every contiguous non-wear period.
             _add_interval_bands(
@@ -1434,68 +1648,107 @@ def preprocessing_server(
                 fillcolor="rgba(127,127,127,0.6)",
                 linecolor="grey"
             )
-
+        
+        # Calculate the padded vertical range from the finite activity values
         y_min, y_max = _activity_y_range(y_plot)
-
+        
+        # Configure the axes, margins, drawing mode, and rectangle appearance
         fig.update_layout(
-            xaxis=dict(
-                title="Date/Time",
-                type="linear",
-                tickmode="array",
-                tickvals=tick_vals,
-                ticktext=tick_text,
-            ),
-            yaxis=dict(
-                title="Activity counts",
-                range=[y_min, y_max],
-                zeroline=True,
-            ),
-            margin=dict(l=40, r=20, t=30, b=45),
+            xaxis={
+                "title": "Date/Time",
+                "type": "linear",
+                "tickmode": "array",
+                "tickvals": tick_vals,
+                "ticktext": tick_text,
+            },
+            yaxis={
+                "title": "Activity counts",
+                "range": [y_min, y_max],
+                "zeroline": True,
+            },
+            margin={
+                "l": 40,
+                "r": 20,
+                "t": 30,
+                "b": 45
+            },
             height=430,
             autosize=True,
             showlegend=False,
             dragmode="drawrect",
-            newshape=dict(
-                line=dict(color="rgba(214,39,40,0.7)", width=1.5),
-                fillcolor="rgba(214,39,40,0.15)",
-            ),
+            newshape={
+                "line": {
+                    "color": "rgba(214,39,40,0.7)",
+                    "width": 1.5
+                },
+                "fillcolor": "rgba(214,39,40,0.15)",
+            },
         )
 
+        # Return the completed interactive figure to the Shiny output
         return fig
 
-    # ---- export preprocessed recording to all analysis tabs ----------------
+    # -------------------------------------------------------------------------
+    # Export preprocessed recording to the analysis tabs
+    # -------------------------------------------------------------------------
+    # Run this effect only when the user clicks Export to Analysis Tabs
     @reactive.effect
     @reactive.event(input.btn_export_to_tabs)
     def _on_export_to_tabs():
+        """Commit the locally preprocessed recording to shared app state"""
+    
+        # BUG(BUG-1): After sharing the data with the other tabs, it is not possible
+        # to revert to the original recording in the preprocessing tab, because
+        # rv_single.set() / batch[subj] overwrite the shared state with no backup of
+        # the prior value. The user must re-upload the file to start over.
+        
+        # Access the current editable recording
         raw = _raw_local()
 
+        # Stop if there is no recording to export
         if raw is None:
-            _status.set("Error: No recording loaded.")
-            return
+            _status.set(
+                "Error: No recording loaded."
+            )
+            return None
 
         try:
+            # Read whether the app is currently operating in single file or batch mode
             mode = rv_mode()
 
+            # Replace the shared reactive value with a deep copy of the local recording
             if mode == "single":
                 rv_single.set(copy.deepcopy(raw))
+            
+            # Replace only the selected recording in the batch
             else:
-                # In batch mode update the active subject in the collection.
+                # Access the shared batch collection
                 batch = rv_batch()
+
+                # Identify the subject selected in the preprocessing controls
                 subj = selected_subject(input)
 
+                # Update the batch only when both collection and subject exist
                 if batch is not None and subj:
                     batch[subj] = copy.deepcopy(raw)
+
+                    # Store a new batch reference so all analysis tabs update
                     rv_batch.set(copy.deepcopy(batch))
-
+            
+            # Confirm that the processed recording entered the shared app state
             _status.set("Recording exported to all analysis tabs.")
-
+        
+        # Report failures while updating shared single or batch mode
         except Exception as exc:  # noqa: BLE001
-            _status.set(f"Error exporting: {exc}")
+            _status.set(
+                f"Error exporting: {exc}"
+            )
 
-    # ---- export mask to CSV ------------------------------------------------
-    @render.download(
-        filename="mask_export.csv"
-        )
+    # -------------------------------------------------------------------------
+    # Export non-wear mask to CSV
+    # -------------------------------------------------------------------------
+    # Register a download handler with a fixed CSV name
+    @render.download(filename="mask_export.csv")
     def btn_export_mask():
         """
         Export the current non-wear mask as a CSV file.
@@ -1504,20 +1757,22 @@ def preprocessing_server(
         provides ``Start_time`` and ``Stop_time`` columns. When no mask exists,
         an empty CSV containing only those column headers is returned.
         """
-        # Access the currently edited local recording.
+        # Access the currently edited local recording
         raw = _raw_local()
 
-        # Assume that no mask is available until one is retrieved successfully.
+        # Assume that no mask is available until one is retrieved successfully
         mask = None
 
+        # Try to access the public mask when one exists
         if raw is not None:
             try:
                 mask = raw.mask
 
+            # Leave mask as None if the Raw object cannot provide it
             except Exception:
                 pass
 
-        # Return an empty table when no mask is available.
+        # Return an empty dataframe when no mask is available
         if mask is None:
             df = pd.DataFrame(
                 columns=[
@@ -1526,17 +1781,18 @@ def preprocessing_server(
                 ]
             )
 
-        # Convert the available binary mask to start/stop intervals.
+        # Convert the available binary mask to start/stop intervals
         else:
             df = _mask_to_dataframe(mask)
 
-        # Write the DataFrame to an in-memory text buffer.
+        # Write the DataFrame to an in-memory text buffer
         buf = io.StringIO()
 
+        # Write the mask dataframe without the pandas row index
         df.to_csv(
             buf,
             index=False,
         )
 
-        # Yield the CSV text to Shiny's download handler.
+        # Yield the CSV text to Shiny's download handler
         yield buf.getvalue()
