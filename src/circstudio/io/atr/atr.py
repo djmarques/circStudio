@@ -61,7 +61,14 @@ class ATR(Raw):
             raise ValueError("The input file does not contain a header.")
 
         #Extract information from the header
-        freq = pd.Timedelta(int(header['INTERVAL'][0]), unit='s')
+        interval_s = int(header['INTERVAL'][0])  # BUG FIX: parse interval before validating
+        if interval_s == 0:  # BUG FIX: prevent ZeroDivisionError in pd.resample when INTERVAL==0
+            raise ValueError(
+                "INTERVAL is 0 in the ATR header — cannot create a zero-duration "
+                "sampling frequency. The file may be corrupt or use an unsupported "
+                "export configuration."
+            )  # BUG FIX: raise a clear error instead of a cryptic ZeroDivisionError
+        freq = pd.Timedelta(interval_s, unit='s')  # BUG FIX: build frequency from validated interval
 
         # Create a DataFrame containing actigraphy data
         data = pd.read_csv(input_fname,

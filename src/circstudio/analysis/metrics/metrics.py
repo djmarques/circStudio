@@ -692,6 +692,7 @@ def IS(data):
     Returns
     -------
     is: float
+        NaN for a constant signal, where the ratio is 0/0.
 
     Notes
     -----
@@ -749,6 +750,10 @@ def IS(data):
     )
 
     d_1h = data.var()
+
+    # Constant signal: both variances are zero, so IS is undefined
+    if d_1h == 0:
+        return np.nan
 
     return d_24h / d_1h
 
@@ -821,6 +826,7 @@ def IV(data):
     Returns
     -------
     iv: float
+        NaN for a constant signal, where the ratio is 0/0.
 
     Notes
     -----
@@ -869,6 +875,10 @@ def IV(data):
     c_1h = data.diff(1).pow(2).mean()
 
     d_1h = data.var()
+
+    # Constant signal: no variance and no successive differences, so IV is undefined
+    if d_1h == 0:
+        return np.nan
 
     return c_1h / d_1h
 
