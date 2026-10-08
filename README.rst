@@ -1,5 +1,18 @@
 **circStudio**
 ================
+|license| |ci| |pypi|
+
+.. |license| image:: https://img.shields.io/badge/License-GPL%20v3-blue.svg
+   :target: https://github.com/DiseaseTranscriptomicsLab/circStudio/blob/main/LICENSE.md
+   :alt: License: GPL v3
+
+.. |ci| image:: https://img.shields.io/github/actions/workflow/status/DiseaseTranscriptomicsLab/circStudio/tests.yml?branch=main&label=CI%20tests
+   :target: https://github.com/DiseaseTranscriptomicsLab/circStudio/actions/workflows/tests.yml
+   :alt: CI tests
+
+.. |pypi| image:: https://img.shields.io/pypi/v/circStudio
+   :target: https://pypi.org/project/circStudio/
+   :alt: PyPI version
 
 **circStudio** is a Python package for preprocessing, modeling, and analyzing actigraphy time series. It
 enables users to read activity, light and temperature recordings collected by a wide range of actigraphy
