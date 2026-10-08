@@ -6,6 +6,12 @@ import pyexcel as pxl
 from pandas.tseries.frequencies import to_offset
 
 from ..analysis.tools import *
+from ..preprocessing.nonwear import detect_nonwear_troiano, detect_nonwear_choi
+
+_NONWEAR_ALGORITHMS = {
+    "troiano": detect_nonwear_troiano,
+    "choi": detect_nonwear_choi,
+}
 
 
 class BaseLog:
@@ -441,7 +447,7 @@ class Mask:
 
 
     def add_mask_period(self, start, stop):
-        """Add a period to the inactivity mask
+        """Add a period to the inactivity mask (additive — never clears existing mask).
 
         Parameters
         ----------
@@ -451,41 +457,130 @@ class Mask:
             Stop time (YYYY-MM-DD HH:MM:SS) of the inactivity period.
         """
 
-        # Check if a mask has already been created
-        # NB : if the inactivity_length is not None, accessing the mask will
-        # trigger its creation.
-        if self.inactivity_length is None:
-            self.inactivity_length = -1
-            # self.mask = pd.Series(
-            #     np.ones(self.length()),
-            #     index=self.data.index
-            # )
-
-        # Check if start and stop are within the index range
-        if pd.Timestamp(start) < self.mask.index[0]:
-            raise ValueError(
-                (
-                    "Attempting to set the start time of a mask period before "
-                    + "the actual start time of the data.\n"
-                    + "Mask start time: {}".format(start)
-                    + "Data start time: {}".format(self.mask.index[0])
-                )
+        # If no mask exists yet, create an all-ones (keep-all) mask directly
+        # on self._mask without going through the inactivity_length setter —
+        # the setter unconditionally clears _mask, which would destroy any mask
+        # previously set by detect_nonwear().
+        if self._mask is None:
+            ref = (
+                self._original_activity
+                if self._original_activity is not None
+                else self.activity
             )
-        if pd.Timestamp(stop) > self.mask.index[-1]:
-            raise ValueError(
-                (
-                    "Attempting to set the stop time of a mask period after "
-                    + "the actual stop time of the data.\n"
-                    + "Mask stop time: {}".format(stop)
-                    + "Data stop time: {}".format(self.mask.index[-1])
-                )
+            self._mask = pd.Series(
+                np.ones(len(ref), dtype=int),
+                index=ref.index,
+                name="nonwear_mask",
             )
 
-        # Set mask values between start and stop to zeros
-        # self.mask.loc[start:stop] = 0
-        self.mask = self.mask.mask(
-            (self.mask.index >= start) & (self.mask.index <= stop), 0
+        # Validate bounds against the full mask index (not the windowed view).
+        if pd.Timestamp(start) < self._mask.index[0]:
+            raise ValueError(
+                "Attempting to set the start time of a mask period before "
+                "the actual start time of the data.\n"
+                "Mask start time: {}\n".format(start)
+                + "Data start time: {}".format(self._mask.index[0])
+            )
+        if pd.Timestamp(stop) > self._mask.index[-1]:
+            raise ValueError(
+                "Attempting to set the stop time of a mask period after "
+                "the actual stop time of the data.\n"
+                "Mask stop time: {}\n".format(stop)
+                + "Data stop time: {}".format(self._mask.index[-1])
+            )
+
+        # Mark the period as non-wear (0) without disturbing the rest.
+        self._mask = self._mask.mask(
+            (self._mask.index >= pd.Timestamp(start))
+            & (self._mask.index <= pd.Timestamp(stop)),
+            0,
         )
+
+    def detect_nonwear(
+        self,
+        method="choi",
+        min_length="90min",
+        spike_tolerance=2,
+        spike_max_counts=100,
+        **kwargs,
+    ):
+        """Detect non-wear periods automatically and store the result as the mask.
+
+        Runs one of the validated actigraphy non-wear detection algorithms on
+        ``self.activity`` and stores the resulting binary series as
+        ``self._mask`` (0 = non-wear, 1 = wear), making it immediately
+        available via ``self.mask``.  Any previously set inactivity-length
+        mask is discarded.
+
+        Parameters
+        ----------
+        method : {"choi", "troiano"}
+            Algorithm to use.
+
+            * ``"choi"`` — Choi et al. (2011), *Med Sci Sports Exerc* 43(2):357-364.
+              Recommended default: reduces false positives during sleep by
+              requiring that the neighbourhood around isolated spikes is also
+              inactive.  Default minimum run: 90 min.
+
+            * ``"troiano"`` — Troiano et al. (2008), *Med Sci Sports Exerc*
+              40(1):181-188.  Original NHANES algorithm.  Default minimum
+              run: 60 min.
+
+        min_length : str or int
+            Minimum duration of a non-wear period.  Accepts a pandas offset
+            string (e.g. ``"60min"``, ``"2h"``) or a plain integer number of
+            epochs.  Defaults: ``"90min"`` for Choi, ``"60min"`` for Troiano
+            (override here if needed).
+        spike_tolerance : int
+            Maximum number of non-zero epochs permitted within a non-wear
+            candidate window (provided their counts ≤ ``spike_max_counts``).
+            Default is 2.
+        spike_max_counts : int
+            Epochs with counts at or below this value are treated as isolated
+            spikes rather than genuine activity.  Default is 100.
+        **kwargs
+            Additional keyword arguments forwarded to the algorithm function
+            (e.g. ``window_size`` for Choi).
+
+        Raises
+        ------
+        ValueError
+            If ``method`` is not recognised.
+        """
+        method_key = method.lower()
+        if method_key not in _NONWEAR_ALGORITHMS:
+            raise ValueError(
+                f"Unknown non-wear detection method '{method}'. "
+                f"Available methods: {list(_NONWEAR_ALGORITHMS.keys())}"
+            )
+
+        if self.activity is None and self._original_activity is None:
+            warnings.warn(
+                "No activity data found. Cannot detect non-wear periods.",
+                UserWarning,
+            )
+            return
+
+        # Always run detection on the original (unfiltered) activity so that
+        # previously applied masks / resampling do not bias the algorithm.
+        base_activity = (
+            self._original_activity
+            if self._original_activity is not None
+            else self.activity
+        )
+
+        fn = _NONWEAR_ALGORITHMS[method_key]
+        detected_mask = fn(
+            activity=base_activity,
+            min_length=min_length,
+            spike_tolerance=spike_tolerance,
+            spike_max_counts=spike_max_counts,
+            **kwargs,
+        )
+
+        # Discard any existing length-based mask and store the new one.
+        self._inactivity_length = None
+        self._mask = detected_mask
 
     def add_mask_periods(self, input_fname, *args, **kwargs):
         """Add periods to the inactivity mask
