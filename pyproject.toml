@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "circStudio"
-version = "1.1.1"
+version = "1.1.2"
 authors = [
     { name="Daniel Marques", email="daniel.marques@gimm.pt" },
     { name="Nuno Morais", email="nuno.morais@nms.unl.pt" },
@@ -62,3 +62,17 @@ Issues = "https://github.com/djmarques/circStudio/issues"
 
 [tool.uv.build-backend]
 source-include = ["src/circstudio/data/**"]
+
+[tool.pyrefly]
+# The Shiny app in ``app/`` imports the ``modules`` package and adds ``app/``
+# and ``src/`` to ``sys.path`` at runtime. Pyrefly can't see that dynamic
+# manipulation, so declare both roots here to resolve ``modules.*`` and
+# ``circstudio`` during static analysis.
+search-path = ["src", "app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "slow: takes more than a few seconds",
+    "needs_data: requires a bundled file in src/circstudio/data",
+]

@@ -1,0 +1,49 @@
+name: tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # circStudio requires Python 3.12 (pyproject: requires-python = ">=3.12").
+  PYTHON_VERSION: "3.12"
+  # Keep every test headless; conftest.py also sets this, belt and braces.
+  MPLBACKEND: Agg
+
+jobs:
+  unit:
+    name: library tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Create the environment
+        run: |
+          uv venv --python ${{ env.PYTHON_VERSION }}
+          # Library runtime dependencies, pinned to the ranges in pyproject.
+          uv pip install \
+            'pandas>=2.3.3,<3' 'numpy>=2.4.1,<3' 'scipy>=1.17.0,<2' \
+            'statsmodels>=0.14.6,<1' 'lmfit>=1.3.4,<2' 'plotly>=6.5.2,<7' \
+            'seaborn>=0.13.2,<1' 'matplotlib>=3.10.8,<4' 'pyexcel>=0.7.4,<1' \
+            pyexcel-ods pingouin
+          # Test dependencies.
+          uv pip install pytest pytest-mock
+
+      - name: Run the library tests
+        run: uv run pytest tests -q --durations=10
